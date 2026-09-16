@@ -102,11 +102,10 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
         <div id="phone-pairing-indicator" class="text-xs font-mono text-amber-400">● Waiting for mobile phone scan...</div>
         <div class="flex flex-wrap justify-center gap-2 w-full">
           <button type="button" onclick="copyPairingLink()" class="btn-d">🔗 Copy Mobile Link</button>
-          <button type="button" onclick="confirmPhoneConnectedManual()" class="btn-g">✓ Confirm Phone Positioned</button>
         </div>
       </div>
     </div>
-    <button id="btn-proceed-to-biometrics" type="button" onclick="proceedToBiometricStage()" disabled class="btn-lock">🔒 Scan QR Code or Confirm Phone Positioned to Unlock Next Step</button>
+    <button id="btn-proceed-to-biometrics" type="button" onclick="proceedToBiometricStage()" disabled class="btn-lock">🔒 Scan QR Code with Mobile Phone to Unlock Next Step</button>
   </div>
 
   <!-- STAGE 2: 1:1 BIOMETRICS (LEFT = UPLOAD CANDIDATE ID ONLY, RIGHT = LIVE CAMERA REAL-TIME DETECTION) -->
@@ -426,7 +425,6 @@ function handleMobileGuardMessage(msg) {
   }
 }
 
-function confirmPhoneConnectedManual() { markPhoneAsPaired(); proceedToBiometricStage(); }
 function markPhoneAsPaired() {
   if (isPhonePaired) return;
   isPhonePaired = true;
@@ -435,7 +433,7 @@ function markPhoneAsPaired() {
   if (btn) { btn.disabled = false; btn.className = "w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg cursor-pointer"; btn.innerHTML = "Continue to 1:1 Biometrics → (Phone Connected ✓)"; }
 }
 function proceedToBiometricStage() {
-  if (!isPhonePaired) markPhoneAsPaired();
+  if (!isPhonePaired) return;
   currentStage = 'biometrics';
   $('stage-login-pairing')?.classList.add('hidden');
   $('stage-biometrics')?.classList.remove('hidden');
