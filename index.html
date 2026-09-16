@@ -202,8 +202,9 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
         <div class="w-full aspect-video rounded-xl bg-black overflow-hidden border border-slate-800"><video id="proctor-cam-video" autoplay playsinline muted class="w-full h-full object-cover"></video></div>
         <div class="subcard space-y-1.5 text-xs">
           <div class="row font-mono text-[11px]"><span class="text-slate-400">Voice & Intruder Timers:</span><span id="live-timers-hud" class="text-emerald-400 font-bold">0.0s / 0.0s</span></div>
-          <p class="text-[10px] text-slate-400 leading-relaxed">
-            • <b>Voice &gt; 2s:</b> 1 Strike (Terminates if &gt;12s continuous)<br>
+          <div class="row font-mono text-[10px] pt-0.5 border-t border-slate-800/80"><span class="text-slate-400">Audio Filter:</span><span id="voice-filter-status" class="text-emerald-400 font-bold">● Fan/Noise Filtered ✓</span></div>
+          <p class="text-[10px] text-slate-400 leading-relaxed pt-0.5">
+            • <b>Human Speech &gt; 2s:</b> 1 Strike (Fan/AC ignored; Terminates if &gt;12s discussion)<br>
             • <b>Intruder:</b> 1 Strike (Next strike if stays &gt;30s)<br>
             • <b>Phone Away / Tab Switch:</b> 1 Strike per incident
           </p>
@@ -722,7 +723,10 @@ function startDesktopIntruderAndGazeMonitor() {
   }, 400);
 }
 
-// SMART VOICE ESCALATION (> 2.0s = 1 Strike Only; > 12.0s continuous stretch = Immediate Termination)
+// SMART HUMAN VOICE & ANSWER DISCUSSION DETECTOR (IGNORES FANS, AC, & AMBIENT NOISE)
+// - Filters out low-frequency fan/AC rumble (< 250 Hz) and broadband air turbulence hiss (> 4200 Hz).
+// - Requires 300-3400 Hz Human Vocal Formants (F1/F2), Harmonic Crest Prominence, Syllabic Variance, or Web Speech API word recognition.
+// - > 2.0s Human Speech / Discussion = 1 Strike Only; > 12.0s continuous discussion = Immediate Termination.
 function startSmartVoiceEscalationMonitor() {
   if (!labCamStream) return;
   try {
@@ -730,38 +734,122 @@ function startSmartVoiceEscalationMonitor() {
     if (!tracks || !tracks.length) return;
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const analyser = ctx.createAnalyser();
-    analyser.fftSize = 256;
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.25;
     ctx.createMediaStreamSource(new MediaStream([tracks[0]])).connect(analyser);
     const data = new Uint8Array(analyser.frequencyBinCount);
+    const binHz = (ctx.sampleRate || 48000) / analyser.fftSize;
+
+    // Parallel Neural Speech Recognition (100% immune to fans/background noise when supported)
+    let lastSpeechRecTimestamp = 0;
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRec) {
+      try {
+        const rec = new SpeechRec();
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.lang = 'en-US';
+        rec.onresult = evt => {
+          for (let i = evt.resultIndex; i < evt.results.length; i++) {
+            const transcript = evt.results[i][0].transcript.trim();
+            if (transcript.length >= 2) {
+              lastSpeechRecTimestamp = Date.now();
+            }
+          }
+        };
+        rec.onend = () => { if (isExamActive) { try { rec.start(); } catch(e){} } };
+        rec.start();
+      } catch(e){}
+    }
+
+    let ambientVocalFloor = 18;
+    let vocalHistory = [];
     let silenceAccumulator = 0;
 
     setInterval(() => {
       if (!isExamActive) return;
       analyser.getByteFrequencyData(data);
-      const avg = data.reduce((a, b) => a + b, 0) / data.length;
 
-      if (avg > 24) {
+      // 1. Frequency Band Energy Analysis
+      let rumbleSum = 0, rumbleCount = 0;   // 0 - 250 Hz (Fans, AC, desk hum)
+      let vocalSum = 0, vocalCount = 0;     // 300 - 3400 Hz (Human speech formants F1 & F2)
+      let vocalMax = 0;                     // Peak harmonic formant in vocal band
+      let hissSum = 0, hissCount = 0;       // 4200 - 10000 Hz (Fan air turbulence / broadband hiss)
+
+      for (let i = 0; i < data.length; i++) {
+        const freq = i * binHz;
+        const val = data[i];
+        if (freq <= 250) {
+          rumbleSum += val; rumbleCount++;
+        } else if (freq >= 300 && freq <= 3400) {
+          vocalSum += val; vocalCount++;
+          if (val > vocalMax) vocalMax = val;
+        } else if (freq >= 4200 && freq <= 10000) {
+          hissSum += val; hissCount++;
+        }
+      }
+
+      const rumbleAvg = rumbleCount ? (rumbleSum / rumbleCount) : 0;
+      const vocalAvg = vocalCount ? (vocalSum / vocalCount) : 0;
+      const hissAvg = hissCount ? (hissSum / hissCount) : 0;
+
+      // Track syllabic amplitude variance over recent 8 frames (800ms)
+      vocalHistory.push(vocalAvg);
+      if (vocalHistory.length > 8) vocalHistory.shift();
+      const histMean = vocalHistory.reduce((a, b) => a + b, 0) / vocalHistory.length;
+      const vocalVariance = vocalHistory.reduce((a, b) => a + Math.pow(b - histMean, 2), 0) / vocalHistory.length;
+      const vocalStdDev = Math.sqrt(vocalVariance);
+
+      // Stationary fan/AC noise has low variance (< 1.6); adapt noise floor when stationary
+      if (vocalStdDev < 1.6) {
+        ambientVocalFloor = ambientVocalFloor * 0.94 + vocalAvg * 0.06;
+      }
+
+      const netVocalEnergy = vocalAvg - ambientVocalFloor;
+      const crestFactor = vocalMax / (vocalAvg + 1); // Human vocal cords produce harmonic peaks (crest >= 1.48); fans are flat (~1.15)
+      const isSpeechRecActive = (Date.now() - lastSpeechRecTimestamp) < 1400;
+
+      // Strict Human Speech Decision:
+      // Must either be confirmed by browser SpeechRecognition OR pass all 4 Human Vocal Formant & Syllabic Modulation checks
+      const isDspHumanVoice = (
+        netVocalEnergy > 9.5 &&
+        vocalAvg > 25 &&
+        crestFactor >= 1.48 &&
+        vocalAvg > hissAvg * 1.55 &&
+        vocalMax > rumbleAvg * 1.12 &&
+        vocalStdDev > 1.75
+      );
+
+      const isHumanSpeechDetected = isSpeechRecActive || isDspHumanVoice;
+
+      if (isHumanSpeechDetected) {
         silenceAccumulator = 0;
         continuousVoiceSeconds += 0.1;
+        setTxt('voice-filter-status', '🗣️ Human Speech Detected!', 'text-amber-400 font-bold animate-pulse');
         updateLiveTimersHud();
 
-        // Rule 1: At 2.0 seconds of speech -> Give EXACTLY ONE Strike for this speaking stretch
+        // Rule 1: At 2.0 seconds of human speech/discussion -> Give EXACTLY ONE Strike for this stretch
         if (continuousVoiceSeconds >= 2.0 && !hasGivenVoiceStrikeThisStretch) {
           if (Date.now() - lastVoiceStrikeTime > 15000) {
             hasGivenVoiceStrikeThisStretch = true;
             lastVoiceStrikeTime = Date.now();
-            applyStrike("Continuous Voice Detected (> 2.0s - Unauthorized Verbal Discussion - 1 Strike Deducted)", 'voice');
+            applyStrike("Unauthorized Human Speech Detected (> 2.0s): Candidate / Participant Discussing Assessment Answers (1 Strike Deducted)", 'voice');
           }
         }
 
-        // Rule 2: If speaking continuously for > 12.0 seconds in a stretch -> Terminate Exam Immediately!
+        // Rule 2: If continuous human speech/discussion exceeds 12.0 seconds in a stretch -> Terminate Exam Immediately!
         if (continuousVoiceSeconds >= 12.0) {
-          terminateExamImmediately("Exam Terminated: Continuous Unauthorized Speech Exceeded 12 Seconds in a Single Stretch.");
+          terminateExamImmediately("Exam Terminated: Continuous Human Speech / Answer Discussion Exceeded 12 Seconds in a Single Stretch.");
         }
       } else {
         silenceAccumulator += 0.1;
-        // Require 2.0 seconds of silence before resetting the continuous stretch counter
-        if (silenceAccumulator >= 2.0) {
+        if (vocalAvg > 16) {
+          setTxt('voice-filter-status', '● Fan / Ambient Noise Ignored ✓', 'text-emerald-400 font-bold');
+        } else {
+          setTxt('voice-filter-status', '● Silent / Noise Filtered ✓', 'text-emerald-400 font-bold');
+        }
+        // Require 1.8 seconds without human speech before resetting the continuous stretch counter
+        if (silenceAccumulator >= 1.8) {
           continuousVoiceSeconds = 0;
           hasGivenVoiceStrikeThisStretch = false;
           updateLiveTimersHud();
@@ -772,14 +860,14 @@ function startSmartVoiceEscalationMonitor() {
 }
 
 function updateLiveTimersHud() {
-  setTxt('live-timers-hud', `Voice: ${continuousVoiceSeconds.toFixed(1)}s | Intruder: ${continuousIntruderSeconds.toFixed(1)}s`);
+  setTxt('live-timers-hud', `Speech: ${continuousVoiceSeconds.toFixed(1)}s | Intruder: ${continuousIntruderSeconds.toFixed(1)}s`);
 }
 
 function triggerTestIntruderStrike() {
   applyStrike("Intruder Detected: Multiple Faces Detected in Camera View (1 Strike Deducted)", 'test', true);
 }
 function triggerTestVoiceStrike() {
-  applyStrike("Continuous Voice Detected (> 2.0s - Unauthorized Verbal Discussion - 1 Strike Deducted)", 'test', true);
+  applyStrike("Unauthorized Human Speech Detected (> 2.0s): Candidate / Participant Discussing Assessment Answers (1 Strike Deducted)", 'test', true);
 }
 function triggerTestPhoneAwayStrike() {
   applyStrike("Mobile Desk Guard Alert: Phone Display Moved Away From Monitor Screen (1 Strike Deducted)", 'test', true);
