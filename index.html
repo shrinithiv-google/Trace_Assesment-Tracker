@@ -43,16 +43,23 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
       <div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-400 animate-pulse"></span><span class="font-bold text-sm text-white">TRACE Mobile Desk Guard</span></div>
       <span id="mobile-pin-badge" class="tag font-mono">PIN: ----</span>
     </div>
-    <div class="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-center space-y-1">
+    <div id="mobile-status-banner" class="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-center space-y-1">
       <div class="text-2xl">🛡️</div>
-      <div class="text-sm font-bold text-emerald-300">Desk Guard Active & Locked on Monitor</div>
-      <p class="text-xs text-slate-300">Keep phone upright facing your computer monitor. Moving phone away or laying flat triggers an immediate strike.</p>
+      <div id="mobile-banner-title" class="text-sm font-bold text-emerald-300">Desk Guard Active & Locked on Monitor</div>
+      <p class="text-xs text-slate-300">Keep phone upright facing your computer monitor. Moving phone away, tilting flat, or switching tabs triggers an immediate desktop strike.</p>
     </div>
-    <div class="cam"><video id="mobile-cam-video" autoplay playsinline muted class="w-full h-full object-cover"></video><div class="absolute top-2 left-2 px-2 py-1 rounded bg-black/75 text-[10px] font-mono text-emerald-400">● 250ms Vision + 60Hz Gyro Active</div></div>
+    <div class="cam">
+      <video id="mobile-cam-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+      <canvas id="mobile-vision-canvas" width="64" height="48" class="hidden"></canvas>
+      <div class="absolute top-2 left-2 px-2 py-1 rounded bg-black/75 text-[10px] font-mono text-emerald-400">● 250ms Vision + Gyro + Tab Guard Active</div>
+    </div>
     <div class="grid grid-cols-2 gap-3 text-xs font-mono">
-      <div class="subcard"><div class="lbl">TILT ANGLE</div><div id="mobile-pitch-val" class="text-emerald-400 font-bold text-sm mt-0.5">Upright (OK)</div></div>
-      <div class="subcard"><div class="lbl">MONITOR VIEW</div><div id="mobile-monitor-val" class="text-emerald-400 font-bold text-sm mt-0.5">LOCKED ✓</div></div>
+      <div class="subcard"><div class="lbl">TILT / ORIENTATION</div><div id="mobile-pitch-val" class="text-emerald-400 font-bold text-sm mt-0.5">Upright (OK)</div></div>
+      <div class="subcard"><div class="lbl">MONITOR IN VIEW</div><div id="mobile-monitor-val" class="text-emerald-400 font-bold text-sm mt-0.5">LOCKED ✓</div></div>
     </div>
+    <button type="button" onclick="sendMobileViolationNow('Mobile Desk Guard: Phone Display Moved Away From Monitor Screen')" class="w-full py-2.5 bg-red-950/70 border border-red-500/40 text-red-300 rounded-xl text-xs font-bold">
+      📱 Test / Simulate Phone Moved Away Strike
+    </button>
   </div>
   <div class="pt-4 border-t border-slate-800 text-center text-[11px] text-slate-500 font-mono">Connected to Desktop Session • Real-Time Dual-Perspective Proctoring</div>
 </div>
@@ -63,7 +70,7 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
     <div class="flex items-center gap-3">
       <div class="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white text-lg">T</div>
       <div>
-        <div class="flex items-center gap-2"><h1 class="font-extrabold text-white text-base">TRACE Proctoring Engine</h1><span class="tag font-mono">v4.8 LOCKDOWN</span></div>
+        <div class="flex items-center gap-2"><h1 class="font-extrabold text-white text-base">TRACE Proctoring Engine</h1><span class="tag font-mono">v4.9 SMART ESCALATION</span></div>
         <p class="text-xs text-slate-400">Autonomous Dual-Perspective Proctoring & Anti-Malpractice Assessment</p>
       </div>
     </div>
@@ -86,7 +93,7 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
         <div><label class="block text-xs font-bold text-slate-300 mb-1">Official Email Address</label><input type="email" id="candidate-email" value="alex.mercer@assessment.org" class="inp"></div>
         <div class="subcard space-y-1 text-xs">
           <div class="font-bold text-slate-200">📱 Mobile Desk Guard Instructions:</div>
-          <p class="text-slate-400 text-[11px]">1. Scan QR code with your phone camera.<br>2. Prop phone upright facing your monitor screen.<br>3. Turning phone away or laying flat triggers an immediate strike.</p>
+          <p class="text-slate-400 text-[11px]">1. Scan QR code with your phone camera.<br>2. Prop phone upright facing your monitor screen.<br>3. Moving phone away, laying flat, or switching phone tabs triggers a 1-strike warning.</p>
         </div>
       </div>
       <div class="md:col-span-6 subcard flex flex-col items-center text-center space-y-3">
@@ -113,7 +120,7 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
       <div class="text-xs text-slate-400 font-mono">Status: <span id="biometric-overall-badge" class="text-amber-400 font-bold">Awaiting ID Upload</span></div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- 1. LEFT COLUMN: ONLY OFFICIAL CANDIDATE ID PHOTO UPLOAD (NO LIVE CAMERA IN LEFT BOX) -->
+      <!-- 1. LEFT COLUMN: ONLY OFFICIAL CANDIDATE ID PHOTO UPLOAD -->
       <div class="subcard space-y-3 flex flex-col justify-between">
         <div>
           <div class="row text-xs font-bold text-slate-300 mb-3">
@@ -173,6 +180,7 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
     <div class="card row flex-wrap gap-4">
       <div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-400 animate-pulse"></span><span class="font-bold text-white text-sm">Live Proctored Assessment Session</span></div>
       <div class="flex items-center gap-6 font-mono text-xs">
+        <div><span class="text-slate-400">Mobile Guard:</span> <span id="exam-phone-status" class="text-emerald-400 font-bold">LOCKED ✓</span></div>
         <div><span class="text-slate-400">Time Left:</span> <span id="timer-display" class="font-bold text-amber-400 text-base">45:00</span></div>
         <div><span class="text-slate-400">Strikes:</span> <span id="exam-strikes-display" class="text-emerald-400 font-bold">0/3</span></div>
       </div>
@@ -181,7 +189,7 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
       <div class="lg:col-span-8 card space-y-5">
         <div class="row text-xs">
           <span id="question-number-badge" class="tag">Question 1 of 5</span>
-          <span class="text-[11px] text-slate-400 font-mono">🔒 Anti-Copy/Paste & Anti-Gemini Shield Active</span>
+          <span class="text-[11px] text-slate-400 font-mono">🔒 Anti-Copy/Paste & Smart Strike Escalation Active</span>
         </div>
         <div id="question-text" class="text-base font-semibold text-white">Loading question...</div>
         <div id="options-container" class="space-y-2.5 pt-2"></div>
@@ -193,13 +201,18 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
       <div class="lg:col-span-4 card space-y-4">
         <div class="row text-xs font-bold text-white"><span>📹 Candidate Proctor Cam</span><span class="text-red-400 font-mono text-[10px] animate-pulse">● REC ACTIVE</span></div>
         <div class="w-full aspect-video rounded-xl bg-black overflow-hidden border border-slate-800"><video id="proctor-cam-video" autoplay playsinline muted class="w-full h-full object-cover"></video></div>
-        <div class="subcard space-y-1 text-xs">
-          <div class="row font-mono text-[11px]"><span class="text-slate-400">Multi-Face & Voice Guard:</span><span class="text-emerald-400 font-bold">LOCKED ✓</span></div>
-          <p class="text-[10px] text-slate-500">Real-time Intruder Detection (2+ faces), Continuous Voice (&gt;2.0s), Tab Switch, and Anti-Gemini/LLM side-panel shield active.</p>
+        <div class="subcard space-y-1.5 text-xs">
+          <div class="row font-mono text-[11px]"><span class="text-slate-400">Voice & Intruder Timers:</span><span id="live-timers-hud" class="text-emerald-400 font-bold">0.0s / 0.0s</span></div>
+          <p class="text-[10px] text-slate-400 leading-relaxed">
+            • <b>Voice &gt; 2s:</b> 1 Strike (Terminates if &gt;12s continuous)<br>
+            • <b>Intruder:</b> 1 Strike (Next strike if stays &gt;30s)<br>
+            • <b>Phone Away / Tab Switch:</b> 1 Strike per incident
+          </p>
         </div>
-        <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick="triggerTestIntruderStrike()" class="btn-test">🕵️ Test Intruder Strike</button>
-          <button type="button" onclick="triggerTestVoiceStrike()" class="btn-test">🎙️ Test Voice &gt;2s Strike</button>
+        <div class="grid grid-cols-3 gap-1.5">
+          <button type="button" onclick="triggerTestIntruderStrike()" class="btn-test">🕵️ Intruder</button>
+          <button type="button" onclick="triggerTestVoiceStrike()" class="btn-test">🎙️ Voice &gt;2s</button>
+          <button type="button" onclick="triggerTestPhoneAwayStrike()" class="btn-test">📱 Phone Away</button>
         </div>
         <button type="button" onclick="submitExamEarly()" class="w-full py-3 bg-red-950/60 hover:bg-red-900/80 border border-red-500/40 text-red-300 rounded-xl text-xs font-bold cursor-pointer">Submit Assessment Early</button>
       </div>
@@ -278,7 +291,7 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
   <div class="bg-slate-900 border-2 border-red-600 rounded-3xl p-8 max-w-lg w-full text-center space-y-4 shadow-2xl">
     <div class="text-5xl">🛑</div>
     <h3 class="text-2xl font-black text-red-500">ASSESSMENT TERMINATED</h3>
-    <p class="text-xs text-slate-300">You have exceeded the maximum 3-strike malpractice limit. Your session has been terminated and logged.</p>
+    <p id="disqualified-reason" class="text-xs text-slate-300">You have exceeded the maximum 3-strike malpractice limit or triggered a critical continuous violation. Your session has been terminated and logged.</p>
     <button type="button" onclick="location.reload()" class="btn-d">Return to Start</button>
   </div>
 </div>
@@ -292,8 +305,22 @@ const urlParams = new URLSearchParams(window.location.search);
 const isMobileGuardMode = urlParams.get('mode') === 'phone_guard';
 let currentSessionId = urlParams.get('session') || ('TRACE-' + Math.floor(100000 + Math.random() * 900000));
 let currentStage = 'login', isPhonePaired = false, hasIdPhoto = false, hasLiveWebcam = false, isBiometricallyVerified = false, isExamActive = false;
-let strikesRemaining = 3, lastStrikeTimestamp = 0, warningDismissCooldownUntil = 0, examTimeRemaining = 45 * 60, examTimerInterval = null;
-let labCamStream = null, cachedBlazeFaceModel = null, mediaRecorder = null, recordedChunks = [], voiceDetectionTimer = 0, isLockdownBound = false;
+let strikesRemaining = 3, warningDismissCooldownUntil = 0, examTimeRemaining = 45 * 60, examTimerInterval = null;
+let labCamStream = null, cachedBlazeFaceModel = null, mediaRecorder = null, recordedChunks = [], isLockdownBound = false;
+
+// Smart Escalation State Trackers (No instant 3-strike rapid termination)
+let continuousVoiceSeconds = 0;
+let hasGivenVoiceStrikeThisStretch = false;
+let lastVoiceStrikeTime = 0;
+
+let continuousIntruderSeconds = 0;
+let hasGivenInitialIntruderStrike = false;
+let lastIntruderStrikeTime = 0;
+
+let lastMobileStrikeTime = 0;
+let lastTabStrikeTime = 0;
+let processedMobileEventIds = new Set();
+let mobilePeerConn = null;
 
 const defaultQuestions = [
   { q: "Which data structure guarantees O(1) average-time complexity for key lookup and insertion?", opts: ["Binary Search Tree", "Hash Table with Closed Addressing", "Skip List", "Sorted Array"], ans: 1 },
@@ -323,7 +350,7 @@ window.addEventListener('DOMContentLoaded', () => {
   } else {
     setTxt('desktop-session-pin', currentSessionId);
     renderPairingQR();
-    initDesktopRelay();
+    initDesktopRelayAndPolling();
     initDesktopPeer();
     setupTabSwitchFocusGuard();
   }
@@ -340,17 +367,65 @@ function copyPairingLink() {
 }
 function initDesktopPeer() {
   if (typeof Peer === 'undefined') return;
-  try { new Peer(currentSessionId + '-DESKTOP').on('connection', conn => conn.on('data', data => handleMobileGuardMessage(data))); } catch(e){}
+  try {
+    const peer = new Peer(currentSessionId + '-DESKTOP');
+    peer.on('connection', conn => {
+      conn.on('data', data => handleMobileGuardMessage(data));
+    });
+  } catch(e){}
 }
-function initDesktopRelay() {
+function initDesktopRelayAndPolling() {
   const topic = `trace_sync_${currentSessionId.replace(/[^a-zA-Z0-9]/g, '')}`;
-  try { new EventSource(`https://ntfy.sh/${topic}/sse`).onmessage = evt => { try { const p = JSON.parse(evt.data); if (p.message) handleMobileGuardMessage(JSON.parse(p.message)); } catch(e){} }; } catch(e){}
+  // 1. Live SSE stream
+  try {
+    const es = new EventSource(`https://ntfy.sh/${topic}/sse`);
+    es.onmessage = evt => {
+      try {
+        const p = JSON.parse(evt.data);
+        if (p.message) handleMobileGuardMessage(JSON.parse(p.message));
+      } catch(e){}
+    };
+  } catch(e){}
+
+  // 2. Redundant 1.2-second HTTP Polling fallback (catches mobile alerts even if SSE is blocked)
+  setInterval(async () => {
+    try {
+      const res = await fetch(`https://ntfy.sh/${topic}/json?poll=1&since=4s`);
+      const text = await res.text();
+      text.trim().split('\n').forEach(line => {
+        if (!line) return;
+        try {
+          const outer = JSON.parse(line);
+          if (outer.message) {
+            const inner = JSON.parse(outer.message);
+            handleMobileGuardMessage(inner);
+          }
+        } catch(e){}
+      });
+    } catch(e){}
+  }, 1200);
 }
+
 function handleMobileGuardMessage(msg) {
   if (!msg) return;
-  if (msg.type === 'PHONE_CONNECTED' || msg.type === 'HEARTBEAT') markPhoneAsPaired();
-  else if (msg.type === 'VIOLATION') applyStrike(msg.reason || "Mobile Desk Guard Alert: Phone Moved Away From Monitor Screen");
+  if (msg.id && processedMobileEventIds.has(msg.id)) return;
+  if (msg.id) processedMobileEventIds.add(msg.id);
+
+  if (msg.type === 'PHONE_CONNECTED' || msg.type === 'HEARTBEAT') {
+    markPhoneAsPaired();
+    setTxt('exam-phone-status', 'LOCKED ✓', 'text-emerald-400 font-bold');
+  } else if (msg.type === 'VIOLATION') {
+    markPhoneAsPaired();
+    setTxt('exam-phone-status', 'ALERT ⚠️', 'text-red-400 font-bold animate-pulse');
+    // Trigger 1 mobile strike with 20-second category cooldown so moving phone never rapid-terminates
+    const now = Date.now();
+    if (now - lastMobileStrikeTime > 20000) {
+      lastMobileStrikeTime = now;
+      applyStrike(msg.reason || "Mobile Desk Guard Alert: Phone Display Moved Away From Monitor", 'mobile');
+    }
+  }
 }
+
 function confirmPhoneConnectedManual() { markPhoneAsPaired(); proceedToBiometricStage(); }
 function markPhoneAsPaired() {
   if (isPhonePaired) return;
@@ -367,20 +442,103 @@ function proceedToBiometricStage() {
   startLabWebcam();
 }
 
+// ==================== MOBILE PHONE GUARD RUNTIME (TAB SWITCH + GYRO + VISION FLOW) ====================
+function sendMobileViolationNow(reason) {
+  const topic = `trace_sync_${currentSessionId.replace(/[^a-zA-Z0-9]/g, '')}`;
+  const payload = { id: 'mob_' + Date.now() + '_' + Math.random(), type: 'VIOLATION', reason, ts: Date.now() };
+  if (mobilePeerConn && mobilePeerConn.open) {
+    try { mobilePeerConn.send(payload); } catch(e){}
+  }
+  fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify(payload) }).catch(()=>{});
+  setTxt('mobile-banner-title', '⚠️ VIOLATION TRANSMITTED TO DESKTOP', 'text-sm font-bold text-red-400');
+  setTxt('mobile-monitor-val', 'AWAY / ALERT ❌', 'text-red-400 font-bold text-sm mt-0.5');
+}
+
 async function startMobileGuardMode() {
   setTxt('mobile-pin-badge', `PIN: ${currentSessionId}`);
   const topic = `trace_sync_${currentSessionId.replace(/[^a-zA-Z0-9]/g, '')}`;
-  const sendAlert = (type, reason = '') => fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify({ type, reason, ts: Date.now() }) }).catch(()=>{});
-  sendAlert('PHONE_CONNECTED');
-  setInterval(() => sendAlert('HEARTBEAT'), 3000);
-  try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }); if ($('mobile-cam-video')) { $('mobile-cam-video').srcObject = stream; $('mobile-cam-video').play().catch(()=>{}); } } catch(e){}
-  let lastMobViolation = 0;
+
+  const sendSignal = (type, reason = '') => {
+    const payload = { id: 'sig_' + Date.now() + '_' + Math.random(), type, reason, ts: Date.now() };
+    if (mobilePeerConn && mobilePeerConn.open) {
+      try { mobilePeerConn.send(payload); } catch(e){}
+    }
+    fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify(payload) }).catch(()=>{});
+  };
+
+  // Connect WebRTC PeerJS directly to desktop
+  if (typeof Peer !== 'undefined') {
+    try {
+      const peer = new Peer();
+      peer.on('open', () => {
+        mobilePeerConn = peer.connect(currentSessionId + '-DESKTOP');
+        mobilePeerConn.on('open', () => sendSignal('PHONE_CONNECTED'));
+      });
+    } catch(e){}
+  }
+
+  sendSignal('PHONE_CONNECTED');
+  setInterval(() => sendSignal('HEARTBEAT'), 2500);
+
+  // 1. Mobile Tab Switch / App Minimize Detection on Phone!
+  let lastMobTabAlert = 0;
+  const triggerMobileTabSwitch = () => {
+    if (Date.now() - lastMobTabAlert > 5000) {
+      lastMobTabAlert = Date.now();
+      sendMobileViolationNow("Mobile Desk Guard Alert: Candidate Switched Tabs or Minimized Browser on Mobile Phone");
+    }
+  };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) triggerMobileTabSwitch(); });
+  window.addEventListener('pagehide', triggerMobileTabSwitch);
+  window.addEventListener('blur', triggerMobileTabSwitch);
+
+  // 2. Mobile Camera Stream + 250ms Optical Flow Monitor-Lock Detector (works even if Gyro isn't supported)
+  let prevFrameLuma = null;
+  let consecutiveMotionFrames = 0;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    const vid = $('mobile-cam-video');
+    if (vid) { vid.srcObject = stream; vid.play().catch(()=>{}); }
+
+    const canvas = $('mobile-vision-canvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    setInterval(() => {
+      if (!vid || vid.readyState < 2 || !ctx) return;
+      ctx.drawImage(vid, 0, 0, 64, 48);
+      const data = ctx.getImageData(0, 0, 64, 48).data;
+      let currLuma = new Float32Array(64 * 48);
+      let diffSum = 0;
+      for (let i = 0; i < currLuma.length; i++) {
+        currLuma[i] = 0.299 * data[i*4] + 0.587 * data[i*4+1] + 0.114 * data[i*4+2];
+        if (prevFrameLuma) diffSum += Math.abs(currLuma[i] - prevFrameLuma[i]);
+      }
+      prevFrameLuma = currLuma;
+      const avgDiff = diffSum / currLuma.length;
+      // Large camera movement or pointing away from monitor screen
+      if (avgDiff > 28) {
+        consecutiveMotionFrames++;
+        if (consecutiveMotionFrames >= 2) {
+          consecutiveMotionFrames = 0;
+          sendMobileViolationNow("Mobile Desk Guard Alert: Phone Display Moved Away From Monitor View");
+        }
+      } else {
+        consecutiveMotionFrames = 0;
+      }
+    }, 300);
+  } catch(e){}
+
+  // 3. 60Hz Gyroscope / Accelerometer Orientation Guard
+  let lastGyroAlert = 0;
   window.addEventListener('deviceorientation', e => {
-    const beta = e.beta || 0;
-    if (Math.abs(beta) < 28 || Math.abs(beta) > 155) {
+    if (e.beta === null) return;
+    const beta = e.beta;
+    if (Math.abs(beta) < 26 || Math.abs(beta) > 155) {
       setTxt('mobile-pitch-val', `Tilted Away (${Math.round(beta)}°)`, "text-red-400 font-bold text-sm mt-0.5");
       setTxt('mobile-monitor-val', "AWAY FROM MONITOR ❌", "text-red-400 font-bold text-sm mt-0.5");
-      if (Date.now() - lastMobViolation > 3500) { lastMobViolation = Date.now(); sendAlert('VIOLATION', 'Mobile Desk Guard Alert: Phone Screen Turned Away From Monitor / Laid Flat'); }
+      if (Date.now() - lastGyroAlert > 6000) {
+        lastGyroAlert = Date.now();
+        sendMobileViolationNow("Mobile Desk Guard Alert: Phone Display Tilted Away From Monitor / Laid Flat");
+      }
     } else {
       setTxt('mobile-pitch-val', `Upright (${Math.round(beta)}° OK)`, "text-emerald-400 font-bold text-sm mt-0.5");
       setTxt('mobile-monitor-val', "LOCKED ON MONITOR ✓", "text-emerald-400 font-bold text-sm mt-0.5");
@@ -388,6 +546,7 @@ async function startMobileGuardMode() {
   });
 }
 
+// ==================== STEP 2: 1:1 BIOMETRICS (LEFT ID UPLOAD ONLY, RIGHT LIVE CAMERA) ====================
 async function getBlazeFaceModel() {
   if (cachedBlazeFaceModel) return cachedBlazeFaceModel;
   if (typeof blazeface !== 'undefined') { try { cachedBlazeFaceModel = await blazeface.load(); } catch(e){} }
@@ -467,6 +626,7 @@ function lockBiometricMatchInstant() {
   drawBiometricOverlays(true);
 }
 
+// ==================== STEP 3: ACTIVE EXAM & SMART ESCALATION ENGINE ====================
 function startAssessment() {
   if (!isBiometricallyVerified) lockBiometricMatchInstant();
   currentStage = 'exam';
@@ -476,11 +636,12 @@ function startAssessment() {
   if ($('proctor-cam-video') && labCamStream) { $('proctor-cam-video').srcObject = labCamStream; $('proctor-cam-video').play().catch(()=>{}); }
   renderQuestion();
   startExamTimer();
-  startDesktopGazeAndIntruderMonitor();
-  startContinuousVoiceMonitoring();
+  startDesktopIntruderAndGazeMonitor();
+  startSmartVoiceEscalationMonitor();
   startFullSessionRecording();
   activateExamBrowserLockdown();
 }
+
 function renderQuestion() {
   const q = questions[currentQuestionIdx] || questions[0];
   setTxt('question-number-badge', `Question ${currentQuestionIdx + 1} of ${questions.length}`);
@@ -510,23 +671,61 @@ function startExamTimer() {
     if (examTimeRemaining <= 0) finishExam(false);
   }, 1000);
 }
-function startDesktopGazeAndIntruderMonitor() {
+
+// SMART INTRUDER ESCALATION:
+// - Gives EXACTLY 1 strike when an intruder (2+ faces) appears.
+// - Does NOT give another strike while they remain in frame UNTIL > 30.0 seconds of continuous intruder presence!
+function startDesktopIntruderAndGazeMonitor() {
   let awayCount = 0;
   setInterval(async () => {
-    if (!isExamActive || Date.now() < warningDismissCooldownUntil) return;
+    if (!isExamActive) return;
     const video = $('proctor-cam-video');
     if (!video || video.readyState < 2) return;
     const model = await getBlazeFaceModel();
     if (!model) return;
     try {
       const faces = await model.estimateFaces(video, false);
-      if (faces && faces.length > 1) { awayCount = 0; applyStrike(`Intruder Detected: Multiple Faces (${faces.length} Persons) Detected in Camera View`); return; }
-      if (!faces || faces.length === 0) { if (++awayCount >= 3) { awayCount = 0; applyStrike("Candidate Face Missing From Camera View (Looked Away From Monitor)"); } }
-      else awayCount = 0;
+      if (faces && faces.length > 1) {
+        awayCount = 0;
+        continuousIntruderSeconds += 0.4;
+        updateLiveTimersHud();
+
+        // 1st Strike: When intruder first detected (after 0.8s confirmation)
+        if (!hasGivenInitialIntruderStrike && continuousIntruderSeconds >= 0.8) {
+          hasGivenInitialIntruderStrike = true;
+          lastIntruderStrikeTime = Date.now();
+          applyStrike(`Intruder Detected: Multiple Faces (${faces.length} Persons) in Camera View (1 Strike Deducted)`, 'intruder');
+        }
+        // Escalation Strike: Only if intruder stays continuously for > 30.0 seconds!
+        else if (hasGivenInitialIntruderStrike && continuousIntruderSeconds >= 30.0) {
+          continuousIntruderSeconds = 0.8; // Reset 30s counter for next window
+          lastIntruderStrikeTime = Date.now();
+          applyStrike("Extended Intruder Alert: Unauthorized Person Remained in Camera View for Over 30 Seconds", 'intruder_extended');
+        }
+        return;
+      } else {
+        // Decay intruder timer when alone
+        continuousIntruderSeconds = Math.max(0, continuousIntruderSeconds - 0.4);
+        if (continuousIntruderSeconds === 0 && (Date.now() - lastIntruderStrikeTime > 15000)) {
+          hasGivenInitialIntruderStrike = false;
+        }
+        updateLiveTimersHud();
+      }
+
+      if (!faces || faces.length === 0) {
+        if (++awayCount >= 6) {
+          awayCount = 0;
+          applyStrike("Candidate Face Missing From Camera View (Looked Away From Monitor)", 'gaze');
+        }
+      } else {
+        awayCount = 0;
+      }
     } catch(e){}
   }, 400);
 }
-function startContinuousVoiceMonitoring() {
+
+// SMART VOICE ESCALATION (> 2.0s = 1 Strike Only; > 12.0s continuous stretch = Immediate Termination)
+function startSmartVoiceEscalationMonitor() {
   if (!labCamStream) return;
   try {
     const tracks = labCamStream.getAudioTracks();
@@ -536,19 +735,57 @@ function startContinuousVoiceMonitoring() {
     analyser.fftSize = 256;
     ctx.createMediaStreamSource(new MediaStream([tracks[0]])).connect(analyser);
     const data = new Uint8Array(analyser.frequencyBinCount);
+    let silenceAccumulator = 0;
+
     setInterval(() => {
-      if (!isExamActive || Date.now() < warningDismissCooldownUntil) return;
+      if (!isExamActive) return;
       analyser.getByteFrequencyData(data);
       const avg = data.reduce((a, b) => a + b, 0) / data.length;
+
       if (avg > 24) {
-        voiceDetectionTimer += 0.1;
-        if (voiceDetectionTimer >= 2.0) { voiceDetectionTimer = 0; applyStrike("Continuous Voice / Speech Detected (> 2.0s - Unauthorized Verbal Discussion)"); }
-      } else voiceDetectionTimer = Math.max(0, voiceDetectionTimer - 0.15);
+        silenceAccumulator = 0;
+        continuousVoiceSeconds += 0.1;
+        updateLiveTimersHud();
+
+        // Rule 1: At 2.0 seconds of speech -> Give EXACTLY ONE Strike for this speaking stretch
+        if (continuousVoiceSeconds >= 2.0 && !hasGivenVoiceStrikeThisStretch) {
+          if (Date.now() - lastVoiceStrikeTime > 15000) {
+            hasGivenVoiceStrikeThisStretch = true;
+            lastVoiceStrikeTime = Date.now();
+            applyStrike("Continuous Voice Detected (> 2.0s - Unauthorized Verbal Discussion - 1 Strike Deducted)", 'voice');
+          }
+        }
+
+        // Rule 2: If speaking continuously for > 12.0 seconds in a stretch -> Terminate Exam Immediately!
+        if (continuousVoiceSeconds >= 12.0) {
+          terminateExamImmediately("Exam Terminated: Continuous Unauthorized Speech Exceeded 12 Seconds in a Single Stretch.");
+        }
+      } else {
+        silenceAccumulator += 0.1;
+        // Require 2.0 seconds of silence before resetting the continuous stretch counter
+        if (silenceAccumulator >= 2.0) {
+          continuousVoiceSeconds = 0;
+          hasGivenVoiceStrikeThisStretch = false;
+          updateLiveTimersHud();
+        }
+      }
     }, 100);
   } catch(e){}
 }
-function triggerTestIntruderStrike() { applyStrike("Intruder Detected: Multiple Faces Detected in Camera View (Unauthorized Second Person Present)", true); }
-function triggerTestVoiceStrike() { applyStrike("Continuous Voice / Speech Detected (> 2.0s - Unauthorized Verbal Discussion)", true); }
+
+function updateLiveTimersHud() {
+  setTxt('live-timers-hud', `Voice: ${continuousVoiceSeconds.toFixed(1)}s | Intruder: ${continuousIntruderSeconds.toFixed(1)}s`);
+}
+
+function triggerTestIntruderStrike() {
+  applyStrike("Intruder Detected: Multiple Faces Detected in Camera View (1 Strike Deducted)", 'test', true);
+}
+function triggerTestVoiceStrike() {
+  applyStrike("Continuous Voice Detected (> 2.0s - Unauthorized Verbal Discussion - 1 Strike Deducted)", 'test', true);
+}
+function triggerTestPhoneAwayStrike() {
+  applyStrike("Mobile Desk Guard Alert: Phone Display Moved Away From Monitor Screen (1 Strike Deducted)", 'test', true);
+}
 
 function activateExamBrowserLockdown() {
   try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); } catch(e){}
@@ -557,7 +794,7 @@ function activateExamBrowserLockdown() {
   ['copy', 'cut', 'paste'].forEach(evt => document.addEventListener(evt, e => {
     if (!isExamActive) return;
     e.preventDefault();
-    applyStrike(`Malpractice Blocked: Unauthorized ${evt.toUpperCase()} Clipboard Action Attempted`);
+    applyStrike(`Malpractice Blocked: Unauthorized ${evt.toUpperCase()} Clipboard Action Attempted`, 'clipboard');
   }));
   document.addEventListener('contextmenu', e => { if (isExamActive) e.preventDefault(); });
   window.addEventListener('keydown', e => {
@@ -565,20 +802,32 @@ function activateExamBrowserLockdown() {
     const k = e.key.toLowerCase(), ctrl = e.ctrlKey || e.metaKey;
     if (e.key === 'F12' || (ctrl && e.shiftKey && ['i','j','c','g','s'].includes(k)) || (e.altKey && k === 'g') || (ctrl && ['c','v','x','f','p','s','u'].includes(k))) {
       e.preventDefault(); e.stopPropagation();
-      applyStrike("Malpractice Blocked: Unauthorized Keyboard Shortcut or Browser AI Assistant (Gemini / Copilot) Invoked");
+      applyStrike("Malpractice Blocked: Unauthorized Keyboard Shortcut or Browser AI Assistant (Gemini / Copilot) Invoked", 'shortcut');
       return false;
     }
   }, true);
   window.addEventListener('resize', () => {
     if (isExamActive && Date.now() >= warningDismissCooldownUntil && (window.outerWidth - window.innerWidth > 185)) {
-      applyStrike("Unauthorized Browser Side-Panel Detected (Chrome Gemini / AI Side-Panel Must Remain Closed)");
+      applyStrike("Unauthorized Browser Side-Panel Detected (Chrome Gemini / AI Side-Panel Must Remain Closed)", 'sidepanel');
     }
   });
 }
+
 function setupTabSwitchFocusGuard() {
-  document.addEventListener('visibilitychange', () => { if (document.hidden && isExamActive) applyStrike("Tab Switch / Browser Window Minimized During Assessment"); });
-  window.addEventListener('blur', () => { if (isExamActive && Date.now() >= warningDismissCooldownUntil) applyStrike("Window Focus Lost (Switched Away From Assessment Tab / Application)"); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && isExamActive && (Date.now() - lastTabStrikeTime > 12000)) {
+      lastTabStrikeTime = Date.now();
+      applyStrike("Tab Switch / Browser Window Minimized During Assessment", 'tab');
+    }
+  });
+  window.addEventListener('blur', () => {
+    if (isExamActive && Date.now() >= warningDismissCooldownUntil && (Date.now() - lastTabStrikeTime > 12000)) {
+      lastTabStrikeTime = Date.now();
+      applyStrike("Window Focus Lost (Switched Away From Assessment Tab / Application)", 'tab');
+    }
+  });
 }
+
 function startFullSessionRecording() {
   if (!labCamStream) return;
   try {
@@ -593,38 +842,60 @@ function startFullSessionRecording() {
     mediaRecorder.start(1000);
   } catch(e){}
 }
-function applyStrike(reason, forceImmediate = false) {
+
+// ==================== CONTROLLED STRIKE ENGINE (NEVER TERMINATES IN ONE GO) ====================
+function isWarningModalOpen() {
+  const modal = $('modal-warning');
+  return modal && !modal.classList.contains('hidden');
+}
+
+function applyStrike(reason, category = 'general', forceImmediate = false) {
   if (strikesRemaining <= 0 || currentStage === 'completed' || (!isExamActive && !forceImmediate)) return;
-  const now = Date.now();
-  if (!forceImmediate && now < warningDismissCooldownUntil) return;
-  if (now - lastStrikeTimestamp < 1500) return;
-  lastStrikeTimestamp = now;
+
+  // CRITICAL FIX: If the Warning Modal is currently open on screen, DO NOT deduct additional strikes!
+  // This guarantees the candidate only receives 1 strike per incident and can acknowledge it without rapid termination.
+  if (!forceImmediate && isWarningModalOpen()) return;
+  if (!forceImmediate && Date.now() < warningDismissCooldownUntil) return;
+
   strikesRemaining--;
   const consumed = 3 - strikesRemaining;
   setTxt('exam-strikes-display', `${consumed}/3`);
   syncToGoogleSheet('logViolation', { violation: reason, strike: consumed, remaining: strikesRemaining });
-  if (strikesRemaining <= 0) finishExam(true);
-  else {
+
+  if (strikesRemaining <= 0) {
+    terminateExamImmediately(`Maximum 3-Strike Malpractice Limit Reached. Final Violation: ${reason}`);
+  } else {
     setTxt('warning-reason', `Violation: ${reason}`);
     setTxt('warning-strikes-left', String(strikesRemaining));
     $('modal-warning')?.classList.remove('hidden');
   }
 }
+
+function terminateExamImmediately(reasonText) {
+  setTxt('disqualified-reason', reasonText);
+  finishExam(true);
+}
+
 function dismissWarningModal() {
-  warningDismissCooldownUntil = Date.now() + 4000;
+  warningDismissCooldownUntil = Date.now() + 5000; // 5s grace window after acknowledging warning
   $('modal-warning')?.classList.add('hidden');
 }
+
 function submitExamEarly() { if (confirm("Are you sure you want to submit your assessment now?")) finishExam(false); }
+
 function finishExam(isDisqualified = false) {
   isExamActive = false;
   if (examTimerInterval) clearInterval(examTimerInterval);
   if (mediaRecorder && mediaRecorder.state !== 'inactive') { try { mediaRecorder.stop(); } catch(e){} }
   if (labCamStream) { try { labCamStream.getTracks().forEach(t => t.stop()); } catch(e){} }
+  $('modal-warning')?.classList.add('hidden');
+
   if (isDisqualified) {
     $('modal-disqualified')?.classList.remove('hidden');
     syncToGoogleSheet('submitScore', { score: 0, status: 'DISQUALIFIED', integrity: 0 });
     return;
   }
+
   let correct = 0;
   questions.forEach((q, idx) => { if (userAnswers[idx] === q.ans) correct++; });
   const scorePct = Math.round((correct / questions.length) * 100);
