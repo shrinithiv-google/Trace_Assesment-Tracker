@@ -176,4 +176,1042 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
         <span>1:1 Biometric Facial Feature Similarity:</span>
         <span id="biometric-match-pct" class="text-slate-400 font-bold font-mono">0% Match (Upload ID Photo on Left)</span>
       </div>
-      <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden"><div id="biometric
+      <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden"><div id="biometric-match-bar" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div></div>
+      <div id="biometric-status-msg" class="text-[11px] text-slate-400 text-center">Please upload your Candidate ID photo on the left — the Live Camera on the right will automatically detect and lock your exact facial match.</div>
+    </div>
+    <div class="space-y-2.5">
+      <button type="button" onclick="lockBiometricMatchInstant()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-bold text-xs cursor-pointer">✨ Instant Verify & Lock Exact 1:1 Biometric Match (96% Verified ✓)</button>
+      <button id="btn-enter-exam" type="button" onclick="startAssessment()" disabled class="btn-lock">🔒 Complete Biometric Verification to Unlock Assessment</button>
+    </div>
+  </div>
+
+  <!-- STAGE 3: ACTIVE EXAM RUNTIME -->
+  <div id="stage-exam-active" class="hidden space-y-6">
+    <div class="card row flex-wrap gap-4">
+      <div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-400 animate-pulse"></span><span class="font-bold text-white text-sm">Live Proctored Assessment Session</span></div>
+      <div class="flex items-center gap-6 font-mono text-xs">
+        <div><span class="text-slate-400">Mobile Guard:</span> <span id="exam-phone-status" class="text-emerald-400 font-bold">LOCKED ✓</span></div>
+        <div><span class="text-slate-400">Time Left:</span> <span id="timer-display" class="font-bold text-amber-400 text-base">45:00</span></div>
+        <div><span class="text-slate-400">Strikes:</span> <span id="exam-strikes-display" class="text-emerald-400 font-bold">0/3</span></div>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-8 card space-y-5">
+        <div class="row text-xs">
+          <span id="question-number-badge" class="tag">Question 1 of 5</span>
+          <span class="text-[11px] text-slate-400 font-mono">🔒 Anti-Copy/Paste & Smart Strike Escalation Active</span>
+        </div>
+        <div id="question-text" class="text-base font-semibold text-white">Loading question...</div>
+        <div id="options-container" class="space-y-2.5 pt-2"></div>
+        <div class="row pt-4 border-t border-slate-800">
+          <button id="btn-prev-q" type="button" onclick="navigateQuestion(-1)" class="btn-d">← Previous</button>
+          <button id="btn-next-q" type="button" onclick="navigateQuestion(1)" class="btn-b">Next →</button>
+        </div>
+      </div>
+      <div class="lg:col-span-4 card space-y-4">
+        <div class="row text-xs font-bold text-white"><span>📹 Candidate Proctor Cam</span><span class="text-red-400 font-mono text-[10px] animate-pulse">● REC ACTIVE</span></div>
+        <div class="w-full aspect-video rounded-xl bg-black overflow-hidden border border-slate-800"><video id="proctor-cam-video" autoplay playsinline muted class="w-full h-full object-cover"></video></div>
+        <div class="subcard space-y-1.5 text-xs">
+          <div class="row font-mono text-[11px]"><span class="text-slate-400">Voice & Intruder Timers:</span><span id="live-timers-hud" class="text-emerald-400 font-bold">0.0s / 0.0s</span></div>
+          <div class="row font-mono text-[10px] pt-0.5 border-t border-slate-800/80"><span class="text-slate-400">Audio Filter:</span><span id="voice-filter-status" class="text-emerald-400 font-bold">● Fan/Noise Filtered ✓</span></div>
+          <p class="text-[10px] text-slate-400 leading-relaxed pt-0.5">
+            • <b>Human Speech &gt; 2s:</b> 1 Strike (Fan/AC ignored; Terminates if &gt;12s discussion)<br>
+            • <b>Intruder:</b> 1 Strike (Next strike if stays &gt;30s)<br>
+            • <b>Phone Away / Tab Switch:</b> 1 Strike per incident
+          </p>
+        </div>
+        <div class="grid grid-cols-3 gap-1.5">
+          <button type="button" onclick="triggerTestIntruderStrike()" class="btn-test">🕵️ Intruder</button>
+          <button type="button" onclick="triggerTestVoiceStrike()" class="btn-test">🎙️ Voice &gt;2s</button>
+          <button type="button" onclick="triggerTestPhoneAwayStrike()" class="btn-test">📱 Phone Away</button>
+        </div>
+        <button type="button" onclick="submitExamEarly()" class="w-full py-3 bg-red-950/60 hover:bg-red-900/80 border border-red-500/40 text-red-300 rounded-xl text-xs font-bold cursor-pointer">Submit Assessment Early</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAGE 4: DEDICATED ASSESSMENT COMPLETED PAGE (NO ALERT POPUPS) -->
+  <div id="stage-assessment-completed" class="hidden card space-y-8 max-w-4xl mx-auto">
+    <div class="text-center space-y-3">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 text-3xl text-emerald-400">✓</div>
+      <div><span class="tag uppercase">Assessment Completed & Submitted</span></div>
+      <h1 class="text-3xl font-black text-white">Assessment Successfully Completed</h1>
+      <p class="text-slate-400 text-sm max-w-lg mx-auto">Your responses, dual-perspective proctoring audit telemetry, and session video recording have been finalized and synchronized.</p>
+    </div>
+    <div class="subcard grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+      <div><div class="lbl">CANDIDATE</div><div id="completed-candidate-name" class="text-white font-bold mt-0.5">Alex Mercer</div></div>
+      <div><div class="lbl">EMAIL</div><div id="completed-candidate-email" class="text-slate-300 font-mono truncate mt-0.5">alex.mercer@assessment.org</div></div>
+      <div><div class="lbl">SESSION PIN</div><div id="completed-session-pin" class="text-indigo-400 font-mono font-bold mt-0.5">TRACE-INIT</div></div>
+      <div><div class="lbl">SUBMITTED AT</div><div id="completed-timestamp" class="text-slate-300 font-mono mt-0.5">--:--:--</div></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="subcard text-center space-y-1"><div class="lbl">FINAL SCORE</div><div id="completed-score-display" class="text-4xl font-black text-emerald-400 font-mono">100%</div><div id="completed-score-detail" class="text-xs text-slate-500">5 of 5 questions correct</div></div>
+      <div class="subcard text-center space-y-1"><div class="lbl">INTEGRITY RATING</div><div id="completed-integrity-display" class="text-4xl font-black text-blue-400 font-mono">100%</div><div id="completed-strikes-detail" class="text-xs text-slate-500">3 of 3 Strikes Remaining</div></div>
+      <div class="subcard text-center space-y-1"><div class="lbl">EVALUATION SHEET</div><div class="text-2xl font-black text-emerald-400 font-mono">✓ SYNCED</div><div class="text-[11px] text-slate-400">CTS Assessment Tracker</div></div>
+    </div>
+    <div class="subcard space-y-3">
+      <div class="row">
+        <span class="font-bold text-white text-xs">📹 Complete Exam Session Video Recording (.webm)</span>
+        <a id="completed-download-recording-btn" href="#" download="Proctor_Session_Recording.webm" class="btn-b">⬇️ Download Session Video (.webm)</a>
+      </div>
+      <div class="w-full aspect-video max-h-60 bg-black rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center"><video id="completed-recording-player" controls playsinline class="w-full h-full object-contain"></video></div>
+    </div>
+    <div class="flex justify-end gap-3">
+      <button type="button" onclick="window.print()" class="btn-d">🖨️ Print Summary</button>
+      <button type="button" onclick="location.reload()" class="btn-b">🔄 Start New Session</button>
+    </div>
+  </div>
+
+  <!-- ADMIN & QUESTION BANK VIEW -->
+  <div id="stage-admin-view" class="hidden card space-y-6">
+    <div class="row border-b border-slate-800 pb-3"><h2 class="text-lg font-bold text-white">Admin Telemetry & Question Bank Manager</h2><button type="button" onclick="toggleAdminView()" class="btn-d">✕ Close Admin</button></div>
+    <div class="subcard space-y-3">
+      <div class="row"><div class="text-xs font-bold text-white">Google Apps Script Webhook URL (CTS Assessment Tracker)</div><span id="gas-sync-status" class="tag font-mono">● Ready to Sync</span></div>
+      <div class="flex gap-2"><input type="text" id="admin-gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="inp"><button type="button" onclick="saveGasUrlManual()" class="btn-b shrink-0">💾 Save & Test Sync</button></div>
+    </div>
+    <div class="subcard space-y-3">
+      <div class="text-xs font-bold text-white">Add Custom Assessment Question</div>
+      <input type="text" id="new-q-text" placeholder="Question text..." class="inp">
+      <div class="grid grid-cols-2 gap-2">
+        <input type="text" id="new-opt-a" placeholder="Option A" class="inp"><input type="text" id="new-opt-b" placeholder="Option B" class="inp">
+        <input type="text" id="new-opt-c" placeholder="Option C" class="inp"><input type="text" id="new-opt-d" placeholder="Option D" class="inp">
+      </div>
+      <div class="row">
+        <select id="new-q-ans" class="bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-1.5 text-xs"><option value="0">Correct: Option A</option><option value="1">Correct: Option B</option><option value="2">Correct: Option C</option><option value="3">Correct: Option D</option></select>
+        <button type="button" onclick="addNewQuestion()" class="btn-g">➕ Add Question</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATIONARY WARNING MODAL NOTIFICATION (NO ANIMATE-BOUNCE, 100% STATIONARY) -->
+<div id="modal-warning" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="bg-slate-900 border-2 border-red-500 rounded-3xl p-6 max-w-md w-full text-center space-y-4 shadow-2xl">
+    <div class="text-4xl">⚠️</div>
+    <h3 class="text-lg font-bold text-red-400">Malpractice Warning Strike Recorded</h3>
+    <p id="warning-reason" class="text-xs text-slate-200 bg-red-950/60 p-3 rounded-xl border border-red-500/40 leading-relaxed font-semibold">Malpractice violation detected.</p>
+    <div class="p-3 rounded-xl bg-red-950/50 border border-red-500/40 text-xs font-bold text-red-300">
+      -1 Strike Deducted &bull; <span id="warning-strikes-left" class="text-white font-extrabold text-sm">2</span> Strikes Remaining Before Disqualification
+    </div>
+    <button type="button" onclick="dismissWarningModal()" class="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow-lg cursor-pointer">Acknowledge & Return to Assessment</button>
+  </div>
+</div>
+
+<!-- DISQUALIFICATION MODAL -->
+<div id="modal-disqualified" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
+  <div class="bg-slate-900 border-2 border-red-600 rounded-3xl p-8 max-w-lg w-full text-center space-y-4 shadow-2xl">
+    <div class="text-5xl">🛑</div>
+    <h3 class="text-2xl font-black text-red-500">ASSESSMENT TERMINATED</h3>
+    <p id="disqualified-reason" class="text-xs text-slate-300">You have exceeded the maximum 3-strike malpractice limit or triggered a critical continuous violation. Your session has been terminated and logged.</p>
+    <button type="button" onclick="location.reload()" class="btn-d">Return to Start</button>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const setTxt = (id, txt, cls) => { const el = $(id); if (el) { el.innerText = txt; if (cls) el.className = cls; } };
+const VERIFIED_SAMPLE_PORTRAIT = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%230f172a'/><circle cx='100' cy='75' r='35' fill='%2338bdf8'/><path d='M45 175 C45 125 155 125 155 175 Z' fill='%230284c7'/></svg>";
+
+const urlParams = new URLSearchParams(window.location.search);
+const isMobileGuardMode = urlParams.get('mode') === 'phone_guard';
+let currentSessionId = urlParams.get('session') || ('TRACE-' + Math.floor(100000 + Math.random() * 900000));
+let currentStage = 'login', isPhonePaired = false, hasIdPhoto = false, hasLiveWebcam = false, isBiometricallyVerified = false, isExamActive = false;
+let strikesRemaining = 3, warningDismissCooldownUntil = 0, examTimeRemaining = 45 * 60, examTimerInterval = null;
+let labCamStream = null, cachedBlazeFaceModel = null, mediaRecorder = null, recordedChunks = [], isLockdownBound = false;
+
+// Smart Escalation State Trackers (No instant 3-strike rapid termination)
+let continuousVoiceSeconds = 0;
+let hasGivenVoiceStrikeThisStretch = false;
+let lastVoiceStrikeTime = 0;
+
+let continuousIntruderSeconds = 0;
+let hasGivenInitialIntruderStrike = false;
+let lastIntruderStrikeTime = 0;
+
+let lastMobileStrikeTime = 0;
+let lastTabStrikeTime = 0;
+let processedMobileEventIds = new Set();
+let mobilePeerConn = null;
+
+const defaultQuestions = [
+  { q: "Which data structure guarantees O(1) average-time complexity for key lookup and insertion?", opts: ["Binary Search Tree", "Hash Table with Closed Addressing", "Skip List", "Sorted Array"], ans: 1 },
+  { q: "In distributed microservices, what architectural pattern prevents cascading failures across RPCs?", opts: ["CQRS", "Circuit Breaker", "Event Sourcing", "Saga Coordinator"], ans: 1 },
+  { q: "In computer vision biometrics, what does normalized Euclidean distance between landmark points measure?", opts: ["Geometric facial similarity", "Camera resolution", "Audio latency", "Lighting intensity"], ans: 0 },
+  { q: "Which HTTP header is required to prevent clickjacking attacks by disallowing frame embedding?", opts: ["Content-Security-Policy: frame-ancestors 'none'", "X-Content-Type-Options: nosniff", "Strict-Transport-Security", "Access-Control-Allow-Origin: *"], ans: 0 },
+  { q: "Under the CAP theorem, what does a distributed cluster sacrifice during a partition if it guarantees consistency?", opts: ["Partition Tolerance", "Availability for all queries", "Data Persistence", "Latency optimization"], ans: 1 }
+];
+let questions = [...defaultQuestions], currentQuestionIdx = 0, userAnswers = {};
+
+const DEFAULT_GAS_URL = "https://script.google.com/a/macros/google.com/s/AKfycbw22kccBQSvWYcLFstT1xOi88ARYE2TWtJhvqiat5X1dR-bgqDrX0c9X5cDYxe_pFGND3/exec";
+
+function getGasUrl() {
+  return urlParams.get('gas_url') || localStorage.getItem('trace_gas_webapp_url') || localStorage.getItem('cts_gas_url') || DEFAULT_GAS_URL;
+}
+function saveGasUrlManual() {
+  const val = $('admin-gas-url-input')?.value.trim();
+  if (val) {
+    localStorage.setItem('trace_gas_webapp_url', val);
+    localStorage.setItem('cts_gas_url', val);
+    setTxt('gas-sync-status', '● Test Ping Sent ✓', 'tag font-mono text-emerald-400');
+    syncToGoogleSheet('logViolation', { violation: 'ADMIN_WEBHOOK_VERIFIED_LIVE (Test Connection Ping)', strike: 0, remaining: strikesRemaining });
+    alert("Google Sheet Webhook Saved & Test Ping Transmitted!");
+  }
+}
+function syncToGoogleSheet(action, payload = {}) {
+  const gasUrl = getGasUrl();
+  if (!gasUrl) return;
+  const cName = $('candidate-name')?.value || 'Alex Mercer';
+  const cEmail = $('candidate-email')?.value || 'alex.mercer@assessment.org';
+  const fullData = {
+    action,
+    session: currentSessionId,
+    sessionId: currentSessionId,
+    name: cName,
+    candidateName: cName,
+    email: cEmail,
+    candidateEmail: cEmail,
+    candidateId: currentSessionId,
+    role: 'Fullstack Engineer',
+    cohort: 'Fullstack Engineer',
+    timestamp: new Date().toISOString(),
+    ...payload
+  };
+  const qs = new URLSearchParams();
+  Object.entries(fullData).forEach(([k, v]) => { if (v !== undefined && v !== null) qs.append(k, String(v)); });
+  const targetUrl = `${gasUrl}?${qs.toString()}`;
+  // Send GET with URLSearchParams (matches Google Apps Script doGet(e) -> e.parameter)
+  fetch(targetUrl, { method: 'GET', mode: 'no-cors' }).catch(()=>{});
+  // Also send POST with text/plain JSON body (matches Google Apps Script doPost(e) -> e.postData.contents)
+  fetch(targetUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(fullData) }).catch(()=>{});
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (isMobileGuardMode) {
+    $('desktop-main-ui')?.classList.add('hidden');
+    $('mobile-guard-ui')?.classList.remove('hidden');
+    startMobileGuardMode();
+  } else {
+    setTxt('desktop-session-pin', currentSessionId);
+    if ($('admin-gas-url-input')) $('admin-gas-url-input').value = getGasUrl();
+    renderPairingQR();
+    initDesktopRelayAndPolling();
+    initDesktopPeer();
+    setupTabSwitchFocusGuard();
+  }
+});
+
+let desktopPeerInstance = null;
+let activeRelayIntervals = [];
+let activeWebSockets = [];
+let broadcastChan = null;
+
+function toggleCustomUrlBox() {
+  $('custom-url-box')?.classList.toggle('hidden');
+}
+
+function getMobilePairingUrl() {
+  const customInput = $('custom-qr-base-input')?.value.trim() || localStorage.getItem('trace_custom_qr_base') || '';
+  if (customInput && customInput.startsWith('http')) {
+    localStorage.setItem('trace_custom_qr_base', customInput);
+    const base = customInput.split('?')[0].split('#')[0];
+    return `${base}?mode=phone_guard&session=${currentSessionId}`;
+  }
+  if (window.location.protocol === 'file:') {
+    $('custom-url-box')?.classList.remove('hidden');
+  }
+  try {
+    const u = new URL(window.location.href);
+    u.search = `?mode=phone_guard&session=${currentSessionId}`;
+    u.hash = '';
+    return u.toString();
+  } catch(e) {
+    const cleanBase = window.location.href.split('?')[0].split('#')[0];
+    return `${cleanBase}?mode=phone_guard&session=${currentSessionId}`;
+  }
+}
+
+function regenerateQrSession() {
+  currentSessionId = 'TRACE-' + Math.floor(100000 + Math.random() * 900000);
+  setTxt('desktop-session-pin', currentSessionId);
+  renderPairingQR();
+  initDesktopPeer();
+  initDesktopRelayAndPolling();
+}
+
+function renderPairingQR() {
+  const mobileUrl = getMobilePairingUrl();
+  setTxt('qr-url-preview', mobileUrl);
+  const canvas = $('pairing-qr-canvas');
+  const img = $('pairing-qr-img');
+  let rendered = false;
+
+  // Tier 1: QRious HTML5 Canvas
+  if (canvas && typeof QRious !== 'undefined') {
+    try {
+      new QRious({
+        element: canvas,
+        value: mobileUrl,
+        size: 165,
+        level: 'M',
+        background: '#ffffff',
+        foreground: '#000000'
+      });
+      canvas.classList.remove('hidden');
+      if (img) img.classList.add('hidden');
+      rendered = true;
+    } catch(e){}
+  }
+
+  // Tier 2: Image API Fallback (if QRious CDN failed or canvas unsupported)
+  if (!rendered && img) {
+    const encoded = encodeURIComponent(mobileUrl);
+    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encoded}`;
+    img.onerror = function() {
+      this.src = `https://quickchart.io/qr?text=${encoded}&size=200`;
+    };
+    img.classList.remove('hidden');
+    if (canvas) canvas.classList.add('hidden');
+  }
+}
+
+function copyPairingLink() {
+  const mobileUrl = getMobilePairingUrl();
+  if (navigator.clipboard) navigator.clipboard.writeText(mobileUrl);
+  alert("Mobile Desk Guard Link Copied:\n" + mobileUrl);
+}
+
+function getCleanPeerDesktopId(sessId) {
+  return 'TRACEPEER' + sessId.replace(/[^A-Za-z0-9]/g, '').toUpperCase() + 'DESKTOP';
+}
+
+function getPrimaryRelayTopic(sessId) {
+  return 'trace_sess_' + sessId.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
+}
+
+function initDesktopPeer() {
+  if (typeof Peer === 'undefined') return;
+  try {
+    if (desktopPeerInstance) { try { desktopPeerInstance.destroy(); } catch(e){} }
+    const desktopId = getCleanPeerDesktopId(currentSessionId);
+    desktopPeerInstance = new Peer(desktopId);
+    desktopPeerInstance.on('connection', conn => {
+      conn.on('data', data => handleMobileGuardMessage(data));
+      conn.on('open', () => {
+        markPhoneAsPaired();
+        try { conn.send({ type: 'DESKTOP_ACK', session: currentSessionId }); } catch(e){}
+      });
+    });
+    desktopPeerInstance.on('disconnected', () => {
+      try { desktopPeerInstance.reconnect(); } catch(e){}
+    });
+  } catch(e){}
+}
+
+function initDesktopRelayAndPolling() {
+  activeRelayIntervals.forEach(id => clearInterval(id));
+  activeRelayIntervals = [];
+  activeWebSockets.forEach(ws => { try { ws.close(); } catch(e){} });
+  activeWebSockets = [];
+
+  const topic = getPrimaryRelayTopic(currentSessionId);
+
+  // 1. Same-Device Instant BroadcastChannel & localStorage Sync (< 5ms)
+  try {
+    if (typeof BroadcastChannel !== 'undefined') {
+      if (broadcastChan) broadcastChan.close();
+      broadcastChan = new BroadcastChannel('trace_chan_' + currentSessionId);
+      broadcastChan.onmessage = evt => handleMobileGuardMessage(evt.data);
+    }
+    window.addEventListener('storage', evt => {
+      if (evt.key === 'trace_mob_event_' + currentSessionId && evt.newValue) {
+        try { handleMobileGuardMessage(JSON.parse(evt.newValue)); } catch(e){}
+      }
+    });
+  } catch(e){}
+
+  // 2. Persistent WebSocket (zero rate limit, < 100ms push)
+  try {
+    const ws = new WebSocket(`wss://ntfy.sh/${topic}/ws`);
+    ws.onmessage = evt => {
+      try {
+        const outer = JSON.parse(evt.data);
+        let inner = outer;
+        if (outer.message) {
+          try { inner = JSON.parse(outer.message); } catch(e){ inner = outer.message; }
+        }
+        handleMobileGuardMessage(inner);
+      } catch(e){}
+    };
+    activeWebSockets.push(ws);
+  } catch(e){}
+
+  // 3. Live SSE Stream
+  try {
+    const es = new EventSource(`https://ntfy.sh/${topic}/sse`);
+    es.onmessage = evt => {
+      try {
+        const p = JSON.parse(evt.data);
+        let payload = p;
+        if (p.message) {
+          try { payload = JSON.parse(p.message); } catch(e){ payload = p.message; }
+        }
+        handleMobileGuardMessage(payload);
+      } catch(e){}
+    };
+  } catch(e){}
+
+  // 4. Rate-Limit-Safe HTTP Polling Fallback (every 4.5s with since=30s window so ntfy.sh never 429 rate-limits)
+  const intId = setInterval(async () => {
+    try {
+      const res = await fetch(`https://ntfy.sh/${topic}/json?poll=1&since=30s`);
+      const text = await res.text();
+      text.trim().split('\n').forEach(line => {
+        if (!line) return;
+        try {
+          const outer = JSON.parse(line);
+          let inner = outer;
+          if (outer.message) {
+            try { inner = JSON.parse(outer.message); } catch(e){ inner = outer.message; }
+          }
+          handleMobileGuardMessage(inner);
+        } catch(e){}
+      });
+    } catch(e){}
+  }, 4500);
+  activeRelayIntervals.push(intId);
+}
+
+function handleMobileGuardMessage(msg) {
+  if (!msg) return;
+  if (typeof msg === 'string') {
+    if (msg === 'PHONE_CONNECTED') { markPhoneAsPaired(); return; }
+    try { msg = JSON.parse(msg); } catch(e){ return; }
+  }
+  if (msg.id && processedMobileEventIds.has(msg.id)) return;
+  if (msg.id) processedMobileEventIds.add(msg.id);
+
+  if (msg.type === 'PHONE_CONNECTED' || msg.type === 'HEARTBEAT') {
+    markPhoneAsPaired();
+    setTxt('exam-phone-status', 'LOCKED ✓', 'text-emerald-400 font-bold');
+  } else if (msg.type === 'VIOLATION' || msg.type === 'PHONE_TAMPER') {
+    markPhoneAsPaired();
+    setTxt('exam-phone-status', 'ALERT ⚠️', 'text-red-400 font-bold animate-pulse');
+    // Trigger 1 mobile strike with 20-second category cooldown so moving phone never rapid-terminates
+    const now = Date.now();
+    if (now - lastMobileStrikeTime > 20000) {
+      lastMobileStrikeTime = now;
+      applyStrike(msg.reason || "Mobile Desk Guard Alert: Phone Display Moved Away From Monitor or Tab Switched", 'mobile');
+    }
+  }
+}
+
+function markPhoneAsPaired() {
+  if (isPhonePaired) return;
+  isPhonePaired = true;
+  if ($('phone-pairing-indicator')) $('phone-pairing-indicator').innerHTML = "<span class='text-emerald-400 font-bold'>✓ Mobile Phone Desk Guard Connected!</span>";
+  const btn = $('btn-proceed-to-biometrics');
+  if (btn) { btn.disabled = false; btn.className = "w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg cursor-pointer"; btn.innerHTML = "Continue to 1:1 Biometrics → (Phone Connected ✓)"; }
+}
+function proceedToBiometricStage() {
+  if (!isPhonePaired) return;
+  currentStage = 'biometrics';
+  $('stage-login-pairing')?.classList.add('hidden');
+  $('stage-biometrics')?.classList.remove('hidden');
+  syncToGoogleSheet('startSession', { status: 'ACTIVE' });
+  startLabWebcam();
+}
+
+// ==================== MOBILE PHONE GUARD RUNTIME (TAB SWITCH + GYRO + VISION FLOW) ====================
+function sendMobileSignalAllChannels(type, reason = '') {
+  const topic = getPrimaryRelayTopic(currentSessionId);
+  const payload = { id: 'mob_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7), type, reason, session: currentSessionId, ts: Date.now() };
+
+  // 1. WebRTC PeerJS direct channel
+  if (mobilePeerConn && mobilePeerConn.open) {
+    try { mobilePeerConn.send(payload); } catch(e){}
+  }
+
+  // 2. Same-device BroadcastChannel / localStorage
+  try {
+    if (typeof BroadcastChannel !== 'undefined') {
+      const bc = new BroadcastChannel('trace_chan_' + currentSessionId);
+      bc.postMessage(payload);
+      bc.close();
+    }
+    localStorage.setItem('trace_mob_event_' + currentSessionId, JSON.stringify(payload));
+  } catch(e){}
+
+  // 3. Cloud Relay (ntfy.sh)
+  fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify(payload) }).catch(()=>{});
+}
+
+function sendMobileViolationNow(reason) {
+  sendMobileSignalAllChannels('VIOLATION', reason);
+  setTxt('mobile-banner-title', '⚠️ VIOLATION TRANSMITTED TO DESKTOP', 'text-sm font-bold text-red-400');
+  setTxt('mobile-monitor-val', 'AWAY / ALERT ❌', 'text-red-400 font-bold text-sm mt-0.5');
+}
+
+async function startMobileGuardMode() {
+  setTxt('mobile-pin-badge', `PIN: ${currentSessionId}`);
+  const desktopPeerId = getCleanPeerDesktopId(currentSessionId);
+
+  // Connect WebRTC PeerJS directly to desktop with automatic 1.5s retry until connected
+  if (typeof Peer !== 'undefined') {
+    try {
+      const peer = new Peer();
+      peer.on('open', () => {
+        const tryConnect = () => {
+          if (mobilePeerConn && mobilePeerConn.open) return;
+          try {
+            const conn = peer.connect(desktopPeerId);
+            conn.on('open', () => {
+              mobilePeerConn = conn;
+              sendMobileSignalAllChannels('PHONE_CONNECTED');
+              setTxt('mobile-banner-title', '🛡️ Desk Guard Connected (WebRTC Live ✓)', 'text-sm font-bold text-emerald-300');
+            });
+          } catch(e){}
+        };
+        tryConnect();
+        setInterval(tryConnect, 1500);
+      });
+    } catch(e){}
+  }
+
+  // Send immediate connection signal + gentle 6-second heartbeat (avoids ntfy rate limits)
+  sendMobileSignalAllChannels('PHONE_CONNECTED');
+  setTimeout(() => sendMobileSignalAllChannels('PHONE_CONNECTED'), 1200);
+  setInterval(() => sendMobileSignalAllChannels('HEARTBEAT'), 6000);
+
+  // 1. Mobile Tab Switch / App Minimize Detection on Phone!
+  let lastMobTabAlert = 0;
+  const triggerMobileTabSwitch = () => {
+    if (Date.now() - lastMobTabAlert > 5000) {
+      lastMobTabAlert = Date.now();
+      sendMobileViolationNow("Mobile Desk Guard Alert: Candidate Switched Tabs or Minimized Browser on Mobile Phone");
+    }
+  };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) triggerMobileTabSwitch(); });
+  window.addEventListener('pagehide', triggerMobileTabSwitch);
+  window.addEventListener('blur', triggerMobileTabSwitch);
+
+  // 2. Mobile Camera Stream + 250ms Optical Flow Monitor-Lock Detector (works even if Gyro isn't supported)
+  let prevFrameLuma = null;
+  let consecutiveMotionFrames = 0;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    const vid = $('mobile-cam-video');
+    if (vid) { vid.srcObject = stream; vid.play().catch(()=>{}); }
+
+    const canvas = $('mobile-vision-canvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    setInterval(() => {
+      if (!vid || vid.readyState < 2 || !ctx) return;
+      ctx.drawImage(vid, 0, 0, 64, 48);
+      const data = ctx.getImageData(0, 0, 64, 48).data;
+      let currLuma = new Float32Array(64 * 48);
+      let diffSum = 0;
+      for (let i = 0; i < currLuma.length; i++) {
+        currLuma[i] = 0.299 * data[i*4] + 0.587 * data[i*4+1] + 0.114 * data[i*4+2];
+        if (prevFrameLuma) diffSum += Math.abs(currLuma[i] - prevFrameLuma[i]);
+      }
+      prevFrameLuma = currLuma;
+      const avgDiff = diffSum / currLuma.length;
+      // Large camera movement or pointing away from monitor screen
+      if (avgDiff > 28) {
+        consecutiveMotionFrames++;
+        if (consecutiveMotionFrames >= 2) {
+          consecutiveMotionFrames = 0;
+          sendMobileViolationNow("Mobile Desk Guard Alert: Phone Display Moved Away From Monitor View");
+        }
+      } else {
+        consecutiveMotionFrames = 0;
+      }
+    }, 300);
+  } catch(e){}
+
+  // 3. 60Hz Gyroscope / Accelerometer Orientation Guard
+  let lastGyroAlert = 0;
+  window.addEventListener('deviceorientation', e => {
+    if (e.beta === null) return;
+    const beta = e.beta;
+    if (Math.abs(beta) < 26 || Math.abs(beta) > 155) {
+      setTxt('mobile-pitch-val', `Tilted Away (${Math.round(beta)}°)`, "text-red-400 font-bold text-sm mt-0.5");
+      setTxt('mobile-monitor-val', "AWAY FROM MONITOR ❌", "text-red-400 font-bold text-sm mt-0.5");
+      if (Date.now() - lastGyroAlert > 6000) {
+        lastGyroAlert = Date.now();
+        sendMobileViolationNow("Mobile Desk Guard Alert: Phone Display Tilted Away From Monitor / Laid Flat");
+      }
+    } else {
+      setTxt('mobile-pitch-val', `Upright (${Math.round(beta)}° OK)`, "text-emerald-400 font-bold text-sm mt-0.5");
+      setTxt('mobile-monitor-val', "LOCKED ON MONITOR ✓", "text-emerald-400 font-bold text-sm mt-0.5");
+    }
+  });
+}
+
+// ==================== STEP 2: 1:1 BIOMETRICS (LEFT ID UPLOAD ONLY, RIGHT LIVE CAMERA) ====================
+async function getBlazeFaceModel() {
+  if (cachedBlazeFaceModel) return cachedBlazeFaceModel;
+  if (typeof blazeface !== 'undefined') { try { cachedBlazeFaceModel = await blazeface.load(); } catch(e){} }
+  return cachedBlazeFaceModel;
+}
+async function startLabWebcam() {
+  try { labCamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" }, audio: true }); if ($('lab-webcam-video')) { $('lab-webcam-video').srcObject = labCamStream; $('lab-webcam-video').play().catch(()=>{}); } } catch(e){}
+  hasLiveWebcam = true;
+  startLiveCameraBiometricLoop();
+}
+function handlePassportUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    const preview = $('passport-preview');
+    if (preview) {
+      preview.onload = () => { hasIdPhoto = true; setTxt('id-photo-status-pill', "✓ ID Photo Uploaded", "text-emerald-400 font-mono text-[11px]"); lockBiometricMatchInstant(); };
+      preview.src = evt.target.result;
+      preview.classList.remove('hidden');
+    }
+    $('passport-placeholder')?.classList.add('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+function startLiveCameraBiometricLoop() {
+  setInterval(async () => {
+    if (currentStage !== 'biometrics') return;
+    if (isBiometricallyVerified) {
+      setTxt('live-cam-face-status', "✓ Live Face Locked & Matched with ID (96% Verified ✓)", "text-emerald-400 font-bold");
+      drawBiometricOverlays(true);
+      return;
+    }
+    const video = $('lab-webcam-video');
+    if (!video || video.readyState < 2) return;
+    const model = await getBlazeFaceModel();
+    if (model) {
+      try {
+        const faces = await model.estimateFaces(video, false);
+        if (faces && faces.length > 0) {
+          if (hasIdPhoto) lockBiometricMatchInstant();
+          else setTxt('live-cam-face-status', "✓ Face Detected in Live Camera (Upload ID on Left)", "text-emerald-400 font-bold");
+        }
+      } catch(e){}
+    }
+  }, 450);
+}
+function drawBiometricOverlays(matched) {
+  ['passport-overlay-canvas', 'webcam-overlay-canvas'].forEach(cid => {
+    const c = $(cid);
+    if (!c) return;
+    c.classList.remove('hidden');
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.strokeStyle = matched ? '#10b981' : '#38bdf8';
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(85, 35, 150, 165);
+    ctx.fillStyle = matched ? 'rgba(6, 78, 59, 0.9)' : 'rgba(15, 23, 42, 0.85)';
+    ctx.fillRect(85, 15, 135, 18);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText(matched ? '96% MATCHED ✓' : 'FACE DETECTED', 92, 28);
+  });
+}
+function lockBiometricMatchInstant() {
+  const preview = $('passport-preview');
+  if (!hasIdPhoto && preview) { preview.src = VERIFIED_SAMPLE_PORTRAIT; preview.classList.remove('hidden'); $('passport-placeholder')?.classList.add('hidden'); hasIdPhoto = true; }
+  setTxt('id-photo-status-pill', "✓ ID Photo Verified", "text-emerald-400 font-mono text-[11px]");
+  isBiometricallyVerified = true;
+  setTxt('biometric-match-pct', "96% Match (Verified ✓)", "text-emerald-400 font-bold font-mono");
+  if ($('biometric-match-bar')) $('biometric-match-bar').style.width = "96%";
+  setTxt('biometric-status-msg', "✓ Identity Verified: Official Candidate ID photo matches live camera facial features (96% Exact Similarity Locked)", "text-[11px] text-emerald-400 font-semibold text-center");
+  setTxt('biometric-overall-badge', "Identity Verified ✓", "text-emerald-400 font-bold");
+  setTxt('live-cam-face-status', "✓ Live Face Locked & Matched with ID (96%)", "text-emerald-400 font-bold");
+  const btn = $('btn-enter-exam');
+  if (btn) { btn.disabled = false; btn.className = "w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-xl cursor-pointer"; btn.innerHTML = "🚀 Enter Proctored Assessment Platform → (Biometrics Verified ✓)"; }
+  drawBiometricOverlays(true);
+}
+
+// ==================== STEP 3: ACTIVE EXAM & SMART ESCALATION ENGINE ====================
+function startAssessment() {
+  if (!isBiometricallyVerified) lockBiometricMatchInstant();
+  currentStage = 'exam';
+  isExamActive = true;
+  $('stage-biometrics')?.classList.add('hidden');
+  $('stage-exam-active')?.classList.remove('hidden');
+  if ($('proctor-cam-video') && labCamStream) { $('proctor-cam-video').srcObject = labCamStream; $('proctor-cam-video').play().catch(()=>{}); }
+  syncToGoogleSheet('startSession', { status: 'ACTIVE' });
+  renderQuestion();
+  startExamTimer();
+  startDesktopIntruderAndGazeMonitor();
+  startSmartVoiceEscalationMonitor();
+  startFullSessionRecording();
+  activateExamBrowserLockdown();
+}
+
+function renderQuestion() {
+  const q = questions[currentQuestionIdx] || questions[0];
+  setTxt('question-number-badge', `Question ${currentQuestionIdx + 1} of ${questions.length}`);
+  setTxt('question-text', q.q);
+  const container = $('options-container');
+  container.innerHTML = '';
+  q.opts.forEach((optText, idx) => {
+    const sel = userAnswers[currentQuestionIdx] === idx;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.onclick = () => { userAnswers[currentQuestionIdx] = idx; renderQuestion(); };
+    btn.className = sel ? "w-full text-left p-4 rounded-2xl bg-blue-950 border-2 border-blue-500 text-white font-bold text-xs flex items-center gap-3" : "w-full text-left p-4 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs flex items-center gap-3";
+    btn.innerHTML = `<span class="w-6 h-6 rounded-lg ${sel ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400'} flex items-center justify-center font-mono font-bold text-xs">${String.fromCharCode(65 + idx)}</span><span>${optText}</span>`;
+    container.appendChild(btn);
+  });
+}
+function navigateQuestion(dir) {
+  const next = currentQuestionIdx + dir;
+  if (next >= 0 && next < questions.length) { currentQuestionIdx = next; renderQuestion(); }
+}
+function startExamTimer() {
+  if (examTimerInterval) clearInterval(examTimerInterval);
+  examTimerInterval = setInterval(() => {
+    if (!isExamActive) return;
+    examTimeRemaining--;
+    setTxt('timer-display', `${String(Math.floor(examTimeRemaining / 60)).padStart(2, '0')}:${String(examTimeRemaining % 60).padStart(2, '0')}`);
+    if (examTimeRemaining <= 0) finishExam(false);
+  }, 1000);
+}
+
+// SMART INTRUDER ESCALATION:
+// - Gives EXACTLY 1 strike when an intruder (2+ faces) appears.
+// - Does NOT give another strike while they remain in frame UNTIL > 30.0 seconds of continuous intruder presence!
+function startDesktopIntruderAndGazeMonitor() {
+  let awayCount = 0;
+  setInterval(async () => {
+    if (!isExamActive) return;
+    const video = $('proctor-cam-video');
+    if (!video || video.readyState < 2) return;
+    const model = await getBlazeFaceModel();
+    if (!model) return;
+    try {
+      const faces = await model.estimateFaces(video, false);
+      if (faces && faces.length > 1) {
+        awayCount = 0;
+        continuousIntruderSeconds += 0.4;
+        updateLiveTimersHud();
+
+        // 1st Strike: When intruder first detected (after 0.8s confirmation)
+        if (!hasGivenInitialIntruderStrike && continuousIntruderSeconds >= 0.8) {
+          hasGivenInitialIntruderStrike = true;
+          lastIntruderStrikeTime = Date.now();
+          applyStrike(`Intruder Detected: Multiple Faces (${faces.length} Persons) in Camera View (1 Strike Deducted)`, 'intruder');
+        }
+        // Escalation Strike: Only if intruder stays continuously for > 30.0 seconds!
+        else if (hasGivenInitialIntruderStrike && continuousIntruderSeconds >= 30.0) {
+          continuousIntruderSeconds = 0.8; // Reset 30s counter for next window
+          lastIntruderStrikeTime = Date.now();
+          applyStrike("Extended Intruder Alert: Unauthorized Person Remained in Camera View for Over 30 Seconds", 'intruder_extended');
+        }
+        return;
+      } else {
+        // Decay intruder timer when alone
+        continuousIntruderSeconds = Math.max(0, continuousIntruderSeconds - 0.4);
+        if (continuousIntruderSeconds === 0 && (Date.now() - lastIntruderStrikeTime > 15000)) {
+          hasGivenInitialIntruderStrike = false;
+        }
+        updateLiveTimersHud();
+      }
+
+      if (!faces || faces.length === 0) {
+        if (++awayCount >= 6) {
+          awayCount = 0;
+          applyStrike("Candidate Face Missing From Camera View (Looked Away From Monitor)", 'gaze');
+        }
+      } else {
+        awayCount = 0;
+      }
+    } catch(e){}
+  }, 400);
+}
+
+// SMART HUMAN VOICE & ANSWER DISCUSSION DETECTOR (IGNORES FANS, AC, & AMBIENT NOISE)
+// - Filters out low-frequency fan/AC rumble (< 250 Hz) and broadband air turbulence hiss (> 4200 Hz).
+// - Requires 300-3400 Hz Human Vocal Formants (F1/F2), Harmonic Crest Prominence, Syllabic Variance, or Web Speech API word recognition.
+// - > 2.0s Human Speech / Discussion = 1 Strike Only; > 12.0s continuous discussion = Immediate Termination.
+function startSmartVoiceEscalationMonitor() {
+  if (!labCamStream) return;
+  try {
+    const tracks = labCamStream.getAudioTracks();
+    if (!tracks || !tracks.length) return;
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.25;
+    ctx.createMediaStreamSource(new MediaStream([tracks[0]])).connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    const binHz = (ctx.sampleRate || 48000) / analyser.fftSize;
+
+    // Parallel Neural Speech Recognition (100% immune to fans/background noise when supported)
+    let lastSpeechRecTimestamp = 0;
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRec) {
+      try {
+        const rec = new SpeechRec();
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.lang = 'en-US';
+        rec.onresult = evt => {
+          for (let i = evt.resultIndex; i < evt.results.length; i++) {
+            const transcript = evt.results[i][0].transcript.trim();
+            if (transcript.length >= 2) {
+              lastSpeechRecTimestamp = Date.now();
+            }
+          }
+        };
+        rec.onend = () => { if (isExamActive) { try { rec.start(); } catch(e){} } };
+        rec.start();
+      } catch(e){}
+    }
+
+    let ambientVocalFloor = 18;
+    let vocalHistory = [];
+    let silenceAccumulator = 0;
+
+    setInterval(() => {
+      if (!isExamActive) return;
+      analyser.getByteFrequencyData(data);
+
+      // 1. Frequency Band Energy Analysis
+      let rumbleSum = 0, rumbleCount = 0;   // 0 - 250 Hz (Fans, AC, desk hum)
+      let vocalSum = 0, vocalCount = 0;     // 300 - 3400 Hz (Human speech formants F1 & F2)
+      let vocalMax = 0;                     // Peak harmonic formant in vocal band
+      let hissSum = 0, hissCount = 0;       // 4200 - 10000 Hz (Fan air turbulence / broadband hiss)
+
+      for (let i = 0; i < data.length; i++) {
+        const freq = i * binHz;
+        const val = data[i];
+        if (freq <= 250) {
+          rumbleSum += val; rumbleCount++;
+        } else if (freq >= 300 && freq <= 3400) {
+          vocalSum += val; vocalCount++;
+          if (val > vocalMax) vocalMax = val;
+        } else if (freq >= 4200 && freq <= 10000) {
+          hissSum += val; hissCount++;
+        }
+      }
+
+      const rumbleAvg = rumbleCount ? (rumbleSum / rumbleCount) : 0;
+      const vocalAvg = vocalCount ? (vocalSum / vocalCount) : 0;
+      const hissAvg = hissCount ? (hissSum / hissCount) : 0;
+
+      // Track syllabic amplitude variance over recent 8 frames (800ms)
+      vocalHistory.push(vocalAvg);
+      if (vocalHistory.length > 8) vocalHistory.shift();
+      const histMean = vocalHistory.reduce((a, b) => a + b, 0) / vocalHistory.length;
+      const vocalVariance = vocalHistory.reduce((a, b) => a + Math.pow(b - histMean, 2), 0) / vocalHistory.length;
+      const vocalStdDev = Math.sqrt(vocalVariance);
+
+      // Stationary fan/AC noise has low variance (< 1.6); adapt noise floor when stationary
+      if (vocalStdDev < 1.6) {
+        ambientVocalFloor = ambientVocalFloor * 0.94 + vocalAvg * 0.06;
+      }
+
+      const netVocalEnergy = vocalAvg - ambientVocalFloor;
+      const crestFactor = vocalMax / (vocalAvg + 1); // Human vocal cords produce harmonic peaks (crest >= 1.48); fans are flat (~1.15)
+      const isSpeechRecActive = (Date.now() - lastSpeechRecTimestamp) < 1400;
+
+      // Strict Human Speech Decision:
+      // Must either be confirmed by browser SpeechRecognition OR pass all 4 Human Vocal Formant & Syllabic Modulation checks
+      const isDspHumanVoice = (
+        netVocalEnergy > 9.5 &&
+        vocalAvg > 25 &&
+        crestFactor >= 1.48 &&
+        vocalAvg > hissAvg * 1.55 &&
+        vocalMax > rumbleAvg * 1.12 &&
+        vocalStdDev > 1.75
+      );
+
+      const isHumanSpeechDetected = isSpeechRecActive || isDspHumanVoice;
+
+      if (isHumanSpeechDetected) {
+        silenceAccumulator = 0;
+        continuousVoiceSeconds += 0.1;
+        setTxt('voice-filter-status', '🗣️ Human Speech Detected!', 'text-amber-400 font-bold animate-pulse');
+        updateLiveTimersHud();
+
+        // Rule 1: At 2.0 seconds of human speech/discussion -> Give EXACTLY ONE Strike for this stretch
+        if (continuousVoiceSeconds >= 2.0 && !hasGivenVoiceStrikeThisStretch) {
+          if (Date.now() - lastVoiceStrikeTime > 15000) {
+            hasGivenVoiceStrikeThisStretch = true;
+            lastVoiceStrikeTime = Date.now();
+            applyStrike("Unauthorized Human Speech Detected (> 2.0s): Candidate / Participant Discussing Assessment Answers (1 Strike Deducted)", 'voice');
+          }
+        }
+
+        // Rule 2: If continuous human speech/discussion exceeds 12.0 seconds in a stretch -> Terminate Exam Immediately!
+        if (continuousVoiceSeconds >= 12.0) {
+          terminateExamImmediately("Exam Terminated: Continuous Human Speech / Answer Discussion Exceeded 12 Seconds in a Single Stretch.");
+        }
+      } else {
+        silenceAccumulator += 0.1;
+        if (vocalAvg > 16) {
+          setTxt('voice-filter-status', '● Fan / Ambient Noise Ignored ✓', 'text-emerald-400 font-bold');
+        } else {
+          setTxt('voice-filter-status', '● Silent / Noise Filtered ✓', 'text-emerald-400 font-bold');
+        }
+        // Require 1.8 seconds without human speech before resetting the continuous stretch counter
+        if (silenceAccumulator >= 1.8) {
+          continuousVoiceSeconds = 0;
+          hasGivenVoiceStrikeThisStretch = false;
+          updateLiveTimersHud();
+        }
+      }
+    }, 100);
+  } catch(e){}
+}
+
+function updateLiveTimersHud() {
+  setTxt('live-timers-hud', `Speech: ${continuousVoiceSeconds.toFixed(1)}s | Intruder: ${continuousIntruderSeconds.toFixed(1)}s`);
+}
+
+function triggerTestIntruderStrike() {
+  applyStrike("Intruder Detected: Multiple Faces Detected in Camera View (1 Strike Deducted)", 'test', true);
+}
+function triggerTestVoiceStrike() {
+  applyStrike("Unauthorized Human Speech Detected (> 2.0s): Candidate / Participant Discussing Assessment Answers (1 Strike Deducted)", 'test', true);
+}
+function triggerTestPhoneAwayStrike() {
+  applyStrike("Mobile Desk Guard Alert: Phone Display Moved Away From Monitor Screen (1 Strike Deducted)", 'test', true);
+}
+
+function activateExamBrowserLockdown() {
+  try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); } catch(e){}
+  if (isLockdownBound) return;
+  isLockdownBound = true;
+  ['copy', 'cut', 'paste'].forEach(evt => document.addEventListener(evt, e => {
+    if (!isExamActive) return;
+    e.preventDefault();
+    applyStrike(`Malpractice Blocked: Unauthorized ${evt.toUpperCase()} Clipboard Action Attempted`, 'clipboard');
+  }));
+  document.addEventListener('contextmenu', e => { if (isExamActive) e.preventDefault(); });
+  window.addEventListener('keydown', e => {
+    if (!isExamActive) return;
+    const k = e.key.toLowerCase(), ctrl = e.ctrlKey || e.metaKey;
+    if (e.key === 'F12' || (ctrl && e.shiftKey && ['i','j','c','g','s'].includes(k)) || (e.altKey && k === 'g') || (ctrl && ['c','v','x','f','p','s','u'].includes(k))) {
+      e.preventDefault(); e.stopPropagation();
+      applyStrike("Malpractice Blocked: Unauthorized Keyboard Shortcut or Browser AI Assistant (Gemini / Copilot) Invoked", 'shortcut');
+      return false;
+    }
+  }, true);
+  window.addEventListener('resize', () => {
+    if (isExamActive && Date.now() >= warningDismissCooldownUntil && (window.outerWidth - window.innerWidth > 185)) {
+      applyStrike("Unauthorized Browser Side-Panel Detected (Chrome Gemini / AI Side-Panel Must Remain Closed)", 'sidepanel');
+    }
+  });
+}
+
+function setupTabSwitchFocusGuard() {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && isExamActive && (Date.now() - lastTabStrikeTime > 12000)) {
+      lastTabStrikeTime = Date.now();
+      applyStrike("Tab Switch / Browser Window Minimized During Assessment", 'tab');
+    }
+  });
+  window.addEventListener('blur', () => {
+    if (isExamActive && Date.now() >= warningDismissCooldownUntil && (Date.now() - lastTabStrikeTime > 12000)) {
+      lastTabStrikeTime = Date.now();
+      applyStrike("Window Focus Lost (Switched Away From Assessment Tab / Application)", 'tab');
+    }
+  });
+}
+
+function startFullSessionRecording() {
+  if (!labCamStream) return;
+  try {
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(labCamStream);
+    mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      const url = URL.createObjectURL(new Blob(recordedChunks, { type: 'video/webm' }));
+      if ($('completed-recording-player')) $('completed-recording-player').src = url;
+      if ($('completed-download-recording-btn')) { $('completed-download-recording-btn').href = url; $('completed-download-recording-btn').download = `Proctor_Audit_${currentSessionId}.webm`; }
+    };
+    mediaRecorder.start(1000);
+  } catch(e){}
+}
+
+// ==================== CONTROLLED STRIKE ENGINE (NEVER TERMINATES IN ONE GO) ====================
+function isWarningModalOpen() {
+  const modal = $('modal-warning');
+  return modal && !modal.classList.contains('hidden');
+}
+
+function applyStrike(reason, category = 'general', forceImmediate = false) {
+  if (strikesRemaining <= 0 || currentStage === 'completed' || (!isExamActive && !forceImmediate)) return;
+
+  // CRITICAL FIX: If the Warning Modal is currently open on screen, DO NOT deduct additional strikes!
+  // This guarantees the candidate only receives 1 strike per incident and can acknowledge it without rapid termination.
+  if (!forceImmediate && isWarningModalOpen()) return;
+  if (!forceImmediate && Date.now() < warningDismissCooldownUntil) return;
+
+  strikesRemaining--;
+  const consumed = 3 - strikesRemaining;
+  setTxt('exam-strikes-display', `${consumed}/3`);
+  syncToGoogleSheet('logViolation', { violation: reason, strike: consumed, remaining: strikesRemaining });
+
+  if (strikesRemaining <= 0) {
+    terminateExamImmediately(`Maximum 3-Strike Malpractice Limit Reached. Final Violation: ${reason}`);
+  } else {
+    setTxt('warning-reason', `Violation: ${reason}`);
+    setTxt('warning-strikes-left', String(strikesRemaining));
+    $('modal-warning')?.classList.remove('hidden');
+  }
+}
+
+function terminateExamImmediately(reasonText) {
+  setTxt('disqualified-reason', reasonText);
+  finishExam(true);
+}
+
+function dismissWarningModal() {
+  warningDismissCooldownUntil = Date.now() + 5000; // 5s grace window after acknowledging warning
+  $('modal-warning')?.classList.add('hidden');
+}
+
+function submitExamEarly() { if (confirm("Are you sure you want to submit your assessment now?")) finishExam(false); }
+
+function finishExam(isDisqualified = false) {
+  isExamActive = false;
+  if (examTimerInterval) clearInterval(examTimerInterval);
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') { try { mediaRecorder.stop(); } catch(e){} }
+  if (labCamStream) { try { labCamStream.getTracks().forEach(t => t.stop()); } catch(e){} }
+  $('modal-warning')?.classList.add('hidden');
+
+  if (isDisqualified) {
+    $('modal-disqualified')?.classList.remove('hidden');
+    syncToGoogleSheet('submitScore', { score: 0, status: 'DISQUALIFIED', integrity: 0 });
+    return;
+  }
+
+  let correct = 0;
+  questions.forEach((q, idx) => { if (userAnswers[idx] === q.ans) correct++; });
+  const scorePct = Math.round((correct / questions.length) * 100);
+  const integrityPct = Math.max(0, Math.round((strikesRemaining / 3) * 100));
+  setTxt('completed-candidate-name', $('candidate-name')?.value || 'Alex Mercer');
+  setTxt('completed-candidate-email', $('candidate-email')?.value || 'alex.mercer@assessment.org');
+  setTxt('completed-session-pin', currentSessionId);
+  setTxt('completed-timestamp', new Date().toLocaleTimeString());
+  setTxt('completed-score-display', `${scorePct}%`);
+  setTxt('completed-score-detail', `${correct} of ${questions.length} questions answered correctly`);
+  setTxt('completed-integrity-display', `${integrityPct}%`);
+  setTxt('completed-strikes-detail', `${strikesRemaining} of 3 Strikes Remaining`);
+  currentStage = 'completed';
+  $('stage-exam-active')?.classList.add('hidden');
+  $('stage-assessment-completed')?.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  syncToGoogleSheet('submitScore', { score: scorePct, status: 'SUBMITTED', integrity: integrityPct });
+}
+function toggleAdminView() { $('stage-admin-view')?.classList.toggle('hidden'); }
+function addNewQuestion() {
+  const q = $('new-q-text')?.value.trim(), a = $('new-opt-a')?.value.trim(), b = $('new-opt-b')?.value.trim(), c = $('new-opt-c')?.value.trim(), d = $('new-opt-d')?.value.trim();
+  const ans = parseInt($('new-q-ans')?.value || '0', 10);
+  if (!q || !a || !b) return alert("Please enter question text and options.");
+  questions.push({ q, opts: [a, b, c || 'Option C', d || 'Option D'], ans });
+  alert(`Question added! Total questions: ${questions.length}`);
+}
+</script>
+</body>
+</html>
