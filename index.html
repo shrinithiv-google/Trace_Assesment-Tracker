@@ -331,78 +331,16 @@ const defaultQuestions = [
 ];
 let questions = [...defaultQuestions], currentQuestionIdx = 0, userAnswers = {};
 
-// ✅ NEW (CONNECTED TO YOUR CTS ASSESSMENT TRACKER GOOGLE SHEET):
-const DEFAULT_GAS_URL = "https://script.google.com/a/macros/google.com/s/AKfycbw22kccBQSvWYcLFstT1xOi88ARYE2TWtJhvqiat5X1dR-bgqDrX0c9X5cDYxe_pFGND3/exec";
-function getGasUrl() { return urlParams.get('gas_url') || localStorage.getItem('trace_gas_webapp_url') || DEFAULT_GAS_URL; }
+// ❌ OLD (IN YOUR PASTED CODE — HAS EMPTY "" URL):
+function getGasUrl() { return urlParams.get('gas_url') || localStorage.getItem('trace_gas_webapp_url') || "https://docs.google.com/spreadsheets/d/1f8dDNiBrjpLAUOG64dMFeqoJqI98A9KcjHRG1IOO91Q/edit?resourcekey=0-ltzgxhKkqv8GpZefIaSNvg&gid=1763260792#gid=1763260792"; }
 function saveGasUrlManual() { const val = $('admin-gas-url-input')?.value.trim(); if (val) { localStorage.setItem('trace_gas_webapp_url', val); alert("Webhook saved!"); } }
-
-function dispatchSheetTransport(baseUrl, qsString, jsonBody) {
-  if (!baseUrl) return;
-  const targetUrl = `${baseUrl}?${qsString}&_t=${Date.now()}`;
-  try {
-    const ifr = document.createElement('iframe');
-    ifr.style.display = 'none';
-    ifr.src = targetUrl;
-    document.body.appendChild(ifr);
-    setTimeout(() => { try { ifr.remove(); } catch(e){} }, 12000);
-  } catch(e){}
-  try {
-    const s = document.createElement('script');
-    s.src = targetUrl;
-    s.async = true;
-    document.body.appendChild(s);
-    setTimeout(() => { try { s.remove(); } catch(e){} }, 8000);
-    const img = new Image();
-    img.src = targetUrl;
-  } catch(e){}
-  try {
-    fetch(targetUrl, { method: 'GET', mode: 'no-cors', credentials: 'include' }).catch(()=>{});
-    fetch(targetUrl, {
-      method: 'POST', mode: 'no-cors', credentials: 'include',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: jsonBody
-    }).catch(()=>{});
-  } catch(e){}
-}
-
 function syncToGoogleSheet(action, payload = {}) {
   const gasUrl = getGasUrl();
   if (!gasUrl) return;
-  const cName = $('candidate-name')?.value?.trim() || 'Alex Mercer';
-  const cEmail = $('candidate-email')?.value?.trim() || 'alex.mercer@assessment.org';
-  const effectiveAction = (action === 'startSession') ? 'submitScore' : action;
-  let correctCount = 0;
-  try { questions.forEach((q, idx) => { if (userAnswers[idx] === q.ans) correctCount++; }); } catch(e){}
-  const liveScorePct = Math.round((correctCount / (questions.length || 5)) * 100);
-  const liveIntegrityPct = Math.max(0, Math.round((strikesRemaining / 3) * 100));
-
-  const fullData = {
-    action: effectiveAction,
-    session: currentSessionId,
-    sessionId: currentSessionId,
-    name: cName,
-    candidateName: cName,
-    email: cEmail,
-    candidateEmail: cEmail,
-    candidateId: currentSessionId,
-    role: 'Fullstack Engineer',
-    cohort: 'Fullstack Engineer',
-    score: payload.score !== undefined ? payload.score : liveScorePct,
-    integrity: payload.integrity !== undefined ? payload.integrity : liveIntegrityPct,
-    status: payload.status || (isExamActive ? 'IN_PROGRESS' : 'ACTIVE'),
-    timestamp: new Date().toISOString(),
-    ...payload
-  };
-  const qs = new URLSearchParams();
-  Object.entries(fullData).forEach(([k, v]) => { if (v !== undefined && v !== null) qs.append(k, String(v)); });
-  const qsString = qs.toString();
-  const jsonBody = JSON.stringify(fullData);
-
-  dispatchSheetTransport(gasUrl, qsString, jsonBody);
-  const publicGasUrl = gasUrl.includes('/a/macros/') ? gasUrl.replace(/\/a\/macros\/[^/]+\//, '/macros/') : gasUrl;
-  if (publicGasUrl !== gasUrl) {
-    setTimeout(() => dispatchSheetTransport(publicGasUrl, qsString, jsonBody), 900);
-  }
+  fetch(gasUrl, {
+    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, sessionId: currentSessionId, candidateName: $('candidate-name')?.value || 'Alex Mercer', candidateEmail: $('candidate-email')?.value || 'alex.mercer@assessment.org', timestamp: new Date().toISOString(), ...payload })
+  }).catch(()=>{});
 }
 
 window.addEventListener('DOMContentLoaded', () => {
