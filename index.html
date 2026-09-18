@@ -332,7 +332,7 @@ const defaultQuestions = [
 let questions = [...defaultQuestions], currentQuestionIdx = 0, userAnswers = {};
 
 // ❌ OLD (IN YOUR PASTED CODE — HAS EMPTY "" URL):
-function getGasUrl() { return urlParams.get('gas_url') || localStorage.getItem('trace_gas_webapp_url') || "https://docs.google.com/spreadsheets/d/1f8dDNiBrjpLAUOG64dMFeqoJqI98A9KcjHRG1IOO91Q/edit?resourcekey=0-ltzgxhKkqv8GpZefIaSNvg&gid=1763260792#gid=1763260792"; }
+function getGasUrl() { return urlParams.get('gas_url') || localStorage.getItem('trace_gas_webapp_url') || ""; }
 function saveGasUrlManual() { const val = $('admin-gas-url-input')?.value.trim(); if (val) { localStorage.setItem('trace_gas_webapp_url', val); alert("Webhook saved!"); } }
 function syncToGoogleSheet(action, payload = {}) {
   const gasUrl = getGasUrl();
