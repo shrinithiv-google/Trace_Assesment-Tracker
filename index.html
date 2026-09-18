@@ -297,7 +297,6 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
 </div>
 
 <script>
-const DEFAULT_GAS_URL = "https://script.google.com/a/macros/google.com/s/AKfycbw22kccBQSvWYcLFstT1xOi88ARYE2TWtJhvqiat5X1dR-bgqDrX0c9X5cDYxe_pFGND3/exec";
 const $ = id => document.getElementById(id);
 const setTxt = (id, txt, cls) => { const el = $(id); if (el) { el.innerText = txt; if (cls) el.className = cls; } };
 const VERIFIED_SAMPLE_PORTRAIT = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%230f172a'/><circle cx='100' cy='75' r='35' fill='%2338bdf8'/><path d='M45 175 C45 125 155 125 155 175 Z' fill='%230284c7'/></svg>";
@@ -332,86 +331,15 @@ const defaultQuestions = [
 ];
 let questions = [...defaultQuestions], currentQuestionIdx = 0, userAnswers = {};
 
-function getGasUrl() { return urlParams.get('gas_url') || localStorage.getItem('trace_gas_webapp_url') || DEFAULT_GAS_URL; }
+function getGasUrl() { return urlParams.get('gas_url') || localStorage.getItem('trace_gas_webapp_url') || ""; }
 function saveGasUrlManual() { const val = $('admin-gas-url-input')?.value.trim(); if (val) { localStorage.setItem('trace_gas_webapp_url', val); alert("Webhook saved!"); } }
-
-function dispatchSheetTransport(baseUrl, qsString, jsonBody) {
-  if (!baseUrl) return;
-  const targetUrl = `${baseUrl}?${qsString}&_t=${Date.now()}`;
-  // 1. Hidden iframe navigation (carries @google.com Workspace session cookies & follows 302 redirects)
-  try {
-    const ifr = document.createElement('iframe');
-    ifr.style.display = 'none';
-    ifr.src = targetUrl;
-    document.body.appendChild(ifr);
-    setTimeout(() => { try { ifr.remove(); } catch(e){} }, 12000);
-  } catch(e){}
-  // 2. Script tag & Image beacon GET fallback (bypasses CORS preflight)
-  try {
-    const s = document.createElement('script');
-    s.src = targetUrl;
-    s.async = true;
-    document.body.appendChild(s);
-    setTimeout(() => { try { s.remove(); } catch(e){} }, 8000);
-    const img = new Image();
-    img.src = targetUrl;
-  } catch(e){}
-  // 3. Fetch GET + POST (text/plain) + sendBeacon
-  try {
-    fetch(targetUrl, { method: 'GET', mode: 'no-cors', credentials: 'include' }).catch(()=>{});
-    fetch(targetUrl, {
-      method: 'POST', mode: 'no-cors', credentials: 'include',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: jsonBody
-    }).catch(()=>{});
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(targetUrl, new Blob([jsonBody], { type: 'text/plain;charset=utf-8' }));
-    }
-  } catch(e){}
-}
-
 function syncToGoogleSheet(action, payload = {}) {
   const gasUrl = getGasUrl();
   if (!gasUrl) return;
-  const cName = $('candidate-name')?.value?.trim() || 'Alex Mercer';
-  const cEmail = $('candidate-email')?.value?.trim() || 'alex.mercer@assessment.org';
-  const effectiveAction = (action === 'startSession') ? 'submitScore' : action;
-  let correctCount = 0;
-  try { questions.forEach((q, idx) => { if (userAnswers[idx] === q.ans) correctCount++; }); } catch(e){}
-  const liveScorePct = Math.round((correctCount / (questions.length || 5)) * 100);
-  const liveIntegrityPct = Math.max(0, Math.round((strikesRemaining / 3) * 100));
-
-  const fullData = {
-    action: effectiveAction,
-    originalAction: action,
-    session: currentSessionId,
-    sessionId: currentSessionId,
-    name: cName,
-    candidateName: cName,
-    email: cEmail,
-    candidateEmail: cEmail,
-    candidateId: currentSessionId,
-    role: 'Fullstack Engineer',
-    cohort: 'Fullstack Engineer',
-    score: payload.score !== undefined ? payload.score : liveScorePct,
-    integrity: payload.integrity !== undefined ? payload.integrity : liveIntegrityPct,
-    status: payload.status || (isExamActive ? 'IN_PROGRESS' : 'ACTIVE'),
-    timestamp: new Date().toISOString(),
-    ...payload
-  };
-  const qs = new URLSearchParams();
-  Object.entries(fullData).forEach(([k, v]) => { if (v !== undefined && v !== null) qs.append(k, String(v)); });
-  const qsString = qs.toString();
-  const jsonBody = JSON.stringify(fullData);
-
-  dispatchSheetTransport(gasUrl, qsString, jsonBody);
-
-  const publicGasUrl = gasUrl.includes('/a/macros/') ? gasUrl.replace(/\/a\/macros\/[^/]+\//, '/macros/') : gasUrl;
-  if (publicGasUrl !== gasUrl && effectiveAction === 'submitScore') {
-    setTimeout(() => dispatchSheetTransport(publicGasUrl, qsString, jsonBody), 900);
-  } else if (publicGasUrl !== gasUrl) {
-    fetch(`${publicGasUrl}?${qsString}`, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: jsonBody }).catch(()=>{});
-  }
+  fetch(gasUrl, {
+    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, sessionId: currentSessionId, candidateName: $('candidate-name')?.value || 'Alex Mercer', candidateEmail: $('candidate-email')?.value || 'alex.mercer@assessment.org', timestamp: new Date().toISOString(), ...payload })
+  }).catch(()=>{});
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -421,15 +349,10 @@ window.addEventListener('DOMContentLoaded', () => {
     startMobileGuardMode();
   } else {
     setTxt('desktop-session-pin', currentSessionId);
-    if ($('admin-gas-url-input')) $('admin-gas-url-input').value = getGasUrl();
     renderPairingQR();
     initDesktopRelayAndPolling();
     initDesktopPeer();
     setupTabSwitchFocusGuard();
-    setTimeout(() => syncToGoogleSheet('submitScore', { score: 0, integrity: 100, status: 'PORTAL_ACTIVE' }), 800);
-    ['candidate-name', 'candidate-email'].forEach(id => {
-      $(id)?.addEventListener('change', () => syncToGoogleSheet('submitScore', { score: 0, integrity: 100, status: 'CANDIDATE_REGISTERED' }));
-    });
   }
 });
 
@@ -509,14 +432,12 @@ function markPhoneAsPaired() {
   if ($('phone-pairing-indicator')) $('phone-pairing-indicator').innerHTML = "<span class='text-emerald-400 font-bold'>✓ Mobile Phone Desk Guard Connected!</span>";
   const btn = $('btn-proceed-to-biometrics');
   if (btn) { btn.disabled = false; btn.className = "w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg cursor-pointer"; btn.innerHTML = "Continue to 1:1 Biometrics → (Phone Connected ✓)"; }
-  syncToGoogleSheet('submitScore', { score: 0, integrity: 100, status: 'PHONE_PAIRED_ACTIVE' });
 }
 function proceedToBiometricStage() {
   if (!isPhonePaired) return;
   currentStage = 'biometrics';
   $('stage-login-pairing')?.classList.add('hidden');
   $('stage-biometrics')?.classList.remove('hidden');
-  syncToGoogleSheet('startSession', { status: 'BIOMETRICS_STAGE' });
   startLabWebcam();
 }
 
@@ -702,7 +623,6 @@ function lockBiometricMatchInstant() {
   const btn = $('btn-enter-exam');
   if (btn) { btn.disabled = false; btn.className = "w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-xl cursor-pointer"; btn.innerHTML = "🚀 Enter Proctored Assessment Platform → (Biometrics Verified ✓)"; }
   drawBiometricOverlays(true);
-  syncToGoogleSheet('submitScore', { score: 0, integrity: 100, status: 'BIOMETRICS_VERIFIED' });
 }
 
 // ==================== STEP 3: ACTIVE EXAM & SMART ESCALATION ENGINE ====================
@@ -713,7 +633,6 @@ function startAssessment() {
   $('stage-biometrics')?.classList.add('hidden');
   $('stage-exam-active')?.classList.remove('hidden');
   if ($('proctor-cam-video') && labCamStream) { $('proctor-cam-video').srcObject = labCamStream; $('proctor-cam-video').play().catch(()=>{}); }
-  syncToGoogleSheet('startSession', { status: 'EXAM_IN_PROGRESS' });
   renderQuestion();
   startExamTimer();
   startDesktopIntruderAndGazeMonitor();
@@ -732,11 +651,7 @@ function renderQuestion() {
     const sel = userAnswers[currentQuestionIdx] === idx;
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.onclick = () => {
-      userAnswers[currentQuestionIdx] = idx;
-      renderQuestion();
-      syncToGoogleSheet('submitScore', { status: 'IN_PROGRESS' });
-    };
+    btn.onclick = () => { userAnswers[currentQuestionIdx] = idx; renderQuestion(); };
     btn.className = sel ? "w-full text-left p-4 rounded-2xl bg-blue-950 border-2 border-blue-500 text-white font-bold text-xs flex items-center gap-3" : "w-full text-left p-4 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs flex items-center gap-3";
     btn.innerHTML = `<span class="w-6 h-6 rounded-lg ${sel ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400'} flex items-center justify-center font-mono font-bold text-xs">${String.fromCharCode(65 + idx)}</span><span>${optText}</span>`;
     container.appendChild(btn);
@@ -1030,10 +945,8 @@ function applyStrike(reason, category = 'general', forceImmediate = false) {
 
   strikesRemaining--;
   const consumed = 3 - strikesRemaining;
-  const liveIntegrity = Math.max(0, Math.round((strikesRemaining / 3) * 100));
   setTxt('exam-strikes-display', `${consumed}/3`);
-  syncToGoogleSheet('logViolation', { violation: reason, strike: consumed, remaining: strikesRemaining, integrity: liveIntegrity });
-  syncToGoogleSheet('submitScore', { integrity: liveIntegrity, status: strikesRemaining <= 0 ? 'DISQUALIFIED' : `STRIKE_${consumed}_OF_3` });
+  syncToGoogleSheet('logViolation', { violation: reason, strike: consumed, remaining: strikesRemaining });
 
   if (strikesRemaining <= 0) {
     terminateExamImmediately(`Maximum 3-Strike Malpractice Limit Reached. Final Violation: ${reason}`);
