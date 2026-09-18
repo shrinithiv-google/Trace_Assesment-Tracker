@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="robots" content="noai,noimageai">
 <meta name="google" content="notranslate">
-<title>Trace_Assesment -Tracker — Autonomous AI Proctoring & Assessment Platform</title>
+<title>TRACE — Autonomous AI Proctoring & Assessment Platform</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -14,336 +14,547 @@
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.10.0/dist/tf-backend-webgl.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
-body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:hidden;user-select:none}
-.font-mono{font-family:'JetBrains Mono',monospace}
-.card{background:#0f172a;border:1px solid #1e293b;border-radius:1.5rem;padding:1.5rem}
-.subcard{background:#020617;border:1px solid #1e293b;border-radius:1rem;padding:1.15rem}
-.inp{background:#020617;border:1px solid #1e293b;border-radius:.75rem;padding:.6rem .85rem;color:#fff;font-size:.75rem;width:100%;outline:none}
-.btn-b{background:#2563eb;color:#fff;font-weight:700;border-radius:.75rem;padding:.65rem 1rem;font-size:.75rem;cursor:pointer}
-.btn-g{background:#059669;color:#fff;font-weight:700;border-radius:.75rem;padding:.65rem 1rem;font-size:.75rem;cursor:pointer}
-.btn-d{background:#1e293b;color:#cbd5e1;font-weight:600;border-radius:.75rem;padding:.5rem .85rem;font-size:.75rem;border:1px solid #334155;cursor:pointer}
-.btn-lock{width:100%;padding:.9rem;background:#1e293b;color:#64748b;border-radius:.85rem;font-size:.75rem;font-weight:700;border:1px solid #334155;cursor:not-allowed}
-.btn-test{padding:.5rem;background:#020617;border:1px solid #1e293b;color:#94a3b8;border-radius:.75rem;font-size:10px;font-weight:700;cursor:pointer}
-.btn-test:hover{color:#fbbf24;border-color:#475569}
-.row{display:flex;justify-content:space-between;align-items:center}
-.cam{width:100%;aspect-ratio:4/3;border-radius:.75rem;background:#000;border:1px solid #1e293b;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-.tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:#064e3b;color:#34d399;border:1px solid #047857}
-.lbl{color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase}
-/* Stationary warning modal: explicitly prevent any jumping or bouncing */
-#modal-warning,#modal-warning>div{transform:none!important;animation:none!important}
+  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  input, textarea { user-select: text !important; -webkit-user-select: text !important; }
+  body { background: #020617; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+  .glass { background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(16px); border: 1px solid rgba(51, 65, 85, 0.65); }
+  @keyframes pulse-ring { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 0.4; } 100% { transform: scale(0.95); opacity: 0.8; } }
+  .animate-ring { animation: pulse-ring 2s infinite ease-in-out; }
 </style>
 </head>
-<body class="min-h-screen bg-slate-950 text-slate-100" data-no-ai="true">
+<body class="min-h-screen flex flex-col">
 
-<!-- MOBILE GUARD UI (?mode=phone_guard) -->
-<div id="mobile-guard-ui" class="hidden min-h-screen bg-slate-950 p-4 flex flex-col justify-between">
-  <div class="space-y-4">
-    <div class="row border-b border-slate-800 pb-3">
-      <div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-400 animate-pulse"></span><span class="font-bold text-sm text-white">TRACE Mobile Desk Guard</span></div>
-      <span id="mobile-pin-badge" class="tag font-mono">PIN: ----</span>
+<!-- ==================== MOBILE PHONE DESK GUARD MODE (?mode=phone_guard) ==================== -->
+<div id="mobile-guard-ui" class="hidden min-h-screen bg-slate-950 text-white flex flex-col justify-between p-5">
+  <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+    <div class="flex items-center gap-2.5">
+      <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
+      <span class="font-bold tracking-wider text-xs uppercase text-emerald-400">TRACE Mobile Desk Guard</span>
     </div>
-    <div id="mobile-status-banner" class="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-center space-y-1">
-      <div class="text-2xl">🛡️</div>
-      <div id="mobile-banner-title" class="text-sm font-bold text-emerald-300">Desk Guard Active & Locked on Monitor</div>
-      <p class="text-xs text-slate-300">Keep phone upright facing your computer monitor. Moving phone away, tilting flat, or switching tabs triggers an immediate desktop strike.</p>
-    </div>
-    <div class="cam">
-      <video id="mobile-cam-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
-      <canvas id="mobile-vision-canvas" width="64" height="48" class="hidden"></canvas>
-      <div class="absolute top-2 left-2 px-2 py-1 rounded bg-black/75 text-[10px] font-mono text-emerald-400">● 250ms Vision + Gyro + Tab Guard Active</div>
-    </div>
-    <div class="grid grid-cols-2 gap-3 text-xs font-mono">
-      <div class="subcard"><div class="lbl">TILT / ORIENTATION</div><div id="mobile-pitch-val" class="text-emerald-400 font-bold text-sm mt-0.5">Upright (OK)</div></div>
-      <div class="subcard"><div class="lbl">MONITOR IN VIEW</div><div id="mobile-monitor-val" class="text-emerald-400 font-bold text-sm mt-0.5">LOCKED ✓</div></div>
-    </div>
-    <button type="button" onclick="sendMobileViolationNow('Mobile Desk Guard: Phone Display Moved Away From Monitor Screen')" class="w-full py-2.5 bg-red-950/70 border border-red-500/40 text-red-300 rounded-xl text-xs font-bold">
-      📱 Test / Simulate Phone Moved Away Strike
-    </button>
+    <span id="mobile-pin-badge" class="font-mono text-xs bg-slate-900 px-3 py-1 rounded-full border border-slate-700 text-blue-400">PIN: ----</span>
   </div>
-  <div class="pt-4 border-t border-slate-800 text-center text-[11px] text-slate-500 font-mono">Connected to Desktop Session • Real-Time Dual-Perspective Proctoring</div>
+
+  <div class="my-4 flex flex-col items-center text-center">
+    <div id="mobile-status-circle" class="w-32 h-32 rounded-full border-4 border-emerald-500/80 flex flex-col items-center justify-center bg-emerald-950/30 shadow-2xl mb-3 relative overflow-hidden">
+      <video id="mobile-cam-video" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover opacity-55"></video>
+      <canvas id="mobile-vision-canvas" width="64" height="48" class="hidden"></canvas>
+      <div class="relative z-10 bg-slate-950/85 px-2.5 py-1 rounded-lg border border-emerald-500/40">
+        <span class="text-[10px] uppercase tracking-widest text-emerald-300 font-bold block">360° Desk Guard</span>
+        <span id="mobile-live-indicator" class="text-sm font-extrabold text-white">LOCKED ✓</span>
+      </div>
+    </div>
+
+    <div id="mobile-orientation-banner" class="w-full max-w-xs p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 mb-3">
+      <div id="mobile-banner-title" class="text-xs font-bold text-emerald-300">✓ Phone Paired & Pointed at Monitor</div>
+      <div id="mobile-banner-sub" class="text-[11px] text-slate-300 mt-0.5">Keep this browser tab open and aimed at your computer screen. Switching tabs or moving phone away triggers a strike on desktop.</div>
+    </div>
+
+    <div class="w-full max-w-xs bg-slate-900/90 border border-slate-800 rounded-xl p-3 text-left text-xs space-y-2">
+      <div class="grid grid-cols-2 gap-2">
+        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800">
+          <div class="text-[10px] text-slate-400">Tilt / Pitch</div>
+          <div id="mobile-pitch-val" class="text-emerald-400 font-bold text-sm mt-0.5">78° Upright</div>
+        </div>
+        <div class="bg-slate-950 p-2 rounded-lg border border-slate-800">
+          <div class="text-[10px] text-slate-400">Monitor Lock</div>
+          <div id="mobile-monitor-val" class="text-emerald-400 font-bold text-sm mt-0.5">LOCKED ✓</div>
+        </div>
+      </div>
+      <button onclick="sendMobileViolationNow('Mobile Desk Guard Alert: Phone Display Moved Away From Monitor Screen')" class="w-full py-2 rounded-lg bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/40 text-amber-300 font-bold text-[11px]">
+        ⚡ Send Test Phone-Away Alert to Desktop
+      </button>
+    </div>
+  </div>
+
+  <div class="text-center text-[11px] text-slate-500 border-t border-slate-900 pt-3">
+    TRACE Dual-Camera Proctoring Link • Real-Time Cloud + WebRTC Sync
+  </div>
 </div>
 
-<!-- DESKTOP MAIN INTERFACE -->
-<div id="desktop-main-ui" class="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
-  <header class="row card flex-wrap gap-4">
+<!-- ==================== DESKTOP MAIN INTERFACE ==================== -->
+<div id="desktop-main-ui" class="flex-1 flex flex-col">
+  <header class="border-b border-slate-800/80 bg-slate-950/90 backdrop-blur sticky top-0 z-30 px-6 py-3 flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <div class="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white text-lg">T</div>
+      <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white shadow-lg shadow-blue-600/30">T</div>
       <div>
-        <div class="flex items-center gap-2"><h1 class="font-extrabold text-white text-base">Trace_Assesment -Tracker</h1><span class="tag font-mono">v4.9 SMART ESCALATION</span></div>
-        <p class="text-xs text-slate-400">Autonomous Dual-Perspective Proctoring & Anti-Malpractice Assessment</p>
+        <div class="flex items-center gap-2">
+          <span class="font-extrabold tracking-tight text-white text-base">TRACE</span>
+          <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">Trace_Assesment -Tracker • v4.9</span>
+        </div>
+        <p class="text-[11px] text-slate-400">Autonomous Dual-Device Biometric & Acoustic Assessment Platform</p>
       </div>
     </div>
-    <button type="button" onclick="toggleAdminView()" class="btn-d">⚙️ Admin / Question Bank</button>
+
+    <div class="flex items-center gap-3">
+      <div class="hidden md:flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-xs">
+        <span class="text-slate-400">Session PIN:</span>
+        <span id="desktop-session-pin" class="font-mono font-bold text-blue-400">TRACE-0000</span>
+      </div>
+      <a href="https://docs.google.com/spreadsheets/d/1f8dDNiBrjpLAUOG64dMFeqoJqI98A9KcjHRG1IOO91Q/edit" target="_blank" class="px-3 py-1.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-1.5">
+        <span>📊 Live Google Sheet</span>
+      </a>
+      <button onclick="toggleAdminView()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-semibold">
+        ⚙️ Admin / Questions
+      </button>
+    </div>
   </header>
 
-  <!-- STAGE 1: CANDIDATE LOGIN & MOBILE PHONE PAIRING -->
-  <div id="stage-login-pairing" class="card space-y-6">
-    <div class="row border-b border-slate-800 pb-3">
-      <div>
-        <span class="tag">STEP 1 OF 2</span>
-        <h2 class="text-xl font-bold text-white mt-1">Candidate Registration & Mobile Desk Guard Pairing</h2>
-        <p class="text-xs text-slate-400">Pair your mobile phone as a secondary desk camera facing your computer monitor.</p>
-      </div>
-      <div class="text-right font-mono"><div class="lbl">SESSION PIN</div><div id="desktop-session-pin" class="text-sm font-bold text-indigo-400">TRACE-INIT</div></div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-      <div class="md:col-span-6 space-y-4">
-        <div><label class="block text-xs font-bold text-slate-300 mb-1">Candidate Full Name</label><input type="text" id="candidate-name" value="Alex Mercer" class="inp"></div>
-        <div><label class="block text-xs font-bold text-slate-300 mb-1">Official Email Address</label><input type="email" id="candidate-email" value="alex.mercer@assessment.org" class="inp"></div>
-        <div class="subcard space-y-1 text-xs">
-          <div class="font-bold text-slate-200">📱 Mobile Desk Guard Instructions:</div>
-          <p class="text-slate-400 text-[11px]">1. Scan QR code with your phone camera.<br>2. Prop phone upright facing your monitor screen.<br>3. Moving phone away, laying flat, or switching phone tabs triggers a 1-strike warning.</p>
-        </div>
-      </div>
-      <div class="md:col-span-6 subcard flex flex-col items-center text-center space-y-3">
-        <div class="text-xs font-bold text-white">Scan with Mobile Phone Camera</div>
-        <div class="p-3 bg-white rounded-2xl"><canvas id="pairing-qr-canvas" width="140" height="140"></canvas></div>
-        <div id="phone-pairing-indicator" class="text-xs font-mono text-amber-400">● Waiting for mobile phone scan...</div>
-        <div class="flex flex-wrap justify-center gap-2 w-full">
-          <button type="button" onclick="copyPairingLink()" class="btn-d">🔗 Copy Mobile Link</button>
-        </div>
-      </div>
-    </div>
-    <button id="btn-proceed-to-biometrics" type="button" onclick="proceedToBiometricStage()" disabled class="btn-lock">🔒 Scan QR Code with Mobile Phone to Unlock Next Step</button>
-  </div>
+  <main class="flex-1 max-w-6xl w-full mx-auto p-6 flex flex-col justify-center">
 
-  <!-- STAGE 2: 1:1 BIOMETRICS (LEFT = UPLOAD CANDIDATE ID ONLY, RIGHT = LIVE CAMERA REAL-TIME DETECTION) -->
-  <div id="stage-biometrics" class="hidden card space-y-6">
-    <div class="row border-b border-slate-800 pb-3">
-      <div>
-        <span class="tag">STEP 2 OF 2</span>
-        <h2 class="text-xl font-bold text-white mt-1">1:1 Biometric Facial Feature Comparison</h2>
-        <p class="text-xs text-slate-400">Upload your official Candidate ID photo on the left — the Live Camera on the right detects and compares your facial features in real time.</p>
-      </div>
-      <div class="text-xs text-slate-400 font-mono">Status: <span id="biometric-overall-badge" class="text-amber-400 font-bold">Awaiting ID Upload</span></div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- 1. LEFT COLUMN: ONLY OFFICIAL CANDIDATE ID PHOTO UPLOAD -->
-      <div class="subcard space-y-3 flex flex-col justify-between">
+    <!-- ==================== STEP 1: CANDIDATE LOGIN + MANDATORY PHONE QR PAIRING ==================== -->
+    <section id="stage-login-pairing" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      <div class="lg:col-span-7 glass rounded-3xl p-6 flex flex-col justify-between">
         <div>
-          <div class="row text-xs font-bold text-slate-300 mb-3">
-            <span>1. Official Candidate ID Photo</span>
-            <span id="id-photo-status-pill" class="text-amber-400 font-mono text-[11px]">Upload Required</span>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-4">
+            <span>Step 1 of 3 • Candidate Registration & Mobile Desk Guard</span>
           </div>
-          <div class="cam bg-slate-900">
-            <img id="passport-preview" src="" class="w-full h-full object-cover hidden" alt="Candidate ID">
-            <canvas id="passport-overlay-canvas" width="320" height="240" class="absolute inset-0 w-full h-full pointer-events-none hidden"></canvas>
-            <div id="passport-placeholder" class="text-center p-6 text-slate-400 text-xs space-y-2">
-              <div class="text-4xl">🪪</div>
-              <div class="font-bold text-slate-200">Upload Official Candidate ID Photo</div>
-              <p class="text-[11px] text-slate-500">Select a clear candidate ID photo on the left for 1:1 facial landmark verification against the live camera feed on the right.</p>
+          <h1 class="text-2xl font-extrabold text-white tracking-tight mb-2">Candidate Onboarding & Security Lock</h1>
+          <p class="text-xs text-slate-400 mb-5">
+            Enter your candidate credentials and scan the QR code with your smartphone to activate the secondary 360° Desk Guard camera before entering the 1:1 Biometric Verification Lobby.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Candidate Full Name</label>
+              <input id="candidate-name" type="text" value="Alex Mercer" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-blue-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Official Candidate Email</label>
+              <input id="candidate-email" type="email" value="alex.mercer@assessment.org" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-blue-500 focus:outline-none">
+            </div>
+          </div>
+
+          <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 mb-4">
+            <div class="text-xs font-bold text-slate-200 mb-2">🛡️ Active Proctoring Escalation Rules (3-Strike Policy)</div>
+            <ul class="text-[11px] text-slate-400 space-y-1.5">
+              <li>• <strong class="text-slate-200">1:1 ID vs Live Webcam Verification:</strong> Upload your ID photo on the left and verify your live face on the right.</li>
+              <li>• <strong class="text-emerald-300">Smart Voice Escalation:</strong> Fan & ambient noise ignored. Continuous speech &gt; 2s triggers <strong>1 Strike</strong>; only if you continue talking past <strong>10s</strong> is a 2nd strike added.</li>
+              <li>• <strong class="text-emerald-300">Smart Intruder Escalation:</strong> 2nd person in frame triggers <strong>1 Strike</strong> initially; only if they remain in frame past <strong>30s</strong> is a 2nd strike added.</li>
+              <li>• <strong class="text-emerald-300">Mobile Phone Guard:</strong> Switching tabs on your phone or tilting/moving the phone away from the monitor triggers a Desk Guard strike on your computer.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 flex flex-col gap-2">
+          <button id="btn-proceed-to-biometrics" disabled onclick="proceedToBiometricStage()" class="w-full py-3.5 rounded-xl bg-slate-800 text-slate-500 font-bold text-xs cursor-not-allowed transition flex items-center justify-center gap-2">
+            <span>🔒 Scan QR Code on Phone First to Unlock Biometric Lobby</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: Mobile QR Code Pairing Card -->
+      <div class="lg:col-span-5 glass rounded-3xl p-6 flex flex-col items-center justify-between text-center border border-blue-500/30">
+        <div class="w-full">
+          <div class="flex items-center justify-between text-xs mb-2">
+            <span class="font-bold text-blue-400 uppercase tracking-wider">📱 Mandatory Phone Guard</span>
+            <span id="phone-pairing-indicator" class="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[11px]">Waiting for Phone Scan...</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mb-3">
+            Scan with your phone camera. Place your phone propped up on your desk pointing at your computer screen.
+          </p>
+        </div>
+
+        <div class="bg-white p-3.5 rounded-2xl shadow-xl my-1">
+          <canvas id="pairing-qr-canvas" width="140" height="140"></canvas>
+        </div>
+
+        <div class="w-full space-y-2 mt-3">
+          <div class="flex gap-2">
+            <button onclick="copyPairingLink()" class="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-[11px] font-semibold">
+              📋 Copy Mobile Link
+            </button>
+            <button onclick="markPhoneAsPaired()" class="flex-1 py-2 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold">
+              ✓ Phone Connected (Verify / Demo)
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== STEP 2: 1:1 BIOMETRIC FACIAL & ID MATCHING LOBBY ==================== -->
+    <section id="stage-biometrics" class="hidden glass rounded-3xl p-6 border border-blue-500/30">
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4 mb-5">
+        <div>
+          <span class="text-[11px] font-mono uppercase text-blue-400 font-bold">Step 2 of 3 • Dual-Panel 1:1 Facial Biometric Comparison</span>
+          <h2 class="text-xl font-extrabold text-white mt-0.5">Candidate ID Photo vs. Live Camera Facial Match</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="biometric-overall-badge" class="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold">
+            Awaiting 1:1 Biometric Match...
+          </span>
+        </div>
+      </div>
+
+      <!-- Strictly Upload on Left, Live Camera Only on Right -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Left Panel: Official ID / Passport Photo Upload ONLY -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-slate-200">1. Reference Candidate ID / Passport Photo</span>
+              <span id="id-photo-status-pill" class="text-[11px] font-mono text-amber-400">Upload ID Photo</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mb-3">
+              Upload your government ID card or passport portrait photo from your computer for 1:1 biometric feature comparison.
+            </p>
+          </div>
+
+          <div class="relative w-full h-56 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center overflow-hidden mb-3">
+            <img id="passport-preview" alt="Reference ID" class="hidden w-full h-full object-contain">
+            <canvas id="id-face-canvas" width="320" height="220" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+            <div id="passport-placeholder" class="text-center p-4">
+              <div class="text-3xl mb-2">🪪</div>
+              <div class="text-xs font-bold text-slate-300">No Reference ID Photo Uploaded Yet</div>
+              <div class="text-[11px] text-slate-500 mt-1">Click below to upload an ID photo (PNG / JPG)</div>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <label class="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs text-center cursor-pointer transition shadow-lg">
+              📁 Upload Official ID / Passport Photo
+              <input type="file" accept="image/*" class="hidden" onchange="handlePassportUpload(event)">
+            </label>
+          </div>
+        </div>
+
+        <!-- Right Panel: Live Proctoring Webcam Stream & Facial Mesh -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-slate-200">2. Live Candidate Webcam Feed (BlazeFace AI)</span>
+              <span id="live-cam-face-status" class="text-[11px] font-mono text-emerald-400">Scanning Live Face...</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mb-3">
+              Position your face centered in the webcam frame. Ensure only 1 person is visible and lighting is clear.
+            </p>
+          </div>
+
+          <div class="relative w-full h-56 rounded-xl bg-slate-950 border border-slate-800 overflow-hidden mb-3">
+            <video id="lab-webcam-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+            <canvas id="live-face-canvas" width="320" height="220" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5">
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-400">1:1 Facial Descriptor Similarity Score:</span>
+              <span id="biometric-match-pct" class="font-mono font-bold text-amber-400">Waiting for ID + Live Face...</span>
+            </div>
+            <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div id="biometric-match-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <div id="biometric-status-msg" class="text-[11px] text-slate-400 mt-1.5 text-center">
+              Upload your ID photo on the left or click Verify &amp; Lock 1:1 Match below.
             </div>
           </div>
         </div>
-        <label class="btn-b text-center block">
-          📁 Upload Candidate ID Photo
-          <input type="file" accept="image/*" onchange="handlePassportUpload(event)" class="hidden">
-        </label>
       </div>
 
-      <!-- 2. RIGHT COLUMN: LIVE CAMERA REAL-TIME FACIAL FEATURE DETECTION -->
-      <div class="subcard space-y-3 flex flex-col justify-between">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button onclick="lockBiometricMatchInstant()" class="sm:w-1/3 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-emerald-500/40 text-emerald-300 font-bold text-xs cursor-pointer">
+          ⚡ Verify &amp; Lock 1:1 Facial Match Now
+        </button>
+        <button id="btn-enter-exam" disabled onclick="startAssessment()" class="sm:w-2/3 py-4 rounded-2xl bg-slate-800 text-slate-500 font-bold text-sm cursor-not-allowed transition">
+          🔒 Complete 1:1 Facial Match Above to Launch Proctored Exam
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== STEP 3: ACTIVE PROCTORED EXAM ENVIRONMENT ==================== -->
+    <section id="stage-exam-active" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div class="lg:col-span-8 glass rounded-3xl p-6 flex flex-col justify-between min-h-[490px]">
         <div>
-          <div class="row text-xs font-bold text-slate-300 mb-3">
-            <span>2. Live Camera (Real-Time Face Detection)</span>
-            <span id="lab-cam-status-pill" class="text-emerald-400 font-mono text-[11px]">● Live Camera Active</span>
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-4 mb-5">
+            <div class="flex items-center gap-2">
+              <span id="question-number-badge" class="px-3 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs">Question 1 of 5</span>
+              <span class="text-xs text-slate-400">Fullstack &amp; Distributed Systems</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="px-3 py-1 rounded-xl bg-slate-900 border border-slate-700 text-xs font-mono">
+                ⏳ <span id="timer-display" class="text-emerald-400 font-bold">15:00</span>
+              </div>
+              <div class="px-3 py-1 rounded-xl bg-red-950/60 border border-red-500/40 text-xs font-mono">
+                ⚠️ Strikes: <span id="exam-strikes-display" class="text-red-400 font-extrabold">0/3</span>
+              </div>
+            </div>
           </div>
-          <div class="cam">
-            <video id="lab-webcam-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
-            <canvas id="webcam-overlay-canvas" width="320" height="240" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+          <h3 id="question-text" class="text-base font-bold text-white leading-relaxed mb-5">
+            Loading question...
+          </h3>
+
+          <div id="options-container" class="space-y-3"></div>
+        </div>
+
+        <div class="flex items-center justify-between border-t border-slate-800 pt-4 mt-6">
+          <button onclick="navigateQuestion(-1)" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-slate-300">
+            ← Previous
+          </button>
+          <div class="flex gap-2.5">
+            <button onclick="navigateQuestion(1)" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white">
+              Next Question →
+            </button>
+            <button onclick="submitExamEarly()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-lg">
+              ✓ Submit Final Assessment
+            </button>
           </div>
         </div>
-        <div class="row px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-[11px] font-mono text-slate-300">
-          <span>Live Detection Status:</span>
-          <span id="live-cam-face-status" class="text-emerald-400 font-bold">Tracking Facial Features...</span>
-        </div>
       </div>
-    </div>
-    <div class="subcard space-y-2">
-      <div class="row text-xs font-semibold">
-        <span>1:1 Biometric Facial Feature Similarity:</span>
-        <span id="biometric-match-pct" class="text-slate-400 font-bold font-mono">0% Match (Upload ID Photo on Left)</span>
-      </div>
-      <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden"><div id="biometric-match-bar" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div></div>
-      <div id="biometric-status-msg" class="text-[11px] text-slate-400 text-center">Please upload your Candidate ID photo on the left — the Live Camera on the right will automatically detect and lock your exact facial match.</div>
-    </div>
-    <div class="space-y-2.5">
-      <button type="button" onclick="lockBiometricMatchInstant()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-bold text-xs cursor-pointer">✨ Instant Verify & Lock Exact 1:1 Biometric Match (96% Verified ✓)</button>
-      <button id="btn-enter-exam" type="button" onclick="startAssessment()" disabled class="btn-lock">🔒 Complete Biometric Verification to Unlock Assessment</button>
-    </div>
-  </div>
 
-  <!-- STAGE 3: ACTIVE EXAM RUNTIME -->
-  <div id="stage-exam-active" class="hidden space-y-6">
-    <div class="card row flex-wrap gap-4">
-      <div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-400 animate-pulse"></span><span class="font-bold text-white text-sm">Live Proctored Assessment Session</span></div>
-      <div class="flex items-center gap-6 font-mono text-xs">
-        <div><span class="text-slate-400">Mobile Guard:</span> <span id="exam-phone-status" class="text-emerald-400 font-bold">LOCKED ✓</span></div>
-        <div><span class="text-slate-400">Time Left:</span> <span id="timer-display" class="font-bold text-amber-400 text-base">45:00</span></div>
-        <div><span class="text-slate-400">Strikes:</span> <span id="exam-strikes-display" class="text-emerald-400 font-bold">0/3</span></div>
-      </div>
-    </div>
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <div class="lg:col-span-8 card space-y-5">
-        <div class="row text-xs">
-          <span id="question-number-badge" class="tag">Question 1 of 5</span>
-          <span class="text-[11px] text-slate-400 font-mono">🔒 Anti-Copy/Paste & Smart Strike Escalation Active</span>
+      <!-- Right 4 Cols: Live AI Telemetry & Escalation Monitor -->
+      <div class="lg:col-span-4 glass rounded-3xl p-5 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">● Live AI Proctor HUD</span>
+          <span class="text-[10px] font-mono text-slate-400">3-Strike Escalation</span>
         </div>
-        <div id="question-text" class="text-base font-semibold text-white">Loading question...</div>
-        <div id="options-container" class="space-y-2.5 pt-2"></div>
-        <div class="row pt-4 border-t border-slate-800">
-          <button id="btn-prev-q" type="button" onclick="navigateQuestion(-1)" class="btn-d">← Previous</button>
-          <button id="btn-next-q" type="button" onclick="navigateQuestion(1)" class="btn-b">Next →</button>
-        </div>
-      </div>
-      <div class="lg:col-span-4 card space-y-4">
-        <div class="row text-xs font-bold text-white"><span>📹 Candidate Proctor Cam</span><span class="text-red-400 font-mono text-[10px] animate-pulse">● REC ACTIVE</span></div>
-        <div class="w-full aspect-video rounded-xl bg-black overflow-hidden border border-slate-800"><video id="proctor-cam-video" autoplay playsinline muted class="w-full h-full object-cover"></video></div>
-        <div class="subcard space-y-1.5 text-xs">
-          <div class="row font-mono text-[11px]"><span class="text-slate-400">Voice & Intruder Timers:</span><span id="live-timers-hud" class="text-emerald-400 font-bold">0.0s / 0.0s</span></div>
-          <div class="row font-mono text-[10px] pt-0.5 border-t border-slate-800/80"><span class="text-slate-400">Audio Filter:</span><span id="voice-filter-status" class="text-emerald-400 font-bold">● Fan/Noise Filtered ✓</span></div>
-          <p class="text-[10px] text-slate-400 leading-relaxed pt-0.5">
-            • <b>Human Speech &gt; 2s:</b> 1 Strike (Fan/AC ignored; Terminates if &gt;12s discussion)<br>
-            • <b>Intruder:</b> 1 Strike (Next strike if stays &gt;30s)<br>
-            • <b>Phone Away / Tab Switch:</b> 1 Strike per incident
-          </p>
-        </div>
-        <div class="grid grid-cols-3 gap-1.5">
-          <button type="button" onclick="triggerTestIntruderStrike()" class="btn-test">🕵️ Intruder</button>
-          <button type="button" onclick="triggerTestVoiceStrike()" class="btn-test">🎙️ Voice &gt;2s</button>
-          <button type="button" onclick="triggerTestPhoneAwayStrike()" class="btn-test">📱 Phone Away</button>
-        </div>
-        <button type="button" onclick="submitExamEarly()" class="w-full py-3 bg-red-950/60 hover:bg-red-900/80 border border-red-500/40 text-red-300 rounded-xl text-xs font-bold cursor-pointer">Submit Assessment Early</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- STAGE 4: DEDICATED ASSESSMENT COMPLETED PAGE (NO ALERT POPUPS) -->
-  <div id="stage-assessment-completed" class="hidden card space-y-8 max-w-4xl mx-auto">
-    <div class="text-center space-y-3">
-      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 text-3xl text-emerald-400">✓</div>
-      <div><span class="tag uppercase">Assessment Completed & Submitted</span></div>
-      <h1 class="text-3xl font-black text-white">Assessment Successfully Completed</h1>
-      <p class="text-slate-400 text-sm max-w-lg mx-auto">Your responses, dual-perspective proctoring audit telemetry, and session video recording have been finalized and synchronized.</p>
-    </div>
-    <div class="subcard grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-      <div><div class="lbl">CANDIDATE</div><div id="completed-candidate-name" class="text-white font-bold mt-0.5">Alex Mercer</div></div>
-      <div><div class="lbl">EMAIL</div><div id="completed-candidate-email" class="text-slate-300 font-mono truncate mt-0.5">alex.mercer@assessment.org</div></div>
-      <div><div class="lbl">SESSION PIN</div><div id="completed-session-pin" class="text-indigo-400 font-mono font-bold mt-0.5">TRACE-INIT</div></div>
-      <div><div class="lbl">SUBMITTED AT</div><div id="completed-timestamp" class="text-slate-300 font-mono mt-0.5">--:--:--</div></div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="subcard text-center space-y-1"><div class="lbl">FINAL SCORE</div><div id="completed-score-display" class="text-4xl font-black text-emerald-400 font-mono">100%</div><div id="completed-score-detail" class="text-xs text-slate-500">5 of 5 questions correct</div></div>
-      <div class="subcard text-center space-y-1"><div class="lbl">INTEGRITY RATING</div><div id="completed-integrity-display" class="text-4xl font-black text-blue-400 font-mono">100%</div><div id="completed-strikes-detail" class="text-xs text-slate-500">3 of 3 Strikes Remaining</div></div>
-      <div class="subcard text-center space-y-1"><div class="lbl">EVALUATION SHEET</div><div class="text-2xl font-black text-emerald-400 font-mono">✓ SYNCED</div><div class="text-[11px] text-slate-400">Trace_Assesment -Tracker</div></div>
-    </div>
-    <div class="subcard space-y-3">
-      <div class="row">
-        <span class="font-bold text-white text-xs">📹 Complete Exam Session Video Recording (.webm)</span>
-        <a id="completed-download-recording-btn" href="#" download="Proctor_Session_Recording.webm" class="btn-b">⬇️ Download Session Video (.webm)</a>
-      </div>
-      <div class="w-full aspect-video max-h-60 bg-black rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center"><video id="completed-recording-player" controls playsinline class="w-full h-full object-contain"></video></div>
-    </div>
-    <div class="flex justify-end gap-3">
-      <button type="button" onclick="window.print()" class="btn-d">🖨️ Print Summary</button>
-      <button type="button" onclick="location.reload()" class="btn-b">🔄 Start New Session</button>
-    </div>
-  </div>
+        <div class="relative w-full h-40 rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden">
+          <video id="proctor-cam-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+          <div class="absolute bottom-2 left-2 right-2 flex justify-between items-center bg-slate-950/85 px-2.5 py-1 rounded-lg text-[10px] border border-slate-800">
+            <span id="exam-face-status" class="text-emerald-400 font-bold">1 Face Verified ✓</span>
+            <span id="exam-gaze-status" class="text-blue-400 font-mono">Gaze: CENTER</span>
+          </div>
+        </div>
 
-  <!-- ADMIN & QUESTION BANK VIEW -->
-  <div id="stage-admin-view" class="hidden card space-y-6">
-    <div class="row border-b border-slate-800 pb-3"><h2 class="text-lg font-bold text-white">Admin Telemetry & Question Bank Manager</h2><button type="button" onclick="toggleAdminView()" class="btn-d">✕ Close Admin</button></div>
-    <div class="subcard space-y-3">
-      <div class="text-xs font-bold text-white">Google Apps Script Webhook URL (Trace_Assesment -Tracker)</div>
-      <div class="flex gap-2"><input type="text" id="admin-gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="inp"><button type="button" onclick="saveGasUrlManual()" class="btn-b shrink-0">Save URL</button></div>
-    </div>
-    <div class="subcard space-y-3">
-      <div class="text-xs font-bold text-white">Add Custom Assessment Question</div>
-      <input type="text" id="new-q-text" placeholder="Question text..." class="inp">
-      <div class="grid grid-cols-2 gap-2">
-        <input type="text" id="new-opt-a" placeholder="Option A" class="inp"><input type="text" id="new-opt-b" placeholder="Option B" class="inp">
-        <input type="text" id="new-opt-c" placeholder="Option C" class="inp"><input type="text" id="new-opt-d" placeholder="Option D" class="inp">
+        <div class="space-y-2 text-xs bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Acoustic Speech Filter:</span>
+            <span id="voice-filter-status" class="text-emerald-400 font-bold">● Fan Ignored / Silent</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Continuous Timers:</span>
+            <span id="live-timers-hud" class="text-slate-300 font-mono text-[11px]">Speech: 0.0s | Intruder: 0.0s</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Mobile Desk Guard:</span>
+            <span id="exam-phone-status" class="text-emerald-400 font-bold">LOCKED ✓</span>
+          </div>
+          <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mt-1">
+            <div id="voice-energy-bar" class="h-full bg-emerald-500 transition-all duration-150" style="width: 4%"></div>
+          </div>
+        </div>
+
+        <!-- Controlled 1-Strike Test Buttons for Instant Verification -->
+        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 space-y-2">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Proctor Escalation Verification</div>
+          <div class="grid grid-cols-1 gap-1.5">
+            <button onclick="triggerTestVoiceStrike()" class="w-full py-1.5 px-2.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[11px] font-semibold text-left">
+              🎙️ Simulate Human Speech (&gt;2s) [+1 Strike]
+            </button>
+            <button onclick="triggerTestIntruderStrike()" class="w-full py-1.5 px-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 text-[11px] font-semibold text-left">
+              👥 Simulate 2nd Person Intruder [+1 Strike]
+            </button>
+            <button onclick="triggerTestPhoneAwayStrike()" class="w-full py-1.5 px-2.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-[11px] font-semibold text-left">
+              📱 Simulate Mobile Phone Moved Away [+1 Strike]
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="row">
-        <select id="new-q-ans" class="bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-1.5 text-xs"><option value="0">Correct: Option A</option><option value="1">Correct: Option B</option><option value="2">Correct: Option C</option><option value="3">Correct: Option D</option></select>
-        <button type="button" onclick="addNewQuestion()" class="btn-g">➕ Add Question</button>
+    </section>
+
+    <!-- ==================== STEP 4: COMPLETED REPORT ==================== -->
+    <section id="stage-assessment-completed" class="hidden glass rounded-3xl p-8 max-w-3xl mx-auto w-full border border-emerald-500/40">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+        <div>
+          <span class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+            ✓ Assessment Logged &amp; Synced to Google Sheets
+          </span>
+          <h2 class="text-2xl font-extrabold text-white mt-2">Official Assessment &amp; Integrity Report</h2>
+        </div>
+        <div class="text-right font-mono text-xs text-slate-400">
+          <div id="completed-session-pin">TRACE-0000</div>
+          <div id="completed-timestamp">--:--:--</div>
+        </div>
       </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <div class="text-xs text-slate-400">Candidate</div>
+          <div id="completed-candidate-name" class="text-sm font-bold text-white mt-1">Alex Mercer</div>
+          <div id="completed-candidate-email" class="text-[11px] text-slate-400">alex.mercer@assessment.org</div>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <div class="text-xs text-slate-400">Technical Score</div>
+          <div id="completed-score-display" class="text-2xl font-black text-emerald-400 mt-1">100%</div>
+          <div id="completed-score-detail" class="text-[11px] text-slate-400">5 of 5 correct</div>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <div class="text-xs text-slate-400">Proctoring Integrity</div>
+          <div id="completed-integrity-display" class="text-2xl font-black text-blue-400 mt-1">100%</div>
+          <div id="completed-strikes-detail" class="text-[11px] text-slate-400">3 of 3 Strikes Remaining</div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 mb-6">
+        <div class="text-xs font-bold text-slate-200 mb-2">📹 Recorded Session Audit Playback</div>
+        <video id="completed-recording-player" controls class="w-full max-h-56 rounded-xl bg-black mb-2"></video>
+        <a id="completed-download-recording-btn" href="#" class="inline-block px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs">
+          ⬇️ Download Audit Recording (.webm)
+        </a>
+      </div>
+    </section>
+
+    <!-- ==================== ADMIN QUESTION BUILDER DRAWER ==================== -->
+    <section id="stage-admin-view" class="hidden glass rounded-3xl p-6 mt-6 border border-slate-700">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-white">⚙️ Admin Question Bank &amp; Google Apps Script Webhook</h3>
+        <button onclick="toggleAdminView()" class="text-xs text-slate-400 hover:text-white">✕ Close</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Google Apps Script Web App URL</label>
+          <div class="flex gap-2">
+            <input id="admin-gas-url-input" type="text" class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white">
+            <button onclick="saveGasUrlManual()" class="px-3 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold">Save</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <input id="new-q-text" placeholder="New Question Text" class="col-span-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs">
+          <input id="new-opt-a" placeholder="Option A" class="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-xs">
+          <input id="new-opt-b" placeholder="Option B" class="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-xs">
+          <input id="new-opt-c" placeholder="Option C" class="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-xs">
+          <input id="new-opt-d" placeholder="Option D" class="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-xs">
+          <input id="new-q-ans" type="number" min="0" max="3" value="0" class="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-xs">
+          <button onclick="addNewQuestion()" class="px-3 py-1 rounded bg-emerald-600 text-white text-xs font-bold">+ Add Question</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ==================== WARNING MODAL (STRIKE 1 & STRIKE 2) ==================== -->
+<div id="modal-warning" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+  <div class="bg-slate-900 border-2 border-amber-500 rounded-3xl max-w-md w-full p-6 text-center shadow-2xl">
+    <div class="w-14 h-14 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl mx-auto mb-3">⚠️</div>
+    <h3 class="text-lg font-black text-white">PROCTORING INTEGRITY STRIKE RECORDED</h3>
+    <p id="warning-reason" class="text-xs text-amber-300 font-semibold mt-2 bg-amber-950/50 p-3 rounded-xl border border-amber-500/30">
+      Violation detected.
+    </p>
+    <div class="my-4 text-xs text-slate-300">
+      Strikes Remaining Before Automatic Disqualification:
+      <span id="warning-strikes-left" class="text-base font-black text-amber-400 ml-1">2</span> / 3
     </div>
+    <button onclick="dismissWarningModal()" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs cursor-pointer">
+      I Understand — Resume Assessment (5s Grace Window)
+    </button>
   </div>
 </div>
 
-<!-- STATIONARY WARNING MODAL NOTIFICATION (NO ANIMATE-BOUNCE, 100% STATIONARY) -->
-<div id="modal-warning" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="bg-slate-900 border-2 border-red-500 rounded-3xl p-6 max-w-md w-full text-center space-y-4 shadow-2xl">
-    <div class="text-4xl">⚠️</div>
-    <h3 class="text-lg font-bold text-red-400">Malpractice Warning Strike Recorded</h3>
-    <p id="warning-reason" class="text-xs text-slate-200 bg-red-950/60 p-3 rounded-xl border border-red-500/40 leading-relaxed font-semibold">Malpractice violation detected.</p>
-    <div class="p-3 rounded-xl bg-red-950/50 border border-red-500/40 text-xs font-bold text-red-300">
-      -1 Strike Deducted &bull; <span id="warning-strikes-left" class="text-white font-extrabold text-sm">2</span> Strikes Remaining Before Disqualification
-    </div>
-    <button type="button" onclick="dismissWarningModal()" class="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow-lg cursor-pointer">Acknowledge & Return to Assessment</button>
-  </div>
-</div>
-
-<!-- DISQUALIFICATION MODAL -->
-<div id="modal-disqualified" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
-  <div class="bg-slate-900 border-2 border-red-600 rounded-3xl p-8 max-w-lg w-full text-center space-y-4 shadow-2xl">
-    <div class="text-5xl">🛑</div>
-    <h3 class="text-2xl font-black text-red-500">ASSESSMENT TERMINATED</h3>
-    <p id="disqualified-reason" class="text-xs text-slate-300">You have exceeded the maximum 3-strike malpractice limit or triggered a critical continuous violation. Your session has been terminated and logged.</p>
-    <button type="button" onclick="location.reload()" class="btn-d">Return to Start</button>
+<!-- ==================== DISQUALIFIED MODAL (STRIKE 3 TERMINATION) ==================== -->
+<div id="modal-disqualified" class="hidden fixed inset-0 z-50 bg-red-950/95 backdrop-blur-md flex items-center justify-center p-4">
+  <div class="bg-slate-950 border-2 border-red-500 rounded-3xl max-w-md w-full p-6 text-center shadow-2xl">
+    <div class="w-16 h-16 rounded-full bg-red-600/20 border border-red-500 flex items-center justify-center text-3xl mx-auto mb-3">🚫</div>
+    <h3 class="text-xl font-black text-white">ASSESSMENT TERMINATED (3/3 STRIKES)</h3>
+    <p id="disqualified-reason" class="text-xs text-red-300 font-semibold mt-2 bg-red-950/60 p-3 rounded-xl border border-red-500/40">
+      Maximum 3-Strike Malpractice Limit Reached.
+    </p>
+    <p class="text-[11px] text-slate-400 mt-3">
+      Your session status (DISQUALIFIED • 0% Integrity) and violation telemetry have been logged to the official Google Sheet tracker.
+    </p>
   </div>
 </div>
 
 <script>
-const $ = id => document.getElementById(id);
-const setTxt = (id, txt, cls) => { const el = $(id); if (el) { el.innerText = txt; if (cls) el.className = cls; } };
-const VERIFIED_SAMPLE_PORTRAIT = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%230f172a'/><circle cx='100' cy='75' r='35' fill='%2338bdf8'/><path d='M45 175 C45 125 155 125 155 175 Z' fill='%230284c7'/></svg>";
-
-// Repository Base URL for Trace_Assesment -Tracker
-const REPO_BASE_URL = "https://shrinithiv-google.github.io/Trace_Assesment-Tracker/";
 const DEFAULT_GAS_URL = "https://script.google.com/a/macros/google.com/s/AKfycbw22kccBQSvWYcLFstT1xOi88ARYE2TWtJhvqiat5X1dR-bgqDrX0c9X5cDYxe_pFGND3/exec";
+const REPO_BASE_URL = "https://shrinithiv-google.github.io/Trace_Assesment-Tracker/";
+const VERIFIED_SAMPLE_PORTRAIT = "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240"><rect width="320" height="240" fill="#0f172a"/><circle cx="160" cy="95" r="44" fill="#38bdf8" opacity="0.25"/><circle cx="160" cy="90" r="34" fill="#e2e8f0"/><path d="M105 205 C105 155 215 155 215 205" fill="#e2e8f0"/><rect x="20" y="18" width="120" height="24" rx="6" fill="#0284c7"/><text x="30" y="34" fill="#ffffff" font-family="monospace" font-size="11" font-weight="bold">OFFICIAL ID PHOTO</text></svg>');
+
+const $ = id => document.getElementById(id);
+const setTxt = (id, txt, cls = null) => { const el = $(id); if (el) { el.innerText = txt; if (cls) el.className = cls; } };
 
 const urlParams = new URLSearchParams(window.location.search);
 const isMobileGuardMode = urlParams.get('mode') === 'phone_guard';
-let currentSessionId = urlParams.get('session') || ('TRACE-' + Math.floor(100000 + Math.random() * 900000));
-let currentStage = 'login', isPhonePaired = false, hasIdPhoto = false, hasLiveWebcam = false, isBiometricallyVerified = false, isExamActive = false;
-let strikesRemaining = 3, warningDismissCooldownUntil = 0, examTimeRemaining = 45 * 60, examTimerInterval = null;
-let labCamStream = null, cachedBlazeFaceModel = null, mediaRecorder = null, recordedChunks = [], isLockdownBound = false;
+let currentSessionId = urlParams.get('session') || ('TRACE-' + Math.floor(1000 + Math.random() * 9000));
 
-// Smart Escalation State Trackers (No instant 3-strike rapid termination)
+let currentStage = 'login';
+let isPhonePaired = false;
+let isBiometricallyVerified = false;
+let isExamActive = false;
+let strikesRemaining = 3;
+let warningDismissCooldownUntil = 0;
+let lastTabStrikeTime = 0;
+let lastMobileStrikeTime = 0;
+
+// Smart Escalation Trackers
 let continuousVoiceSeconds = 0;
 let hasGivenVoiceStrikeThisStretch = false;
-let lastVoiceStrikeTime = 0;
-
 let continuousIntruderSeconds = 0;
-let hasGivenInitialIntruderStrike = false;
-let lastIntruderStrikeTime = 0;
+let hasGivenIntruderStrikeThisStretch = false;
 
-let lastMobileStrikeTime = 0;
-let lastTabStrikeTime = 0;
-let processedMobileEventIds = new Set();
+let labCamStream = null;
+let cachedBlazeFaceModel = null;
+let hasIdPhoto = false;
+let hasLiveWebcam = false;
+let mediaRecorder = null;
+let recordedChunks = [];
+let examTimerInterval = null;
+let examTimeRemaining = 900;
+let isLockdownBound = false;
 let mobilePeerConn = null;
+const processedMobileEventIds = new Set();
 
-const defaultQuestions = [
-  { q: "Which data structure guarantees O(1) average-time complexity for key lookup and insertion?", opts: ["Binary Search Tree", "Hash Table with Closed Addressing", "Skip List", "Sorted Array"], ans: 1 },
-  { q: "In distributed microservices, what architectural pattern prevents cascading failures across RPCs?", opts: ["CQRS", "Circuit Breaker", "Event Sourcing", "Saga Coordinator"], ans: 1 },
-  { q: "In computer vision biometrics, what does normalized Euclidean distance between landmark points measure?", opts: ["Geometric facial similarity", "Camera resolution", "Audio latency", "Lighting intensity"], ans: 0 },
-  { q: "Which HTTP header is required to prevent clickjacking attacks by disallowing frame embedding?", opts: ["Content-Security-Policy: frame-ancestors 'none'", "X-Content-Type-Options: nosniff", "Strict-Transport-Security", "Access-Control-Allow-Origin: *"], ans: 0 },
-  { q: "Under the CAP theorem, what does a distributed cluster sacrifice during a partition if it guarantees consistency?", opts: ["Partition Tolerance", "Availability for all queries", "Data Persistence", "Latency optimization"], ans: 1 }
+let questions = [
+  { q: "Which architectural pattern prevents cascading failures across distributed microservices when a downstream dependency experiences high latency?", opts: ["Circuit Breaker Pattern with Exponential Backoff", "Synchronous Blocking RPC Retry Loop", "Monolithic Shared Database Locks", "Client-Side Infinite Polling"], ans: 0 },
+  { q: "In WebRTC real-time peer connections, which protocol negotiates NAT traversal and discovers public IP/port mappings?", opts: ["STUN / TURN with ICE Candidates", "SMTP Relay", "FTP Passive Mode", "SNMP Trap"], ans: 0 },
+  { q: "What is the time complexity of searching for a key in a balanced Binary Search Tree (AVL / Red-Black Tree) with N nodes?", opts: ["O(log N)", "O(N^2)", "O(N!)", "O(1) worst-case"], ans: 0 },
+  { q: "When securing REST APIs with JWT (JSON Web Tokens), why should sensitive payload state never be stored unencrypted inside standard JWT claims?", opts: ["Standard JWT payloads are Base64Url-encoded, not encrypted, and can be decoded by anyone", "JWT tokens automatically expire after 1 millisecond", "Browsers reject Base64 strings", "HTTP headers strip JSON objects"], ans: 0 },
+  { q: "Which browser API provides real-time frequency-domain FFT spectral data for isolating human vocal formants (300Hz–3400Hz) from ambient fan noise?", opts: ["Web Audio API AnalyserNode (getByteFrequencyData)", "localStorage.getItem()", "CanvasRenderingContext2D", "History.pushState()"], ans: 0 }
 ];
-let questions = [...defaultQuestions], currentQuestionIdx = 0, userAnswers = {};
+let currentQuestionIdx = 0;
+let userAnswers = {};
 
 function getGasUrl() { return urlParams.get('gas_url') || localStorage.getItem('trace_gas_webapp_url') || DEFAULT_GAS_URL; }
 function saveGasUrlManual() { const val = $('admin-gas-url-input')?.value.trim(); if (val) { localStorage.setItem('trace_gas_webapp_url', val); alert("Webhook saved!"); } }
+function dispatchSheetTransport(baseUrl, qsString, jsonBody) {
+  if (!baseUrl) return;
+  const targetUrl = `${baseUrl}?${qsString}&_t=${Date.now()}`;
+  // 1. Hidden iframe navigation (carries @google.com Workspace cookies & follows 302 redirects across origins)
+  try {
+    const ifr = document.createElement('iframe');
+    ifr.style.display = 'none';
+    ifr.src = targetUrl;
+    document.body.appendChild(ifr);
+    setTimeout(() => { try { ifr.remove(); } catch(e){} }, 12000);
+  } catch(e){}
+  // 2. Script tag & Image beacon GET fallback (bypasses CORS preflight)
+  try {
+    const s = document.createElement('script');
+    s.src = targetUrl;
+    s.async = true;
+    document.body.appendChild(s);
+    setTimeout(() => { try { s.remove(); } catch(e){} }, 8000);
+    const img = new Image();
+    img.src = targetUrl;
+  } catch(e){}
+  // 3. Credentialed & no-cors fetch (GET + POST) + sendBeacon
+  try {
+    fetch(targetUrl, { method: 'GET', mode: 'no-cors', credentials: 'include' }).catch(()=>{});
+    fetch(targetUrl, {
+      method: 'POST', mode: 'no-cors', credentials: 'include',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: jsonBody
+    }).catch(()=>{});
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(targetUrl, new Blob([jsonBody], { type: 'text/plain;charset=utf-8' }));
+    }
+  } catch(e){}
+}
+
 function syncToGoogleSheet(action, payload = {}) {
   const gasUrl = getGasUrl();
   if (!gasUrl) return;
-  const cName = $('candidate-name')?.value || 'Alex Mercer';
-  const cEmail = $('candidate-email')?.value || 'alex.mercer@assessment.org';
+  const cName = $('candidate-name')?.value?.trim() || 'Alex Mercer';
+  const cEmail = $('candidate-email')?.value?.trim() || 'alex.mercer@assessment.org';
+  // Map startSession to submitScore upsert so Cohort_Sessions creates/updates a single clean row per Session_ID
+  const effectiveAction = (action === 'startSession') ? 'submitScore' : action;
+  let correctCount = 0;
+  try { questions.forEach((q, idx) => { if (userAnswers[idx] === q.ans) correctCount++; }); } catch(e){}
+  const liveScorePct = Math.round((correctCount / (questions.length || 5)) * 100);
+  const liveIntegrityPct = Math.max(0, Math.round((strikesRemaining / 3) * 100));
+
   const fullData = {
-    action,
+    action: effectiveAction,
+    originalAction: action,
     session: currentSessionId,
     sessionId: currentSessionId,
     name: cName,
@@ -353,17 +564,27 @@ function syncToGoogleSheet(action, payload = {}) {
     candidateId: currentSessionId,
     role: 'Fullstack Engineer',
     cohort: 'Fullstack Engineer',
+    score: payload.score !== undefined ? payload.score : liveScorePct,
+    integrity: payload.integrity !== undefined ? payload.integrity : liveIntegrityPct,
+    status: payload.status || (isExamActive ? 'IN_PROGRESS' : 'ACTIVE'),
     timestamp: new Date().toISOString(),
     ...payload
   };
   const qs = new URLSearchParams();
   Object.entries(fullData).forEach(([k, v]) => { if (v !== undefined && v !== null) qs.append(k, String(v)); });
-  const targetUrl = `${gasUrl}?${qs.toString()}`;
-  fetch(targetUrl, { method: 'GET', mode: 'no-cors' }).catch(()=>{});
-  fetch(targetUrl, {
-    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(fullData)
-  }).catch(()=>{});
+  const qsString = qs.toString();
+  const jsonBody = JSON.stringify(fullData);
+
+  // Primary endpoint (Workspace or configured URL)
+  dispatchSheetTransport(gasUrl, qsString, jsonBody);
+
+  // Secondary endpoint (Public /macros/s/ canonical URL staggered by 900ms to guarantee upsert without race condition)
+  const publicGasUrl = gasUrl.includes('/a/macros/') ? gasUrl.replace(/\/a\/macros\/[^/]+\//, '/macros/') : gasUrl;
+  if (publicGasUrl !== gasUrl && effectiveAction === 'submitScore') {
+    setTimeout(() => dispatchSheetTransport(publicGasUrl, qsString, jsonBody), 900);
+  } else if (publicGasUrl !== gasUrl) {
+    fetch(`${publicGasUrl}?${qsString}`, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: jsonBody }).catch(()=>{});
+  }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -378,6 +599,11 @@ window.addEventListener('DOMContentLoaded', () => {
     initDesktopRelayAndPolling();
     initDesktopPeer();
     setupTabSwitchFocusGuard();
+    // Register active session in Google Sheet tracker as soon as desktop portal opens
+    setTimeout(() => syncToGoogleSheet('submitScore', { score: 0, integrity: 100, status: 'PORTAL_ACTIVE' }), 800);
+    ['candidate-name', 'candidate-email'].forEach(id => {
+      $(id)?.addEventListener('change', () => syncToGoogleSheet('submitScore', { score: 0, integrity: 100, status: 'CANDIDATE_REGISTERED' }));
+    });
   }
 });
 
@@ -465,6 +691,7 @@ function markPhoneAsPaired() {
   if ($('phone-pairing-indicator')) $('phone-pairing-indicator').innerHTML = "<span class='text-emerald-400 font-bold'>✓ Mobile Phone Desk Guard Connected!</span>";
   const btn = $('btn-proceed-to-biometrics');
   if (btn) { btn.disabled = false; btn.className = "w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg cursor-pointer"; btn.innerHTML = "Continue to 1:1 Biometrics → (Phone Connected ✓)"; }
+  syncToGoogleSheet('submitScore', { score: 0, integrity: 100, status: 'PHONE_PAIRED_ACTIVE' });
 }
 function proceedToBiometricStage() {
   if (!isPhonePaired) return;
@@ -618,26 +845,27 @@ function startLiveCameraBiometricLoop() {
     const model = await getBlazeFaceModel();
     if (model) {
       try {
-        const faces = await model.estimateFaces(video, false);
-        if (faces && faces.length > 0) {
+        const preds = await model.estimateFaces(video, false);
+        if (preds && preds.length === 1) {
+          setTxt('live-cam-face-status', "✓ 1 Live Face Detected in Camera", "text-emerald-400 font-bold");
           if (hasIdPhoto) lockBiometricMatchInstant();
-          else setTxt('live-cam-face-status', "✓ Face Detected in Live Camera (Upload ID on Left)", "text-emerald-400 font-bold");
+        } else if (preds && preds.length > 1) {
+          setTxt('live-cam-face-status', `⚠️ Multiple Faces (${preds.length}) Detected!`, "text-red-400 font-bold");
         }
       } catch(e){}
     }
-  }, 450);
+  }, 500);
 }
 function drawBiometricOverlays(matched) {
-  ['passport-overlay-canvas', 'webcam-overlay-canvas'].forEach(cid => {
+  ['id-face-canvas', 'live-face-canvas'].forEach(cid => {
     const c = $(cid);
     if (!c) return;
-    c.classList.remove('hidden');
     const ctx = c.getContext('2d');
     ctx.clearRect(0, 0, c.width, c.height);
     ctx.strokeStyle = matched ? '#10b981' : '#38bdf8';
     ctx.lineWidth = 2.5;
-    ctx.strokeRect(85, 35, 150, 165);
-    ctx.fillStyle = matched ? 'rgba(6, 78, 59, 0.9)' : 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeRect(85, 30, 150, 155);
+    ctx.fillStyle = matched ? 'rgba(16,185,129,0.88)' : 'rgba(2,132,199,0.85)';
     ctx.fillRect(85, 15, 135, 18);
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 10px monospace';
@@ -657,6 +885,7 @@ function lockBiometricMatchInstant() {
   const btn = $('btn-enter-exam');
   if (btn) { btn.disabled = false; btn.className = "w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-xl cursor-pointer"; btn.innerHTML = "🚀 Enter Proctored Assessment Platform → (Biometrics Verified ✓)"; }
   drawBiometricOverlays(true);
+  syncToGoogleSheet('submitScore', { score: 0, integrity: 100, status: 'BIOMETRICS_VERIFIED' });
 }
 
 // ==================== STEP 3: ACTIVE EXAM & SMART ESCALATION ENGINE ====================
@@ -667,7 +896,7 @@ function startAssessment() {
   $('stage-biometrics')?.classList.add('hidden');
   $('stage-exam-active')?.classList.remove('hidden');
   if ($('proctor-cam-video') && labCamStream) { $('proctor-cam-video').srcObject = labCamStream; $('proctor-cam-video').play().catch(()=>{}); }
-  syncToGoogleSheet('startSession', { status: 'ACTIVE' });
+  syncToGoogleSheet('startSession', { status: 'EXAM_IN_PROGRESS' });
   renderQuestion();
   startExamTimer();
   startDesktopIntruderAndGazeMonitor();
@@ -686,7 +915,11 @@ function renderQuestion() {
     const sel = userAnswers[currentQuestionIdx] === idx;
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.onclick = () => { userAnswers[currentQuestionIdx] = idx; renderQuestion(); };
+    btn.onclick = () => {
+      userAnswers[currentQuestionIdx] = idx;
+      renderQuestion();
+      syncToGoogleSheet('submitScore', { status: 'IN_PROGRESS' });
+    };
     btn.className = sel ? "w-full text-left p-4 rounded-2xl bg-blue-950 border-2 border-blue-500 text-white font-bold text-xs flex items-center gap-3" : "w-full text-left p-4 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs flex items-center gap-3";
     btn.innerHTML = `<span class="w-6 h-6 rounded-lg ${sel ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400'} flex items-center justify-center font-mono font-bold text-xs">${String.fromCharCode(65 + idx)}</span><span>${optText}</span>`;
     container.appendChild(btn);
@@ -723,158 +956,123 @@ function startDesktopIntruderAndGazeMonitor() {
         awayCount = 0;
         continuousIntruderSeconds += 0.4;
         updateLiveTimersHud();
+        setTxt('exam-face-status', `⚠️ ${faces.length} FACES (${continuousIntruderSeconds.toFixed(1)}s)`, 'text-red-400 font-bold');
 
-        // 1st Strike: When intruder first detected (after 0.8s confirmation)
-        if (!hasGivenInitialIntruderStrike && continuousIntruderSeconds >= 0.8) {
-          hasGivenInitialIntruderStrike = true;
-          lastIntruderStrikeTime = Date.now();
-          applyStrike(`Intruder Detected: Multiple Faces (${faces.length} Persons) in Camera View (1 Strike Deducted)`, 'intruder');
-        }
-        // Escalation Strike: Only if intruder stays continuously for > 30.0 seconds!
-        else if (hasGivenInitialIntruderStrike && continuousIntruderSeconds >= 30.0) {
-          continuousIntruderSeconds = 0.8; // Reset 30s counter for next window
-          lastIntruderStrikeTime = Date.now();
-          applyStrike("Extended Intruder Alert: Unauthorized Person Remained in Camera View for Over 30 Seconds", 'intruder_extended');
+        if (!hasGivenIntruderStrikeThisStretch && continuousIntruderSeconds >= 0.8) {
+          hasGivenIntruderStrikeThisStretch = true;
+          applyStrike(`Multiple Faces (${faces.length}) Detected in Assessment Camera View (Initial Intruder Strike)`, 'intruder');
+        } else if (continuousIntruderSeconds >= 30.0) {
+          // Only escalate with another strike if intruder stays continuously for 30 seconds
+          continuousIntruderSeconds = 0;
+          applyStrike(`Intruder Remained in Camera View Continuously for > 30 Seconds (${faces.length} Faces)`, 'intruder', true);
         }
         return;
-      } else {
-        // Decay intruder timer when alone
-        continuousIntruderSeconds = Math.max(0, continuousIntruderSeconds - 0.4);
-        if (continuousIntruderSeconds === 0 && (Date.now() - lastIntruderStrikeTime > 15000)) {
-          hasGivenInitialIntruderStrike = false;
-        }
-        updateLiveTimersHud();
       }
 
+      // Reset intruder stretch when back to 1 face
+      continuousIntruderSeconds = 0;
+      hasGivenIntruderStrikeThisStretch = false;
+      updateLiveTimersHud();
+
       if (!faces || faces.length === 0) {
-        if (++awayCount >= 6) {
+        awayCount++;
+        setTxt('exam-face-status', '⚠️ Candidate Absent', 'text-amber-400 font-bold');
+        if (awayCount >= 12) {
           awayCount = 0;
-          applyStrike("Candidate Face Missing From Camera View (Looked Away From Monitor)", 'gaze');
+          applyStrike("Candidate Absent From Webcam Frame for Extended Duration", 'absence');
         }
-      } else {
-        awayCount = 0;
+        return;
+      }
+
+      awayCount = 0;
+      setTxt('exam-face-status', '1 Face Verified ✓', 'text-emerald-400 font-bold');
+      const lm = faces[0].landmarks;
+      if (lm && lm.length >= 3) {
+        const eyeDist = Math.abs(lm[1][0] - lm[0][0]) || 1;
+        const noseRatio = (lm[2][0] - lm[0][0]) / eyeDist;
+        if (noseRatio < 0.14 || noseRatio > 0.86) {
+          setTxt('exam-gaze-status', 'Gaze: OFF-SCREEN ⚠️', 'text-amber-400 font-mono');
+        } else {
+          setTxt('exam-gaze-status', 'Gaze: CENTER ✓', 'text-blue-400 font-mono');
+        }
       }
     } catch(e){}
   }, 400);
 }
 
-// SMART HUMAN VOICE & ANSWER DISCUSSION DETECTOR (IGNORES FANS, AC, & AMBIENT NOISE)
-// - Filters out low-frequency fan/AC rumble (< 250 Hz) and broadband air turbulence hiss (> 4200 Hz).
-// - Requires 300-3400 Hz Human Vocal Formants (F1/F2), Harmonic Crest Prominence, Syllabic Variance, or Web Speech API word recognition.
-// - > 2.0s Human Speech / Discussion = 1 Strike Only; > 12.0s continuous discussion = Immediate Termination.
+// SMART VOICE ESCALATION:
+// - Ignores continuous steady fan/AC hum using adaptive baseline floor + spectral crest factor.
+// - Gives 1st strike after 2.0s of human speech.
+// - Does NOT give a 2nd strike unless the candidate keeps talking continuously past 10.0s!
 function startSmartVoiceEscalationMonitor() {
   if (!labCamStream) return;
   try {
-    const tracks = labCamStream.getAudioTracks();
-    if (!tracks || !tracks.length) return;
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+    const src = ctx.createMediaStreamSource(labCamStream);
+    const biquad = ctx.createBiquadFilter();
+    biquad.type = 'bandpass';
+    biquad.frequency.value = 1200;
+    biquad.Q.value = 0.85;
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 1024;
-    analyser.smoothingTimeConstant = 0.25;
-    ctx.createMediaStreamSource(new MediaStream([tracks[0]])).connect(analyser);
-    const data = new Uint8Array(analyser.frequencyBinCount);
-    const binHz = (ctx.sampleRate || 48000) / analyser.fftSize;
+    analyser.smoothingTimeConstant = 0.45;
+    src.connect(biquad);
+    biquad.connect(analyser);
 
-    // Parallel Neural Speech Recognition (100% immune to fans/background noise when supported)
-    let lastSpeechRecTimestamp = 0;
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRec) {
-      try {
-        const rec = new SpeechRec();
-        rec.continuous = true;
-        rec.interimResults = true;
-        rec.lang = 'en-US';
-        rec.onresult = evt => {
-          for (let i = evt.resultIndex; i < evt.results.length; i++) {
-            const transcript = evt.results[i][0].transcript.trim();
-            if (transcript.length >= 2) {
-              lastSpeechRecTimestamp = Date.now();
-            }
-          }
-        };
-        rec.onend = () => { if (isExamActive) { try { rec.start(); } catch(e){} } };
-        rec.start();
-      } catch(e){}
-    }
-
-    let ambientVocalFloor = 18;
-    let vocalHistory = [];
+    const freqData = new Uint8Array(analyser.frequencyBinCount);
+    let ambientNoiseBaseline = 18;
     let silenceAccumulator = 0;
 
     setInterval(() => {
       if (!isExamActive) return;
-      analyser.getByteFrequencyData(data);
+      analyser.getByteFrequencyData(freqData);
+      const binHz = (ctx.sampleRate / 2) / freqData.length;
 
-      // 1. Frequency Band Energy Analysis
-      let rumbleSum = 0, rumbleCount = 0;   // 0 - 250 Hz (Fans, AC, desk hum)
-      let vocalSum = 0, vocalCount = 0;     // 300 - 3400 Hz (Human speech formants F1 & F2)
-      let vocalMax = 0;                     // Peak harmonic formant in vocal band
-      let hissSum = 0, hissCount = 0;       // 4200 - 10000 Hz (Fan air turbulence / broadband hiss)
+      // Sub-180Hz fan/AC rumble energy
+      let lowRumbleSum = 0, lowBins = 0;
+      for (let i = 1; i < freqData.length; i++) {
+        if (i * binHz < 180) { lowRumbleSum += freqData[i]; lowBins++; }
+      }
+      const lowRumbleAvg = lowBins > 0 ? lowRumbleSum / lowBins : 0;
 
-      for (let i = 0; i < data.length; i++) {
-        const freq = i * binHz;
-        const val = data[i];
-        if (freq <= 250) {
-          rumbleSum += val; rumbleCount++;
-        } else if (freq >= 300 && freq <= 3400) {
-          vocalSum += val; vocalCount++;
-          if (val > vocalMax) vocalMax = val;
-        } else if (freq >= 4200 && freq <= 10000) {
-          hissSum += val; hissCount++;
+      // 300Hz - 3400Hz human speech formant band + peak syllabic crest
+      let vocalSum = 0, vocalBins = 0, vocalPeak = 0;
+      for (let i = 1; i < freqData.length; i++) {
+        const hz = i * binHz;
+        if (hz >= 300 && hz <= 3400) {
+          vocalSum += freqData[i];
+          if (freqData[i] > vocalPeak) vocalPeak = freqData[i];
+          vocalBins++;
         }
       }
+      const vocalAvg = vocalBins > 0 ? vocalSum / vocalBins : 0;
 
-      const rumbleAvg = rumbleCount ? (rumbleSum / rumbleCount) : 0;
-      const vocalAvg = vocalCount ? (vocalSum / vocalCount) : 0;
-      const hissAvg = hissCount ? (hissSum / hissCount) : 0;
-
-      // Track syllabic amplitude variance over recent 8 frames (800ms)
-      vocalHistory.push(vocalAvg);
-      if (vocalHistory.length > 8) vocalHistory.shift();
-      const histMean = vocalHistory.reduce((a, b) => a + b, 0) / vocalHistory.length;
-      const vocalVariance = vocalHistory.reduce((a, b) => a + Math.pow(b - histMean, 2), 0) / vocalHistory.length;
-      const vocalStdDev = Math.sqrt(vocalVariance);
-
-      // Stationary fan/AC noise has low variance (< 1.6); adapt noise floor when stationary
-      if (vocalStdDev < 1.6) {
-        ambientVocalFloor = ambientVocalFloor * 0.94 + vocalAvg * 0.06;
+      // Adapt baseline slowly to steady room fan/AC hum
+      if (vocalAvg < ambientNoiseBaseline + 10) {
+        ambientNoiseBaseline = ambientNoiseBaseline * 0.96 + vocalAvg * 0.04;
       }
 
-      const netVocalEnergy = vocalAvg - ambientVocalFloor;
-      const crestFactor = vocalMax / (vocalAvg + 1); // Human vocal cords produce harmonic peaks (crest >= 1.48); fans are flat (~1.15)
-      const isSpeechRecActive = (Date.now() - lastSpeechRecTimestamp) < 1400;
+      const netSpeechDelta = Math.max(0, vocalAvg - ambientNoiseBaseline);
+      const crestRatio = vocalPeak - vocalAvg; // Human speech has distinct harmonic peaks (>28), fans are flat
+      const isHumanSpeech = (netSpeechDelta > 22) && (crestRatio > 28) && (vocalAvg > lowRumbleAvg * 0.95);
 
-      // Strict Human Speech Decision:
-      // Must either be confirmed by browser SpeechRecognition OR pass all 4 Human Vocal Formant & Syllabic Modulation checks
-      const isDspHumanVoice = (
-        netVocalEnergy > 9.5 &&
-        vocalAvg > 25 &&
-        crestFactor >= 1.48 &&
-        vocalAvg > hissAvg * 1.55 &&
-        vocalMax > rumbleAvg * 1.12 &&
-        vocalStdDev > 1.75
-      );
+      const barPct = Math.min(100, Math.round((netSpeechDelta / 50) * 100));
+      if ($('voice-energy-bar')) $('voice-energy-bar').style.width = `${Math.max(4, barPct)}%`;
 
-      const isHumanSpeechDetected = isSpeechRecActive || isDspHumanVoice;
-
-      if (isHumanSpeechDetected) {
+      if (isHumanSpeech) {
         silenceAccumulator = 0;
         continuousVoiceSeconds += 0.1;
-        setTxt('voice-filter-status', '🗣️ Human Speech Detected!', 'text-amber-400 font-bold animate-pulse');
         updateLiveTimersHud();
+        setTxt('voice-filter-status', `⚠️ Speech Detected (${continuousVoiceSeconds.toFixed(1)}s)`, 'text-amber-400 font-bold');
 
-        // Rule 1: At 2.0 seconds of human speech/discussion -> Give EXACTLY ONE Strike for this stretch
-        if (continuousVoiceSeconds >= 2.0 && !hasGivenVoiceStrikeThisStretch) {
-          if (Date.now() - lastVoiceStrikeTime > 15000) {
-            hasGivenVoiceStrikeThisStretch = true;
-            lastVoiceStrikeTime = Date.now();
-            applyStrike("Unauthorized Human Speech Detected (> 2.0s): Candidate / Participant Discussing Assessment Answers (1 Strike Deducted)", 'voice');
-          }
-        }
-
-        // Rule 2: If continuous human speech/discussion exceeds 12.0 seconds in a stretch -> Terminate Exam Immediately!
-        if (continuousVoiceSeconds >= 12.0) {
-          terminateExamImmediately("Exam Terminated: Continuous Human Speech / Answer Discussion Exceeded 12 Seconds in a Single Stretch.");
+        if (!hasGivenVoiceStrikeThisStretch && continuousVoiceSeconds >= 2.0) {
+          hasGivenVoiceStrikeThisStretch = true;
+          applyStrike("Unauthorized Human Speech Detected (> 2.0s Continuous Talking)", 'voice');
+        } else if (continuousVoiceSeconds >= 10.0) {
+          // Escalates with another strike ONLY if candidate continues talking past 10 seconds
+          continuousVoiceSeconds = 0;
+          applyStrike("Extended Continuous Human Speech Exceeded 10.0 Seconds After Warning", 'voice', true);
         }
       } else {
         silenceAccumulator += 0.1;
@@ -980,8 +1178,10 @@ function applyStrike(reason, category = 'general', forceImmediate = false) {
 
   strikesRemaining--;
   const consumed = 3 - strikesRemaining;
+  const liveIntegrity = Math.max(0, Math.round((strikesRemaining / 3) * 100));
   setTxt('exam-strikes-display', `${consumed}/3`);
-  syncToGoogleSheet('logViolation', { violation: reason, strike: consumed, remaining: strikesRemaining });
+  syncToGoogleSheet('logViolation', { violation: reason, strike: consumed, remaining: strikesRemaining, integrity: liveIntegrity });
+  syncToGoogleSheet('submitScore', { integrity: liveIntegrity, status: strikesRemaining <= 0 ? 'DISQUALIFIED' : `STRIKE_${consumed}_OF_3` });
 
   if (strikesRemaining <= 0) {
     terminateExamImmediately(`Maximum 3-Strike Malpractice Limit Reached. Final Violation: ${reason}`);
