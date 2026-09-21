@@ -213,17 +213,18 @@ Desktop Sync Code: <span id="mobile-sync-code-display" class="font-extrabold tex
 <button id="btn-next-q" type="button" onclick="navigateQuestion(1)" class="btn-b">Next →</button>
 </div>
 <div id="exam-help-center-panel" class="hidden mt-4 pt-4 border-t-2 border-indigo-500/40 space-y-3">
-<div class="p-3 rounded-xl bg-indigo-950/50 border border-indigo-500/40 flex flex-wrap items-center justify-between gap-2">
-<div>
-<div class="flex items-center gap-2">
-<span class="text-xs font-extrabold text-indigo-300">📚 Official CTS / DTS Help Center, SOPs &amp; Fact Repository</span>
-<span class="px-2 py-0.5 rounded bg-amber-950 border border-amber-500/40 text-amber-300 font-mono text-[10px] font-bold">🔒 MANUAL SEARCH ONLY • AI ANSWER-FINDER DISABLED</span>
-</div>
-<p class="text-[11px] text-slate-300 mt-0.5">
+<div class="p-2.5 rounded-xl bg-indigo-950/50 border border-indigo-500/40 flex flex-wrap items-center justify-between gap-2">
+<div class="flex flex-wrap items-center gap-2">
+<span class="text-xs font-extrabold text-indigo-300">📚 Official CTS / DTS Help Center &amp; SOP Library</span>
+<span class="px-2 py-0.5 rounded bg-amber-950 border border-amber-500/40 text-amber-300 font-mono text-[10px] font-bold">🔒 MANUAL READ ONLY</span>
+<details class="text-[11px] text-slate-300 cursor-pointer">
+<summary class="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-indigo-300 font-mono text-[10px] select-none hover:bg-slate-800">ℹ️ Rules &amp; Description ▼</summary>
+<p class="mt-1.5 p-2 rounded-lg bg-slate-950/90 border border-slate-800 text-[11px] text-slate-300 max-w-xl">
 Browse categories or filter by 1–3 keyword terms below and manually read the SOP documentation. Asking AI/LLM questions or pasting full exam questions is strictly blocked.
 </p>
+</details>
 </div>
-<div class="text-right font-mono text-[10px] text-emerald-400 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
+<div class="text-right font-mono text-[10px] text-emerald-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
 <div id="hc-telemetry-hud">Manual Read: 0s | Docs Opened: 0</div>
 </div>
 </div>
@@ -307,68 +308,77 @@ CONFIDENTIAL CTS/DTS SOP • MANUAL EXAM REFERENCE
 <button type="button" onclick="location.reload()" class="btn-b">🔄 Start New Session</button>
 </div>
 </div>
-<div id="stage-admin-view" class="hidden card space-y-6">
-<div class="row border-b border-slate-800 pb-3"><h2 class="text-lg font-bold text-white">Admin Telemetry, AI Bulk SOP Ingestion Studio &amp; Question Bank</h2><button type="button" onclick="toggleAdminView()" class="btn-d">✕ Close Admin</button></div>
-<div class="subcard space-y-4 border border-indigo-500/40 bg-indigo-950/20">
+<div id="stage-admin-view" class="hidden card space-y-4">
+<div class="row border-b border-slate-800 pb-3">
+<h2 class="text-base font-bold text-white">Admin Telemetry, SOP Ingestion &amp; Question Bank</h2>
+<button type="button" onclick="toggleAdminView()" class="btn-d">✕ Close Admin</button>
+</div>
+<div class="subcard space-y-3 border border-indigo-500/40 bg-indigo-950/20">
 <div class="row flex-wrap gap-2">
-<div>
+<div class="flex flex-wrap items-center gap-2">
+<span class="text-xs font-extrabold text-indigo-300">🤖 Trainer SOP &amp; Chrome Link Ingestion Studio</span>
+<span class="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono text-[10px]">ZERO CANDIDATE AI</span>
+<details class="relative text-xs">
+<summary class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-indigo-300 font-mono text-[11px] cursor-pointer select-none hover:bg-slate-800">
+ℹ️ Tool Descriptions &amp; Guide ▼
+</summary>
+<div class="mt-2 p-3 rounded-xl bg-slate-950 border border-slate-700 text-[11px] text-slate-300 space-y-1.5 max-w-2xl shadow-xl">
+<div><b>• Overview:</b> Automatically parse, chunk, categorize, and index 100+ Help Center articles, internal SOPs, and direct Chrome URLs. Candidates can only browse &amp; read manually during the exam.</div>
+<div><b>• Mode 1 (Direct Chrome Link):</b> Select a verified Chrome Help Center URL or paste 1–50+ URLs. Opens inside an <b>In-App Locked Chrome Sandbox</b> so candidates never switch browser tabs.</div>
+<div><b>• Mode 2 (Multi-File Bulk Upload):</b> Upload 1–200 `.txt`, `.md`, `.csv`, `.json`, or `.html` files at once, or click <b>Auto-Load 25 CTS/DTS SOP Pack</b>.</div>
+<div><b>• Mode 3 (NotebookLM Raw Dump):</b> Paste raw multi-page wiki/SOP text to auto-split into categorized articles and generate exam questions.</div>
+</div>
+</details>
+</div>
 <div class="flex items-center gap-2">
-<span class="text-xs font-extrabold text-indigo-300">🤖 Trainer-Only AI / NotebookLM Bulk Resource &amp; SOP Ingestion Agent</span>
-<span class="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono text-[10px]">TRAINER UPLOAD ONLY • ZERO CANDIDATE AI</span>
-</div>
-<p class="text-[11px] text-slate-400 mt-0.5">
-Automatically parse, chunk, categorize, and index 100+ Help Center articles, internal SOPs, external docs, and policy facts without manual entry. Candidates can only browse &amp; read these manually during the test.
-</p>
-</div>
+<select id="trainer-ingest-mode-select" onchange="switchTrainerIngestionMode(this.value)" class="bg-slate-950 border border-indigo-500/50 text-white rounded-lg px-2.5 py-1.5 text-xs font-bold">
+<option value="chrome">🌐 1. Direct Chrome Link Importer</option>
+<option value="files">📂 2. Multi-File Upload &amp; 25-SOP Pack</option>
+<option value="dump">📝 3. Raw Document Dump Auto-Indexer</option>
+<option value="all">⚡ Show All 3 Modes (Compact)</option>
+</select>
 <div class="font-mono text-xs bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-indigo-300">
-Indexed Library: <span id="admin-hc-total-count" class="font-bold text-white">12</span> Articles
-</div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-<div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 space-y-2.5 flex flex-col justify-between">
-<div>
-<div class="text-xs font-bold text-white">1. Automated Multi-File Bulk Upload (100+ Docs at Once)</div>
-<p class="text-[11px] text-slate-400 mt-0.5">Select multiple `.txt`, `.md`, `.csv`, `.json`, or `.html` SOP &amp; Help Center files. The AI Ingestion Agent automatically splits headings, assigns SOP IDs, and indexes every article.</p>
-</div>
-<div class="flex flex-wrap gap-2 pt-1">
-<label class="btn-b text-center flex-1">
-📂 Select 1–200 SOP / Help Center Files
-<input type="file" multiple accept=".txt,.md,.csv,.json,.html,.tsv" onchange="handleTrainerBulkFilesUpload(event)" class="hidden">
-</label>
-<button type="button" onclick="autoIngestEnterpriseSopBundle()" class="btn-g">⚡ Auto-Load 25 CTS/DTS SOP Pack</button>
-</div>
-</div>
-<div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 space-y-2">
-<div class="text-xs font-bold text-white">2. NotebookLM-Style Raw Document Dump Auto-Indexer</div>
-<textarea id="trainer-raw-dump-input" rows="3" placeholder="Paste raw multi-page SOPs, Help Center wiki dumps, or FAQ tables here... The AI Agent will automatically split them into titled &amp; categorized Help Center articles." class="inp font-mono text-[11px]"></textarea>
-<div class="flex flex-wrap gap-2">
-<button type="button" onclick="runAiBulkDocumentIngestion()" class="btn-b flex-1">🤖 Run AI Auto-Chunker &amp; Upload Articles</button>
-<button type="button" onclick="autoGenerateQuestionsFromSops()" class="btn-d">🎯 Generate Exam Questions from SOPs</button>
+Library: <span id="admin-hc-total-count" class="font-bold text-white">12</span> Docs
 </div>
 </div>
 </div>
-<div class="bg-slate-900/90 p-3.5 rounded-xl border border-indigo-500/40 space-y-2.5">
-<div class="row flex-wrap gap-2">
-<div>
-<div class="text-xs font-bold text-white">🌐 3. Direct Chrome Link / Help Center URL Selector &amp; Batch Link Importer</div>
-<p class="text-[11px] text-slate-400">Select from verified Chrome Help Center links or paste 1–50+ Chrome URLs / Google Docs links (one per line). Links open inside an <b>In-App Locked Chrome Sandbox</b> during the exam so candidates never switch browser tabs.</p>
-</div>
-<select id="trainer-preset-chrome-link" onchange="applyPresetChromeLink(this.value)" class="bg-slate-950 border border-slate-700 text-indigo-300 rounded-lg px-2.5 py-1.5 text-[11px] font-mono">
+
+<div id="ingest-panel-chrome" class="bg-slate-900/90 p-3 rounded-xl border border-indigo-500/40 space-y-2">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+<select id="trainer-preset-chrome-link" onchange="applyPresetChromeLink(this.value)" class="bg-slate-950 border border-slate-700 text-indigo-300 rounded-lg px-2.5 py-2 text-[11px] font-mono md:col-span-4">
 <option value="">⚡ Quick-Select Official Chrome / SOP Link...</option>
 <option value="https://cloud.google.com/architecture/framework/reliability|Google Cloud Reliability & Circuit Breaker SOP|Internal SOP">🔗 Google Cloud Reliability &amp; Circuit Breaker SOP</option>
 <option value="https://cheatsheetseries.owasp.org/cheatsheets/Clickjacking_Defense_Cheat_Sheet.html|OWASP Clickjacking & CSP Frame-Ancestors Policy|Help Center Article">🔗 OWASP Clickjacking &amp; CSP Frame-Ancestors Guide</option>
 <option value="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429|MDN HTTP 429 Too Many Requests & Retry-After Standard|Help Center Article">🔗 MDN HTTP 429 &amp; Retry-After Specification</option>
 <option value="https://support.google.com/a/answer/175197|Google Workspace 2-Step Verification & Account Recovery SOP|Internal SOP">🔗 Google Workspace 2SV Account Recovery Help Center</option>
 </select>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-12 gap-2">
-<input type="text" id="trainer-chrome-link-title" placeholder="Optional Custom Article Title (auto-detected from Chrome URL if left blank)..." class="inp md:col-span-4 text-[11px]">
-<input type="text" id="trainer-chrome-urls-input" placeholder="Paste 1 or multiple Chrome URLs / Google Doc links (space or comma separated): https://support.google.com/... " class="inp md:col-span-5 font-mono text-[11px]">
-<button type="button" onclick="ingestTrainerChromeLinks()" class="btn-g md:col-span-3 text-[11px]">🔗 Add Chrome Link(s) to Tool</button>
+<input type="text" id="trainer-chrome-link-title" placeholder="Optional Title (auto-detected if blank)..." class="inp md:col-span-3 text-[11px]">
+<input type="text" id="trainer-chrome-urls-input" placeholder="Paste Chrome URL(s): https://support.google.com/..." class="inp md:col-span-3 font-mono text-[11px]">
+<button type="button" onclick="ingestTrainerChromeLinks()" class="btn-g md:col-span-2 text-[11px] py-2">🔗 Add Link(s)</button>
 </div>
 </div>
-<div id="trainer-ai-ingestion-status" class="text-[11px] font-mono text-emerald-400 bg-slate-950 px-3 py-2 rounded-lg border border-slate-800">
-✓ AI Bulk Ingestion Studio Ready — 12 Official CTS/DTS SOP &amp; Help Center Articles (+ Direct Chrome Links) Pre-Indexed for Candidate Manual Reference.
+
+<div id="ingest-panel-files" class="hidden bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-2">
+<span class="text-xs font-bold text-slate-200">📂 Bulk Upload `.txt / .md / .csv / .json / .html` SOP Files:</span>
+<div class="flex flex-wrap gap-2">
+<label class="btn-b text-center">
+📂 Select 1–200 Files
+<input type="file" multiple accept=".txt,.md,.csv,.json,.html,.tsv" onchange="handleTrainerBulkFilesUpload(event)" class="hidden">
+</label>
+<button type="button" onclick="autoIngestEnterpriseSopBundle()" class="btn-g">⚡ Auto-Load 25 CTS/DTS SOP Pack</button>
+</div>
+</div>
+
+<div id="ingest-panel-dump" class="hidden bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-2">
+<textarea id="trainer-raw-dump-input" rows="2" placeholder="Paste raw multi-page SOPs or Help Center text here..." class="inp font-mono text-[11px]"></textarea>
+<div class="flex flex-wrap gap-2">
+<button type="button" onclick="runAiBulkDocumentIngestion()" class="btn-b flex-1">🤖 Auto-Chunk &amp; Upload Articles</button>
+<button type="button" onclick="autoGenerateQuestionsFromSops()" class="btn-d">🎯 Generate Exam Questions from SOPs</button>
+</div>
+</div>
+
+<div id="trainer-ai-ingestion-status" class="text-[11px] font-mono text-emerald-400 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+✓ Ready — 12 Official CTS/DTS SOP &amp; Help Center Articles Pre-Indexed.
 </div>
 </div>
 <div class="subcard space-y-3">
@@ -1682,6 +1692,14 @@ if ($('trainer-chrome-link-title')) $('trainer-chrome-link-title').value = '';
 if ($('trainer-preset-chrome-link')) $('trainer-preset-chrome-link').value = '';
 saveHelpCenterLibrary();
 setTxt('trainer-ai-ingestion-status', `✓ Added ${addedCount} Direct Chrome Link(s) to the In-App SOP Library! Candidates can now open them inside the Locked In-App Chrome Sandbox without switching tabs.`, 'text-[11px] font-mono text-emerald-400 bg-slate-950 px-3 py-2 rounded-lg border border-emerald-500/40');
+}
+function switchTrainerIngestionMode(mode) {
+const pChrome = $('ingest-panel-chrome');
+const pFiles = $('ingest-panel-files');
+const pDump = $('ingest-panel-dump');
+if (pChrome) pChrome.classList.toggle('hidden', mode !== 'chrome' && mode !== 'all');
+if (pFiles) pFiles.classList.toggle('hidden', mode !== 'files' && mode !== 'all');
+if (pDump) pDump.classList.toggle('hidden', mode !== 'dump' && mode !== 'all');
 }
 window.addEventListener('DOMContentLoaded', () => { initHelpCenterLibrary(); });
 </script>
