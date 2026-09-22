@@ -2,6 +2,9 @@
 <html lang="en" class="dark" data-no-ai="true" translate="no">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="robots" content="noai,noimageai">
 <meta name="google" content="notranslate">
@@ -76,7 +79,7 @@ Desktop Sync Code: <span id="mobile-sync-code-display" class="font-extrabold tex
 <div>
 <div class="flex items-center gap-2">
 <h1 class="font-extrabold text-white text-base">TRACE Proctoring Engine</h1>
-<span class="tag font-mono">v4.9 SMART ESCALATION</span>
+<span class="tag font-mono">v5.1 COMPACT STUDIO</span>
 <span id="active-role-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono text-[10px] font-bold">🧑‍💻 CANDIDATE VIEW</span>
 </div>
 <p class="text-xs text-slate-400">Autonomous Dual-Perspective Proctoring &amp; Controlled SOP Assessment</p>
@@ -332,10 +335,11 @@ CONFIDENTIAL CTS/DTS SOP • MANUAL EXAM REFERENCE
 </div>
 <div class="flex items-center gap-2">
 <select id="trainer-ingest-mode-select" onchange="switchTrainerIngestionMode(this.value)" class="bg-slate-950 border border-indigo-500/50 text-white rounded-lg px-2.5 py-1.5 text-xs font-bold">
+<option value="none">▼ Select Upload / Chrome Link Tool (Collapsed)...</option>
 <option value="chrome">🌐 1. Direct Chrome Link Importer</option>
 <option value="files">📂 2. Multi-File Upload &amp; 25-SOP Pack</option>
 <option value="dump">📝 3. Raw Document Dump Auto-Indexer</option>
-<option value="all">⚡ Show All 3 Modes (Compact)</option>
+<option value="all">⚡ Show All 3 Modes</option>
 </select>
 <div class="font-mono text-xs bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-indigo-300">
 Library: <span id="admin-hc-total-count" class="font-bold text-white">12</span> Docs
@@ -343,7 +347,7 @@ Library: <span id="admin-hc-total-count" class="font-bold text-white">12</span> 
 </div>
 </div>
 
-<div id="ingest-panel-chrome" class="bg-slate-900/90 p-3 rounded-xl border border-indigo-500/40 space-y-2">
+<div id="ingest-panel-chrome" class="hidden bg-slate-900/90 p-3 rounded-xl border border-indigo-500/40 space-y-2">
 <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
 <select id="trainer-preset-chrome-link" onchange="applyPresetChromeLink(this.value)" class="bg-slate-950 border border-slate-700 text-indigo-300 rounded-lg px-2.5 py-2 text-[11px] font-mono md:col-span-4">
 <option value="">⚡ Quick-Select Official Chrome / SOP Link...</option>
