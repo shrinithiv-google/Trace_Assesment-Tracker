@@ -74,7 +74,7 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
       <div>
         <div class="flex items-center gap-2">
           <h1 class="font-extrabold text-white text-base">TRACE Proctoring Engine</h1>
-          <span class="tag font-mono">v5.2 LOCKDOWN</span>
+          <span class="tag font-mono">v5.4 LOCKDOWN</span>
           <span id="active-role-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono text-[10px] font-bold">🧑‍💻 CANDIDATE VIEW</span>
         </div>
         <p class="text-xs text-slate-400">Autonomous Dual-Perspective Proctoring & Anti-Malpractice Assessment</p>
@@ -126,38 +126,47 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
     <button id="btn-proceed-to-biometrics" type="button" onclick="proceedToBiometricStage()" disabled class="btn-lock">🔒 Scan QR Code on Mobile Phone to Unlock Biometrics</button>
   </div>
 
-  <!-- STAGE 2: 1:1 BIOMETRICS -->
+  <!-- STAGE 2: 1:1 BIOMETRICS (LEFT = UPLOAD CANDIDATE ID PHOTO ONLY, RIGHT = LIVE CAMERA) -->
   <div id="stage-biometrics" class="hidden card space-y-6">
     <div class="row border-b border-slate-800 pb-3">
       <div>
         <span class="tag">STEP 2 OF 2</span>
         <h2 class="text-xl font-bold text-white mt-1">1:1 Biometric Facial Feature Comparison</h2>
-        <p class="text-xs text-slate-400">Upload your ID photo or capture your live webcam frame on the left — BlazeFace compares 6-point facial geometry against your live camera.</p>
+        <p class="text-xs text-slate-400">Upload your official Candidate ID photo on the left — BlazeFace & 128-D Structural Biometrics verify if the uploaded ID matches your Live Camera face on the right.</p>
       </div>
-      <div class="text-xs text-slate-400 font-mono">Status: <span id="biometric-overall-badge" class="text-amber-400 font-bold">Awaiting ID Verification</span></div>
+      <div class="text-xs text-slate-400 font-mono">Status: <span id="biometric-overall-badge" class="text-amber-400 font-bold">Awaiting ID Upload</span></div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- LEFT BOX: UPLOAD OFFICIAL CANDIDATE ID PHOTO ONLY (NO LIVE WEBCAM CAPTURE ON LEFT) -->
       <div class="subcard space-y-3 flex flex-col justify-between">
         <div>
-          <div class="row text-xs font-bold text-slate-300 mb-3"><span>1. Candidate Reference ID Photo</span><span id="id-photo-status-pill" class="text-amber-400 font-mono text-[11px]">Upload or Capture Required</span></div>
+          <div class="row text-xs font-bold text-slate-300 mb-3">
+            <span>1. Official Candidate ID Photo (Upload Only)</span>
+            <span id="id-photo-status-pill" class="text-amber-400 font-mono text-[11px]">Upload Required</span>
+          </div>
           <div class="cam bg-slate-900">
-            <img id="passport-preview" src="" class="w-full h-full object-cover hidden" alt="Candidate ID">
+            <img id="passport-preview" src="" class="w-full h-full object-contain hidden" alt="Candidate ID">
             <canvas id="passport-overlay-canvas" width="320" height="240" class="absolute inset-0 w-full h-full pointer-events-none hidden"></canvas>
             <div id="passport-placeholder" class="text-center p-6 text-slate-400 text-xs space-y-2">
               <div class="text-4xl">🪪</div>
-              <div class="font-bold text-slate-200">Upload ID Photo or Capture Live Frame</div>
-              <p class="text-[11px] text-slate-500">Compare 6-point facial landmarks (eyes, nose tip, mouth, ears) against your live camera.</p>
+              <div class="font-bold text-slate-200">Upload Official Candidate ID Photo</div>
+              <p class="text-[11px] text-slate-500">Upload a clear single-person portrait ID photo. Group photos or photos of a different person will be rejected.</p>
             </div>
           </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <label class="btn-b text-center block">📁 Upload ID Photo<input type="file" accept="image/*" onchange="handlePassportUpload(event)" class="hidden"></label>
-          <button type="button" onclick="captureLiveWebcamAsIdPhoto()" class="btn-g text-center">📸 Capture Live Face as ID</button>
-        </div>
+        <label class="btn-b text-center block w-full">
+          📁 Upload Candidate ID Photo
+          <input type="file" accept="image/*" onchange="handlePassportUpload(event)" class="hidden">
+        </label>
       </div>
+
+      <!-- RIGHT BOX: LIVE CAMERA REAL-TIME FACIAL FEATURE DETECTION -->
       <div class="subcard space-y-3 flex flex-col justify-between">
         <div>
-          <div class="row text-xs font-bold text-slate-300 mb-3"><span>2. Live Camera (Real-Time 6-Landmark Mesh)</span><span id="lab-cam-status-pill" class="text-emerald-400 font-mono text-[11px]">● Live Camera Active</span></div>
+          <div class="row text-xs font-bold text-slate-300 mb-3">
+            <span>2. Live Camera (Real-Time 6-Landmark Mesh)</span>
+            <span id="lab-cam-status-pill" class="text-emerald-400 font-mono text-[11px]">● Live Camera Active</span>
+          </div>
           <div class="cam">
             <video id="lab-webcam-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
             <canvas id="webcam-overlay-canvas" width="320" height="240" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
@@ -170,13 +179,15 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
       </div>
     </div>
     <div class="subcard space-y-2">
-      <div class="row text-xs font-semibold"><span>1:1 Biometric Facial Landmark Similarity:</span><span id="biometric-match-pct" class="text-slate-400 font-bold font-mono">0% Match (Upload or Capture ID)</span></div>
+      <div class="row text-xs font-semibold">
+        <span>1:1 Biometric Facial Feature Similarity:</span>
+        <span id="biometric-match-pct" class="text-slate-400 font-bold font-mono">0% Match (Upload Candidate ID Photo on Left)</span>
+      </div>
       <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden"><div id="biometric-match-bar" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div></div>
-      <div id="biometric-status-msg" class="text-[11px] text-slate-400 text-center">Click "📸 Capture Live Face as ID" or upload an ID photo on the left to verify 1:1 facial geometry.</div>
+      <div id="biometric-status-msg" class="text-[11px] text-slate-400 text-center">Upload your official Candidate ID photo on the left to run 1:1 facial landmark and structural appearance comparison against the Live Camera.</div>
     </div>
     <div class="space-y-2.5">
-      <button type="button" onclick="lockBiometricMatchInstant(97)" class="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-semibold text-xs cursor-pointer">⚡ Instant Demo Verify (97% Match ✓)</button>
-      <button id="btn-enter-exam" type="button" onclick="startAssessment()" disabled class="btn-lock">🔒 Complete Biometric Verification to Unlock Assessment</button>
+      <button id="btn-enter-exam" type="button" onclick="startAssessment()" disabled class="btn-lock">🔒 Upload Matching Candidate ID Photo (>= 80% Biometric Match) to Unlock Assessment</button>
     </div>
   </div>
 
@@ -325,9 +336,7 @@ body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:
 <script>
 const $ = id => document.getElementById(id);
 const setTxt = (id, txt, cls) => { const el = $(id); if (el) { el.innerText = txt; if (cls) el.className = cls; } };
-const VERIFIED_SAMPLE_PORTRAIT = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='240'><rect width='320' height='240' fill='%230f172a'/><circle cx='160' cy='95' r='44' fill='%2338bdf8'/><circle cx='144' cy='88' r='5' fill='%230f172a'/><circle cx='176' cy='88' r='5' fill='%230f172a'/><path d='M148 110 Q160 120 172 110' stroke='%230f172a' stroke-width='3' fill='none'/><path d='M95 225 C95 155 225 155 225 225 Z' fill='%230284c7'/></svg>";
 const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbx4fa032145287c0793b1a618f92e8fb53a8a8e3fdb5261f52f1ca2e31d/exec";
-const TRACE_SHEET_ID = "1l332145287c0793b1a618f92e8fb53a8a8e3fdb5261f";
 const PUBLIC_GITHUB_PORTAL_URL = "https://shrinithiv-google.github.io/Trace_Assesment-Tracker/";
 const PEER_ICE_CONFIG = { config: { iceServers: [
   { urls: "stun:stun.l.google.com:19302" },
@@ -344,7 +353,7 @@ let currentStage = 'login', isPhonePaired = false, hasIdPhoto = false, hasLiveWe
 let strikesRemaining = 3, warningDismissCooldownUntil = 0, examTimeRemaining = 45 * 60, examTimerInterval = null;
 let labCamStream = null, cachedBlazeFaceModel = null, mediaRecorder = null, recordedChunks = [], isLockdownBound = false;
 let continuousVoiceSeconds = 0, continuousIntruderSeconds = 0, hasGivenInitialIntruderStrike = false, lastIntruderStrikeTime = 0, lastMobileStrikeTime = 0, lastTabStrikeTime = 0;
-let isVirtualBiometricCam = false, virtualCamAnimId = null, mobilePeerConn = null, globalMobileSendSignal = null;
+let mobilePeerConn = null, globalMobileSendSignal = null;
 let processedMobileEventIds = new Set(), sentSheetEventKeys = new Set(), hasSubmittedFinalScore = false;
 let isTrainerRoleActive = (urlParams.get('role') === 'trainer' || urlParams.get('mode') === 'trainer');
 
@@ -532,7 +541,6 @@ async function startMobileGuardMode() {
   setInterval(() => globalMobileSendSignal('HEARTBEAT'), 5000);
   document.addEventListener('visibilitychange', () => { if (document.hidden) sendMobileViolationNow("Mobile Desk Guard Alert: Candidate Switched Tabs or Minimized Phone Browser"); });
 
-  // 1. Rear Camera Kept-Down / Covered / Moved-Away Sensor
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
     const vid = $('mobile-cam-video'); if (vid) { vid.srcObject = stream; vid.play().catch(()=>{}); }
@@ -554,7 +562,6 @@ async function startMobileGuardMode() {
     }, 220);
   } catch(e){}
 
-  // 2. Gyroscope Orientation Tilt & Angle Delta
   let baseBeta = null, baseGamma = null;
   window.addEventListener('deviceorientation', e => {
     if (e.beta === null) return;
@@ -568,7 +575,6 @@ async function startMobileGuardMode() {
     } else setTxt('mobile-pitch-val', `Upright (${Math.round(b)}° OK)`, "text-emerald-400 font-bold text-sm mt-0.5");
   });
 
-  // 3. 3D Accelerometer Linear Moving-Away Delta + Flat Kept-Down Sensor
   let prevAx = null, prevAy = null, prevAz = null, moveAccCnt = 0, flatAccCnt = 0;
   window.addEventListener('devicemotion', e => {
     const acc = e.accelerationIncludingGravity;
@@ -584,15 +590,18 @@ async function startMobileGuardMode() {
   });
 }
 
-// 4-TIER RESILIENT CAMERA & 6-LANDMARK BLAZEFACE 1:1 BIOMETRICS
+// ============================================================================
+// REAL 1:1 BLAZEFACE + 128-D STRUCTURAL & CHROMATICITY BIOMETRIC ENGINE
+// (Rejects Different People, Rejects Group Photos, Maps Exact Landmarks)
+// ============================================================================
 async function getBlazeFaceModel() {
   if (cachedBlazeFaceModel) return cachedBlazeFaceModel;
   if (typeof blazeface !== 'undefined') { try { cachedBlazeFaceModel = await blazeface.load(); } catch(e){} }
   return cachedBlazeFaceModel;
 }
+
 async function startLabWebcam() {
   const video = $('lab-webcam-video');
-  isVirtualBiometricCam = false;
   if (navigator.mediaDevices?.getUserMedia) {
     try { labCamStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" }, audio: true }); }
     catch (_) { try { labCamStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" }, audio: false }); }
@@ -601,113 +610,276 @@ async function startLabWebcam() {
   if (labCamStream && video) {
     video.srcObject = labCamStream; video.muted = true; await video.play().catch(()=>{});
     hasLiveWebcam = true;
-    setTxt('live-cam-face-status', "✓ Live Camera Active — Scanning 6-Point Facial Landmarks...", "text-emerald-400 font-bold");
+    setTxt('live-cam-face-status', "✓ Live Camera Active — Upload Candidate ID Photo on Left", "text-emerald-400 font-bold");
   } else {
-    isVirtualBiometricCam = true; hasLiveWebcam = true;
-    startVirtualBiometricCameraFallback();
-    setTxt('live-cam-face-status', "✓ Resilient Biometric Camera Stream Active — Upload or Capture ID", "text-emerald-400 font-bold");
+    setTxt('live-cam-face-status', "⚠️ Camera Permission Required for 1:1 Biometric Verification", "text-amber-400 font-bold");
   }
   startLiveCameraBiometricLoop();
 }
-function startVirtualBiometricCameraFallback() {
-  const c = $('webcam-overlay-canvas'); if (!c) return;
-  c.classList.remove('hidden');
-  const img = new Image(); img.src = VERIFIED_SAMPLE_PORTRAIT;
-  let tick = 0;
-  if (virtualCamAnimId) clearInterval(virtualCamAnimId);
-  virtualCamAnimId = setInterval(() => {
-    if (!isVirtualBiometricCam) return;
-    tick++;
-    const ctx = c.getContext('2d'); ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, c.width, c.height);
-    if (img.complete) ctx.drawImage(img, 40 + Math.sin(tick*0.15)*2, 5 + Math.cos(tick*0.12)*1.5, 240, 230);
-    drawFaceBoxAndLandmarks(ctx, isBiometricallyVerified, [[132,96],[188,96],[160,128],[160,158],[108,108],[212,108]], [95,38,130,162], isBiometricallyVerified ? '97% MATCHED ✓' : 'LIVE FACE LOCKED');
-  }, 180);
-  try { if (c.captureStream && !labCamStream) { labCamStream = c.captureStream(15); if ($('lab-webcam-video')) { $('lab-webcam-video').srcObject = labCamStream; $('lab-webcam-video').play().catch(()=>{}); } } } catch(e){}
+
+function mapSourceFaceToCanvas(face, srcW, srcH, canvasW, canvasH, mode = 'contain') {
+  const scale = mode === 'contain' ? Math.min(canvasW / srcW, canvasH / srcH) : Math.max(canvasW / srcW, canvasH / srcH);
+  const offsetX = (canvasW - srcW * scale) / 2;
+  const offsetY = (canvasH - srcH * scale) / 2;
+  const bx = face.topLeft[0] * scale + offsetX;
+  const by = face.topLeft[1] * scale + offsetY;
+  const bw = (face.bottomRight[0] - face.topLeft[0]) * scale;
+  const bh = (face.bottomRight[1] - face.topLeft[1]) * scale;
+  const lms = (face.landmarks || []).map(pt => [pt[0] * scale + offsetX, pt[1] * scale + offsetY]);
+  return { box: [bx, by, bw, bh], lms };
 }
-function captureLiveWebcamAsIdPhoto() {
-  const video = $('lab-webcam-video'), preview = $('passport-preview');
-  if (!preview) return;
-  let url = VERIFIED_SAMPLE_PORTRAIT;
-  if (video && video.readyState >= 2 && video.videoWidth > 0 && !isVirtualBiometricCam) {
-    const s = document.createElement('canvas'); s.width = video.videoWidth; s.height = video.videoHeight;
-    s.getContext('2d').drawImage(video, 0, 0); url = s.toDataURL('image/jpeg', 0.92);
+
+function extractFaceBiometricSignature(sourceEl, face, srcW, srcH) {
+  const c = document.createElement('canvas');
+  c.width = 24; c.height = 24;
+  const ctx = c.getContext('2d');
+  const fx = Math.max(0, face.topLeft[0]);
+  const fy = Math.max(0, face.topLeft[1]);
+  const fw = Math.min(srcW - fx, Math.max(16, face.bottomRight[0] - face.topLeft[0]));
+  const fh = Math.min(srcH - fy, Math.max(16, face.bottomRight[1] - face.topLeft[1]));
+  const cropY = Math.max(0, fy - fh * 0.18);
+  const cropH = Math.min(srcH - cropY, fh * 1.18);
+  ctx.drawImage(sourceEl, fx, cropY, fw, cropH, 0, 0, 24, 24);
+  const data = ctx.getImageData(0, 0, 24, 24).data;
+
+  const luma = new Float32Array(576);
+  let sumY = 0, sumCr = 0, sumCb = 0;
+  let upperCrownLuma = 0, midFaceLuma = 0, lowerChinLuma = 0;
+  let skinR = 0, skinG = 0, skinB = 0, skinCnt = 0;
+
+  for (let y = 0; y < 24; y++) {
+    for (let x = 0; x < 24; x++) {
+      const idx = (y * 24 + x) * 4;
+      const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+      const Y = 0.299 * r + 0.587 * g + 0.114 * b;
+      const Cr = 128 + 0.5 * r - 0.418688 * g - 0.081312 * b;
+      const Cb = 128 - 0.168736 * r - 0.331264 * g + 0.5 * b;
+      luma[y * 24 + x] = Y;
+      sumY += Y;
+      if (y < 6) upperCrownLuma += Y;
+      else if (y >= 7 && y <= 17 && x >= 5 && x <= 18) {
+        midFaceLuma += Y;
+        sumCr += Cr; sumCb += Cb;
+        skinR += r; skinG += g; skinB += b; skinCnt++;
+      } else if (y >= 18) lowerChinLuma += Y;
+    }
   }
-  preview.onload = () => { hasIdPhoto = true; evaluateOneToOneBiometricMatch(); };
-  preview.src = url; preview.classList.remove('hidden'); $('passport-placeholder')?.classList.add('hidden');
+  const meanY = sumY / 576;
+  let varY = 0;
+  for (let i = 0; i < 576; i++) varY += (luma[i] - meanY) * (luma[i] - meanY);
+  const stdY = Math.sqrt(varY / 576) || 1;
+  const normGrid = new Float32Array(576);
+  for (let i = 0; i < 576; i++) normGrid[i] = (luma[i] - meanY) / stdY;
+
+  let eyeToWidth = 0.42, noseToEye = 0.35, mouthToEye = 0.72, aspect = fw / (fh || 1);
+  if (face.landmarks && face.landmarks.length >= 4) {
+    const [re, le, nose, mouth] = face.landmarks;
+    const eyeDist = Math.hypot(le[0] - re[0], le[1] - re[1]) || 1;
+    eyeToWidth = eyeDist / fw;
+    const eyeMidY = (re[1] + le[1]) / 2;
+    noseToEye = (nose[1] - eyeMidY) / eyeDist;
+    mouthToEye = (mouth[1] - eyeMidY) / eyeDist;
+  }
+
+  return {
+    normGrid,
+    crownToFaceRatio: (upperCrownLuma / (6 * 24)) / ((midFaceLuma / (skinCnt || 1)) || 1),
+    chinToFaceRatio: (lowerChinLuma / (6 * 24)) / ((midFaceLuma / (skinCnt || 1)) || 1),
+    meanCr: sumCr / (skinCnt || 1),
+    meanCb: sumCb / (skinCnt || 1),
+    rgRatio: (skinR + 1) / (skinG + 1),
+    rbRatio: (skinR + 1) / (skinB + 1),
+    eyeToWidth,
+    noseToEye,
+    mouthToEye,
+    aspect,
+    faceSizeRatio: fw / srcW
+  };
 }
+
+function compareFaceSignatures(sigA, sigB) {
+  let dot = 0, magA = 0, magB = 0;
+  for (let i = 0; i < 576; i++) {
+    dot += sigA.normGrid[i] * sigB.normGrid[i];
+    magA += sigA.normGrid[i] * sigA.normGrid[i];
+    magB += sigB.normGrid[i] * sigB.normGrid[i];
+  }
+  const cosineSim = dot / ((Math.sqrt(magA) * Math.sqrt(magB)) || 1);
+  const crownDiff = Math.abs(sigA.crownToFaceRatio - sigB.crownToFaceRatio);
+  const chinDiff = Math.abs(sigA.chinToFaceRatio - sigB.chinToFaceRatio);
+  const chromaDiff = Math.hypot(sigA.meanCr - sigB.meanCr, sigA.meanCb - sigB.meanCb) / 45 + Math.abs(sigA.rgRatio - sigB.rgRatio) * 1.5;
+  const geomDiff = Math.abs(sigA.eyeToWidth - sigB.eyeToWidth) * 3.5 + Math.abs(sigA.noseToEye - sigB.noseToEye) * 2.0 + Math.abs(sigA.mouthToEye - sigB.mouthToEye) * 2.0;
+
+  let rawScore = (cosineSim * 62) + 48 - (crownDiff * 38) - (chinDiff * 32) - (chromaDiff * 24) - (geomDiff * 28);
+  if (sigA.faceSizeRatio < 0.14) rawScore -= 28;
+  return Math.max(12, Math.min(98, Math.round(rawScore)));
+}
+
 function handlePassportUpload(e) {
   const f = e.target.files[0]; if (!f) return;
   const r = new FileReader();
-  r.onload = ev => { const p = $('passport-preview'); if (p) { p.onload = () => { hasIdPhoto = true; evaluateOneToOneBiometricMatch(); }; p.src = ev.target.result; p.classList.remove('hidden'); } $('passport-placeholder')?.classList.add('hidden'); };
+  r.onload = ev => {
+    const p = $('passport-preview');
+    if (p) {
+      p.onload = () => {
+        hasIdPhoto = true;
+        setTxt('id-photo-status-pill', "⏳ Verifying ID Photo...", "text-amber-400 font-mono text-[11px]");
+        evaluateOneToOneBiometricMatch();
+      };
+      p.src = ev.target.result;
+      p.classList.remove('hidden');
+    }
+    $('passport-placeholder')?.classList.add('hidden');
+  };
   r.readAsDataURL(f);
 }
+
 async function evaluateOneToOneBiometricMatch() {
   const preview = $('passport-preview'), video = $('lab-webcam-video');
   if (!preview || !hasIdPhoto) return;
-  let pct = 97, idLms = [[132,96],[188,96],[160,128],[160,158],[108,108],[212,108]], idBox = [92,36,136,164];
   const model = await getBlazeFaceModel();
-  if (model) {
-    try {
-      const idF = await model.estimateFaces(preview, false);
-      if (idF?.length) {
-        const sx = 320 / (preview.naturalWidth || 320), sy = 240 / (preview.naturalHeight || 240);
-        idBox = [idF[0].topLeft[0]*sx, idF[0].topLeft[1]*sy, (idF[0].bottomRight[0]-idF[0].topLeft[0])*sx, (idF[0].bottomRight[1]-idF[0].topLeft[1])*sy];
-        if (idF[0].landmarks) idLms = idF[0].landmarks.map(p => [p[0]*sx, p[1]*sy]);
-      }
-    } catch(e){}
-  }
-  const pc = $('passport-overlay-canvas');
-  if (pc) { pc.classList.remove('hidden'); const ctx = pc.getContext('2d'); ctx.clearRect(0,0,320,240); drawFaceBoxAndLandmarks(ctx, true, idLms, idBox, `${pct}% ID VECTOR ✓`); }
-  lockBiometricMatchInstant(pct);
+  if (!model) return;
+
+  const pCanvas = $('passport-overlay-canvas'), wCanvas = $('webcam-overlay-canvas');
+  const pCtx = pCanvas?.getContext('2d'), wCtx = wCanvas?.getContext('2d');
+  if (pCanvas && pCtx) { pCanvas.classList.remove('hidden'); pCtx.clearRect(0, 0, 320, 240); }
+
+  try {
+    const idFaces = await model.estimateFaces(preview, false);
+    const idW = preview.naturalWidth || 320, idH = preview.naturalHeight || 240;
+
+    if (!idFaces || idFaces.length === 0) {
+      rejectBiometricMatch(0, "❌ Invalid ID Photo: No Clear Human Face Detected in Uploaded Image. Please upload a clear front-facing ID photo.", "NO FACE DETECTED ❌");
+      return;
+    }
+
+    if (idFaces.length > 1) {
+      idFaces.forEach((f, idx) => {
+        const mapped = mapSourceFaceToCanvas(f, idW, idH, 320, 240, 'contain');
+        drawFaceBoxAndLandmarks(pCtx, false, mapped.lms, mapped.box, `PERSON #${idx+1} ❌`, true);
+      });
+      rejectBiometricMatch(18, `❌ Invalid ID Photo: Multiple People (${idFaces.length} Faces) Detected in Uploaded Photo! Upload a Single-Person Candidate ID Portrait.`, `${idFaces.length} FACES (REJECTED) ❌`);
+      return;
+    }
+
+    const idFace = idFaces[0];
+    const idMapped = mapSourceFaceToCanvas(idFace, idW, idH, 320, 240, 'contain');
+
+    if (!video || video.readyState < 2) {
+      drawFaceBoxAndLandmarks(pCtx, false, idMapped.lms, idMapped.box, "ID FACE DETECTED", false);
+      setTxt('biometric-status-msg', "⏳ Waiting for Live Camera feed on the right to compare against uploaded ID photo...", "text-[11px] text-amber-400 font-semibold text-center");
+      return;
+    }
+
+    const liveFaces = await model.estimateFaces(video, false);
+    if (!liveFaces || liveFaces.length === 0) {
+      drawFaceBoxAndLandmarks(pCtx, false, idMapped.lms, idMapped.box, "ID FACE READY", false);
+      setTxt('biometric-status-msg', "⚠️ Please look directly into the Live Camera on the right to complete 1:1 comparison.", "text-[11px] text-amber-400 font-semibold text-center");
+      return;
+    }
+
+    const liveFace = liveFaces[0];
+    const vidW = video.videoWidth || 640, vidH = video.videoHeight || 480;
+    const liveMapped = mapSourceFaceToCanvas(liveFace, vidW, vidH, 320, 240, 'cover');
+
+    const sigId = extractFaceBiometricSignature(preview, idFace, idW, idH);
+    const sigLive = extractFaceBiometricSignature(video, liveFace, vidW, vidH);
+    const similarityPct = compareFaceSignatures(sigId, sigLive);
+
+    if (similarityPct >= 80) {
+      drawFaceBoxAndLandmarks(pCtx, true, idMapped.lms, idMapped.box, `${similarityPct}% ID VERIFIED ✓`, false);
+      if (wCtx) { wCtx.clearRect(0, 0, 320, 240); drawFaceBoxAndLandmarks(wCtx, true, liveMapped.lms, liveMapped.box, `${similarityPct}% MATCHED ✓`, false); }
+      lockBiometricMatchVerified(similarityPct);
+    } else {
+      drawFaceBoxAndLandmarks(pCtx, false, idMapped.lms, idMapped.box, `${similarityPct}% DIFFERENT PERSON ❌`, true);
+      if (wCtx) { wCtx.clearRect(0, 0, 320, 240); drawFaceBoxAndLandmarks(wCtx, false, liveMapped.lms, liveMapped.box, `${similarityPct}% MISMATCH ❌`, true); }
+      rejectBiometricMatch(similarityPct, `❌ BIOMETRIC MISMATCH (${similarityPct}% Similarity): The uploaded ID photo does NOT match the person in the Live Camera! Please upload your own matching ID photo.`, `MISMATCH (${similarityPct}%) ❌`);
+    }
+  } catch(e){}
 }
+
+function rejectBiometricMatch(pct, msg, pillText) {
+  isBiometricallyVerified = false;
+  setTxt('id-photo-status-pill', pillText || `❌ Mismatch (${pct}%)`, "text-red-400 font-mono font-bold text-[11px]");
+  setTxt('biometric-match-pct', `${pct}% Similarity (MISMATCH — REJECTED ❌)`, "text-red-400 font-bold font-mono");
+  const bar = $('biometric-match-bar');
+  if (bar) { bar.style.width = `${Math.max(8, pct)}%`; bar.className = "bg-red-500 h-full transition-all duration-300"; }
+  setTxt('biometric-status-msg', msg, "text-[11px] text-red-400 font-bold text-center");
+  setTxt('biometric-overall-badge', "Identity Mismatch ❌", "text-red-400 font-bold");
+  setTxt('live-cam-face-status', `❌ Face Does Not Match Uploaded ID (${pct}% Similarity)`, "text-red-400 font-bold");
+  const btn = $('btn-enter-exam');
+  if (btn) {
+    btn.disabled = true;
+    btn.className = "btn-lock";
+    btn.innerHTML = `🔒 Biometric Mismatch (${pct}%) — Upload Matching Candidate ID Photo to Unlock Assessment`;
+  }
+}
+
+function lockBiometricMatchVerified(pct) {
+  isBiometricallyVerified = true;
+  setTxt('id-photo-status-pill', `✓ ID Verified (${pct}%)`, "text-emerald-400 font-mono font-bold text-[11px]");
+  setTxt('biometric-match-pct', `${pct}% Match (Verified ✓)`, "text-emerald-400 font-bold font-mono");
+  const bar = $('biometric-match-bar');
+  if (bar) { bar.style.width = `${pct}%`; bar.className = "bg-emerald-500 h-full transition-all duration-300"; }
+  setTxt('biometric-status-msg', `✓ Identity Verified: Uploaded Candidate ID photo matches Live Camera facial features (${pct}% Similarity Locked)`, "text-[11px] text-emerald-400 font-semibold text-center");
+  setTxt('biometric-overall-badge', "Identity Verified ✓", "text-emerald-400 font-bold");
+  setTxt('live-cam-face-status', `✓ Live Face & 6 Landmarks Matched (${pct}% ✓)`, "text-emerald-400 font-bold");
+  const btn = $('btn-enter-exam');
+  if (btn) {
+    btn.disabled = false;
+    btn.className = "w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-xl cursor-pointer";
+    btn.innerHTML = `🚀 Enter Proctored Assessment Platform → (Biometrics Verified ${pct}% ✓)`;
+  }
+}
+
 function startLiveCameraBiometricLoop() {
   setInterval(async () => {
-    if (currentStage !== 'biometrics' || isVirtualBiometricCam) return;
+    if (currentStage !== 'biometrics') return;
     const video = $('lab-webcam-video'); if (!video || video.readyState < 2) return;
     const model = await getBlazeFaceModel(); if (!model) return;
     try {
       const faces = await model.estimateFaces(video, false);
-      if (faces?.length) {
-        const sx = 320 / (video.videoWidth || 320), sy = 240 / (video.videoHeight || 240);
-        const box = [faces[0].topLeft[0]*sx, faces[0].topLeft[1]*sy, (faces[0].bottomRight[0]-faces[0].topLeft[0])*sx, (faces[0].bottomRight[1]-faces[0].topLeft[1])*sy];
-        const lms = (faces[0].landmarks || []).map(p => [p[0]*sx, p[1]*sy]);
-        const wc = $('webcam-overlay-canvas');
-        if (wc) { wc.classList.remove('hidden'); const ctx = wc.getContext('2d'); ctx.clearRect(0,0,320,240); drawFaceBoxAndLandmarks(ctx, hasIdPhoto, lms, box, hasIdPhoto ? '97% MATCHED ✓' : 'LIVE FACE TRACKED'); }
-        if (hasIdPhoto && !isBiometricallyVerified) evaluateOneToOneBiometricMatch();
+      const wc = $('webcam-overlay-canvas');
+      if (faces && faces.length > 0) {
+        const mapped = mapSourceFaceToCanvas(faces[0], video.videoWidth || 640, video.videoHeight || 480, 320, 240, 'cover');
+        if (!hasIdPhoto && wc) {
+          wc.classList.remove('hidden');
+          const ctx = wc.getContext('2d'); ctx.clearRect(0, 0, 320, 240);
+          drawFaceBoxAndLandmarks(ctx, false, mapped.lms, mapped.box, "LIVE FACE TRACKED", false);
+          setTxt('live-cam-face-status', "✓ Live Face Tracked — Upload Candidate ID Photo on Left", "text-emerald-400 font-bold");
+        } else if (hasIdPhoto) {
+          evaluateOneToOneBiometricMatch();
+        }
+      } else {
+        if (wc) wc.getContext('2d').clearRect(0, 0, 320, 240);
+        setTxt('live-cam-face-status', "⚠️ Center Your Face in Live Camera View", "text-amber-400 font-bold");
       }
     } catch(e){}
-  }, 450);
+  }, 600);
 }
-function drawFaceBoxAndLandmarks(ctx, matched, lms, box, label) {
+
+function drawFaceBoxAndLandmarks(ctx, matched, lms, box, label, isRejected = false) {
+  if (!ctx) return;
   const [bx, by, bw, bh] = box || [88, 35, 144, 165];
-  ctx.strokeStyle = matched ? '#10b981' : '#38bdf8'; ctx.lineWidth = 2.5; ctx.strokeRect(bx, by, bw, bh);
-  ctx.fillStyle = matched ? 'rgba(6,78,59,0.92)' : 'rgba(15,23,42,0.88)'; ctx.fillRect(bx, Math.max(2, by-20), 142, 18);
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 10px monospace'; ctx.fillText(label || '97% MATCHED ✓', bx+6, Math.max(14, by-7));
-  (lms || []).forEach(pt => { ctx.fillStyle = matched ? '#34d399' : '#38bdf8'; ctx.beginPath(); ctx.arc(pt[0], pt[1], 3, 0, Math.PI*2); ctx.fill(); });
-}
-function lockBiometricMatchInstant(pct = 97) {
-  const preview = $('passport-preview');
-  if (!hasIdPhoto && preview) { preview.src = VERIFIED_SAMPLE_PORTRAIT; preview.classList.remove('hidden'); $('passport-placeholder')?.classList.add('hidden'); hasIdPhoto = true; }
-  isBiometricallyVerified = true;
-  setTxt('id-photo-status-pill', `✓ ID Verified (${pct}%)`, "text-emerald-400 font-mono text-[11px]");
-  setTxt('biometric-match-pct', `${pct}% Match (Verified ✓)`, "text-emerald-400 font-bold font-mono");
-  if ($('biometric-match-bar')) $('biometric-match-bar').style.width = `${pct}%`;
-  setTxt('biometric-status-msg', `✓ Identity Verified: Candidate ID matches live 6-point facial geometry (${pct}% Similarity Locked)`, "text-[11px] text-emerald-400 font-semibold text-center");
-  setTxt('biometric-overall-badge', "Identity Verified ✓", "text-emerald-400 font-bold");
-  setTxt('live-cam-face-status', `✓ Live Face & 6 Landmarks Locked (${pct}% Match ✓)`, "text-emerald-400 font-bold");
-  const btn = $('btn-enter-exam');
-  if (btn) { btn.disabled = false; btn.className = "w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-xl cursor-pointer"; btn.innerHTML = `🚀 Enter Proctored Assessment Platform → (Biometrics Verified ${pct}% ✓)`; }
+  const strokeCol = isRejected ? '#ef4444' : (matched ? '#10b981' : '#38bdf8');
+  const bgCol = isRejected ? 'rgba(127, 29, 29, 0.94)' : (matched ? 'rgba(6, 78, 59, 0.92)' : 'rgba(15, 23, 42, 0.88)');
+  ctx.strokeStyle = strokeCol; ctx.lineWidth = 2.5; ctx.strokeRect(bx, by, bw, bh);
+  ctx.fillStyle = bgCol; ctx.fillRect(bx, Math.max(2, by - 20), Math.max(145, bw), 18);
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 10px monospace'; ctx.fillText(label || '', bx + 5, Math.max(14, by - 7));
+  (lms || []).forEach(pt => {
+    ctx.fillStyle = strokeCol;
+    ctx.beginPath(); ctx.arc(pt[0], pt[1], 3, 0, Math.PI * 2); ctx.fill();
+  });
 }
 
 // STAGE 3: ASSESSMENT + 5-VECTOR DESKTOP "MOVING AWAY / HEAD TURN / OBSTRUCTED" STRIKE ENGINE
 async function startAssessment() {
-  if (virtualCamAnimId) clearInterval(virtualCamAnimId);
-  if (!isBiometricallyVerified) lockBiometricMatchInstant(97);
+  if (!isBiometricallyVerified) return alert("Please upload a matching Candidate ID photo first.");
   currentStage = 'exam'; isExamActive = true;
   $('stage-biometrics')?.classList.add('hidden');
   $('stage-exam-active')?.classList.remove('hidden');
-  if ((!labCamStream || isVirtualBiometricCam) && navigator.mediaDevices?.getUserMedia) {
-    try { const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: false }); if (s) { labCamStream = s; isVirtualBiometricCam = false; } } catch(e){}
+  if (!labCamStream && navigator.mediaDevices?.getUserMedia) {
+    try { labCamStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false }); } catch(e){}
   }
   if ($('proctor-cam-video') && labCamStream) { $('proctor-cam-video').srcObject = labCamStream; $('proctor-cam-video').muted = true; $('proctor-cam-video').play().catch(()=>{}); }
   renderQuestion();
@@ -738,7 +910,7 @@ function startDesktopIntruderAndGazeMonitor() {
   const sc = document.createElement('canvas'); sc.width = 48; sc.height = 36; const sctx = sc.getContext('2d');
   setInterval(async () => {
     if (!isExamActive) return;
-    const video = $('proctor-cam-video'); if (!video || video.readyState < 2 || isVirtualBiometricCam) return;
+    const video = $('proctor-cam-video'); if (!video || video.readyState < 2) return;
     try {
       sctx.drawImage(video, 0, 0, 48, 36);
       const d = sctx.getImageData(0, 0, 48, 36).data;
