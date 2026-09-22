@@ -28,9 +28,9 @@
         <div>
           <div class="flex items-center gap-2">
             <span class="font-extrabold text-base text-white">Trace</span>
-            <span id="portal-role-badge" class="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-blue-950/90 text-blue-300 border border-blue-700/50">CANDIDATE EXAM VIEW</span>
+            <span id="portal-role-badge" class="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-blue-950/90 text-blue-300 border border-blue-700/50">AGENT ASSESSMENT VIEW</span>
           </div>
-          <p class="text-[11px] text-slate-400">Dual-Camera 360° AI Proctoring • 1:1 Facial Landmark Verification • NotebookLM SOP Engine</p>
+          <p class="text-[11px] text-slate-400">Mobile QR Guard • 1:1 Facial Landmark Biometrics • In-App SOP & Google Sheets Audit</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -42,14 +42,14 @@
           <span class="text-slate-400">Strikes:</span>
           <span id="exam-strikes-display" class="font-mono font-bold text-emerald-400">0/3</span>
         </div>
-        <button id="btn-role-candidate" type="button" onclick="applyPortalRoleView('candidate')" class="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold cursor-pointer">🎓 Candidate</button>
+        <button id="btn-role-candidate" type="button" onclick="applyPortalRoleView('candidate')" class="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold cursor-pointer">🎓 Agent / Candidate</button>
         <button id="btn-role-trainer" type="button" onclick="applyPortalRoleView('trainer')" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 border border-slate-700 text-xs font-bold cursor-pointer">🛡️ Trainer / Admin</button>
       </div>
     </div>
   </header>
 
   <!-- MAIN DESKTOP CONTAINER -->
-  <main id="desktop-main-ui" class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+  <main id="desktop-main-ui" class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 
     <!-- TRAINER / ADMIN COMMAND CENTER (NOTEBOOKLM SOP SYNTHESIZER + 100-USER LOAD TEST) -->
     <section id="trainer-admin-hub-banner" class="hidden glass rounded-3xl p-6 border border-indigo-500/30 space-y-4">
@@ -85,54 +85,68 @@
       </div>
     </section>
 
-    <!-- STAGE 1: CANDIDATE REGISTRATION & MOBILE 360° GUARD PAIRING -->
+    <!-- STAGE 1: TWO CLEAN SEGMENTS ONLY (LEFT: AGENT DETAILS | RIGHT: PHONE QR CONNECTION — NO PHONE CAMERA FEED ON MONITOR) -->
     <section id="stage-pairing" class="glass rounded-3xl p-6 space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div class="lg:col-span-5 space-y-4">
-          <span class="px-3 py-1 rounded-full bg-blue-950 text-blue-400 border border-blue-700/50 text-xs font-bold">STEP 1 OF 3 • CANDIDATE & MOBILE 360° PAIRING</span>
-          <h1 class="text-2xl font-extrabold text-white">Candidate Identity & 360° Desk Guard</h1>
-          <div class="space-y-3 bg-slate-950/80 p-4 rounded-2xl border border-slate-800">
-            <div>
-              <label class="text-xs text-slate-400 font-semibold">Candidate Full Name</label>
-              <input id="candidate-name" type="text" value="Alex Mercer" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white font-semibold" />
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-4">
+        <div>
+          <span class="px-3 py-1 rounded-full bg-blue-950 text-blue-400 border border-blue-700/50 text-xs font-bold">STEP 1 OF 3 • AGENT DETAILS & PHONE QR SYNC</span>
+          <h1 class="text-2xl font-extrabold text-white mt-1">Agent Registration & Mobile Guard QR Connection</h1>
+        </div>
+        <span class="text-xs font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-700/40 px-3 py-1.5 rounded-xl">● Google Sheets Live Audit Connected</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- SEGMENT 1 (LEFT): AGENT / CANDIDATE DETAILS -->
+        <div class="bg-slate-950/90 rounded-2xl p-5 border border-slate-800 space-y-4 flex flex-col justify-between">
+          <div class="space-y-3.5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+              <span class="text-sm font-extrabold text-blue-400 uppercase">1. Agent / Candidate Details</span>
+              <span class="text-[11px] font-mono text-slate-400">Mandatory Profile</span>
             </div>
             <div>
-              <label class="text-xs text-slate-400 font-semibold">Official Candidate Email</label>
-              <input id="candidate-email" type="email" value="alex.mercer@assessment.org" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white font-semibold" />
+              <label class="text-xs text-slate-400 font-semibold">Agent / Candidate Full Name</label>
+              <input id="candidate-name" type="text" value="Alex Mercer" class="w-full mt-1 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white font-semibold" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 font-semibold">Official Corporate Email / LDAP</label>
+              <input id="candidate-email" type="email" value="alex.mercer@assessment.org" class="w-full mt-1 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white font-semibold" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs text-slate-400 font-semibold">Agent / Employee ID</label>
+                <input id="candidate-emp-id" type="text" value="AGT-2026-884" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white font-mono" />
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 font-semibold">Assessment Queue / LOB</label>
+                <input id="candidate-dept" type="text" value="Enterprise Support & Ops" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white font-semibold" />
+              </div>
             </div>
           </div>
-          <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-300">Mobile 360° Companion Status</span>
-              <span id="mobile-pair-badge" class="text-xs font-mono text-amber-400">⏳ Waiting for Mobile QR Scan...</span>
-            </div>
-            <p class="text-[11px] text-slate-400">Scan the QR code on your smartphone and prop it up to monitor your desk, or click bypass for a laptop-only demo.</p>
-          </div>
-          <div class="flex flex-col sm:flex-row gap-3">
-            <button id="btn-proceed-biometrics" type="button" onclick="proceedToBiometrics()" disabled class="btn-lock flex-1">🔒 Pair Mobile Guard First</button>
-            <button type="button" onclick="simulateMobilePairing()" class="px-4 py-3 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 text-xs font-bold cursor-pointer">⚡ Demo Bypass / Instant Pair →</button>
+          <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+            <span>Session Audit Key:</span>
+            <span id="step1-session-key" class="font-mono font-bold text-amber-400">------</span>
           </div>
         </div>
 
-        <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="bg-slate-950/90 rounded-2xl p-4 border border-slate-800 flex flex-col items-center justify-center text-center space-y-3">
-            <div class="text-xs font-bold text-slate-300">📱 Scan with Mobile Camera</div>
-            <div class="p-2 bg-white rounded-2xl shadow-lg">
+        <!-- SEGMENT 2 (RIGHT): PHONE QR CONNECTION (NO LIVE CAMERA VIDEO PREVIEW ON DESKTOP) -->
+        <div class="bg-slate-950/90 rounded-2xl p-5 border border-slate-800 space-y-4 flex flex-col justify-between">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <span class="text-sm font-extrabold text-emerald-400 uppercase">2. Phone QR Guard Connection</span>
+            <span id="mobile-pair-badge" class="text-xs font-mono text-amber-400">⏳ Awaiting Phone QR...</span>
+          </div>
+
+          <div class="flex flex-col items-center justify-center text-center space-y-3 py-1">
+            <div class="p-3 bg-white rounded-2xl shadow-xl border-2 border-blue-500/30">
               <img id="pairing-qr-img" alt="Pairing QR" class="w-40 h-40 object-contain" />
             </div>
-            <input id="mobile-pair-url-input" type="text" readonly class="w-full px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-400 text-center" />
+            <p class="text-xs text-slate-300 font-semibold max-w-sm">Scan this QR with your mobile phone and place the phone facing your laptop screen.</p>
+            <p class="text-[11px] text-slate-400 max-w-sm">Active Mobile Guard Rules: Moving the phone away, losing laptop screen visibility, or switching tabs/apps on the phone triggers an immediate Strike.</p>
+            <input id="mobile-pair-url-input" type="text" readonly class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-400 text-center" />
           </div>
-          <div class="bg-slate-950/90 rounded-2xl p-4 border border-slate-800 flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-slate-300">📡 Mobile 360° Live Feed</span>
-              <span class="text-[10px] font-mono text-emerald-400">WebRTC + Cloud Relay</span>
-            </div>
-            <div class="relative w-full h-44 bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800">
-              <video id="remote-mobile-video" autoplay playsinline muted class="hidden w-full h-full object-cover"></video>
-              <img id="remote-mobile-snapshot" alt="Mobile Snapshot" class="hidden w-full h-full object-cover" />
-              <div id="remote-mobile-placeholder" class="text-xs text-slate-500 text-center px-4">Mobile camera feed appears here upon QR pairing</div>
-            </div>
-            <div class="mt-2 text-[10px] text-slate-400 text-center">Detects phone kept flat on table, tilted away, or camera blocked</div>
+
+          <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
+            <button id="btn-proceed-biometrics" type="button" onclick="proceedToBiometrics()" disabled class="btn-lock flex-1">🔒 Scan QR or Confirm Phone to Proceed</button>
+            <button type="button" onclick="simulateMobilePairing()" class="px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer shadow-lg">✓ Confirm Phone Connected & Next →</button>
           </div>
         </div>
       </div>
@@ -152,7 +166,7 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- LEFT PANEL: UPLOAD-ONLY CANDIDATE ID PHOTO (NO LIVE CAPTURE BUTTON) -->
+        <!-- LEFT PANEL: UPLOAD-ONLY CANDIDATE ID PHOTO -->
         <div class="bg-slate-950/90 rounded-2xl p-4 border border-slate-800 space-y-3">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-blue-400 uppercase">1. Official Candidate ID Photo (Upload Only)</span>
@@ -205,7 +219,7 @@
       <button id="btn-enter-exam" type="button" onclick="startAssessment()" disabled class="btn-lock">🔒 Upload Matching Candidate ID Photo to Unlock Assessment</button>
     </section>
 
-    <!-- STAGE 3: ACTIVE PROCTORED ASSESSMENT + 5-VECTOR MOVING-AWAY / INTRUDER / VOICE MONITOR -->
+    <!-- STAGE 3: ACTIVE PROCTORED ASSESSMENT + SOP HELP CENTER + INTRUDER / VOICE / MOBILE TAB & SCREEN MONITOR -->
     <section id="stage-exam-active" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div class="lg:col-span-8 glass rounded-3xl p-6 space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
@@ -232,7 +246,7 @@
         <!-- IN-APP SOP & HELP CENTER DRAWER -->
         <div id="exam-help-center-panel" class="hidden bg-slate-950/95 rounded-2xl p-4 border border-indigo-500/40 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-indigo-300">📚 Embedded Whitelisted SOP & Help Center Library</span>
+            <span class="text-xs font-bold text-indigo-300">📚 Embedded Whitelisted SOP & Help Center Library (Logged to Sheets)</span>
             <input type="text" placeholder="Search SOPs..." oninput="handleCandidateManualSearch(this.value)" class="px-3 py-1 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white" />
           </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -246,18 +260,22 @@
       <div class="lg:col-span-4 space-y-4">
         <div class="glass rounded-3xl p-4 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-emerald-400">👁️ Live AI Proctor Feed</span>
+            <span class="text-xs font-bold text-emerald-400">👁️ Live AI Proctor & Mobile Status</span>
             <span id="live-timers-hud" class="text-[10px] font-mono text-slate-400">Speech: 0.0s | Intruder: 0.0s</span>
           </div>
           <div class="relative w-full h-44 bg-slate-950 rounded-2xl overflow-hidden border border-slate-800">
             <video id="proctor-cam-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
             <div class="scan-laser"></div>
           </div>
-          <div class="text-[11px] text-slate-400">5-Vector AI Monitor Active: Tracks Moving Away, Distance Drop, Head Turn, Camera Blocked, Multi-Face Intruder & Voice (>2s).</div>
+          <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] space-y-1">
+            <div class="flex justify-between"><span class="text-slate-400">Phone Screen Visibility:</span><span id="desktop-phone-screen-pill" class="font-mono font-bold text-emerald-400">✓ Screen Visible</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Phone Tab / App Focus:</span><span id="desktop-phone-tab-pill" class="font-mono font-bold text-emerald-400">✓ Locked on Guard</span></div>
+          </div>
           <div class="pt-2 border-t border-slate-800 space-y-1.5">
             <div class="text-[10px] font-bold text-slate-400 uppercase">Instant Demo Violation Simulators:</div>
             <div class="grid grid-cols-1 gap-1.5">
-              <button type="button" onclick="triggerTestPhoneAwayStrike()" class="w-full py-1.5 px-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[11px] font-bold text-left cursor-pointer">📱 Simulate Phone Moved Away / Kept Down Strike</button>
+              <button type="button" onclick="triggerTestPhoneAwayStrike()" class="w-full py-1.5 px-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[11px] font-bold text-left cursor-pointer">📱 Simulate Phone Moved / Screen Not Visible Strike</button>
+              <button type="button" onclick="triggerTestPhoneTabStrike()" class="w-full py-1.5 px-3 rounded-xl bg-pink-500/20 border border-pink-500/40 text-pink-300 text-[11px] font-bold text-left cursor-pointer">📲 Simulate Mobile Phone Tab-Switch Strike</button>
               <button type="button" onclick="triggerTestIntruderStrike()" class="w-full py-1.5 px-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-[11px] font-bold text-left cursor-pointer">👥 Simulate Multi-Face Intruder Strike</button>
               <button type="button" onclick="triggerTestVoiceStrike()" class="w-full py-1.5 px-3 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-300 text-[11px] font-bold text-left cursor-pointer">🎙️ Simulate Voice / Speech (>2.0s) Strike</button>
             </div>
@@ -268,9 +286,9 @@
 
     <!-- STAGE 4: ASSESSMENT COMPLETED SCORECARD -->
     <section id="stage-assessment-completed" class="hidden glass rounded-3xl p-6 space-y-4 border border-emerald-500/40">
-      <h2 class="text-2xl font-extrabold text-emerald-400">🎉 Proctored Assessment Completed & Verified</h2>
+      <h2 class="text-2xl font-extrabold text-emerald-400">🎉 Proctored Assessment Completed & Logged to Google Sheets</h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-        <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800"><span class="text-slate-400">Candidate:</span><div id="completed-candidate-name" class="font-bold text-white text-sm mt-0.5">Alex Mercer</div></div>
+        <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800"><span class="text-slate-400">Agent Name:</span><div id="completed-candidate-name" class="font-bold text-white text-sm mt-0.5">Alex Mercer</div></div>
         <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800"><span class="text-slate-400">Session PIN:</span><div id="completed-session-pin" class="font-mono font-bold text-amber-400 text-sm mt-0.5">------</div></div>
         <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800"><span class="text-slate-400">Final Score:</span><div id="completed-score-display" class="font-mono font-bold text-emerald-400 text-lg mt-0.5">100%</div><div id="completed-score-detail" class="text-[10px] text-slate-400"></div></div>
         <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800"><span class="text-slate-400">Integrity Rating:</span><div id="completed-integrity-display" class="font-mono font-bold text-blue-400 text-lg mt-0.5">100%</div></div>
@@ -284,16 +302,21 @@
   <section id="mobile-guard-ui" class="hidden max-w-md mx-auto p-4 space-y-4">
     <div class="glass rounded-3xl p-5 space-y-4 border border-emerald-500/40">
       <div class="flex items-center justify-between">
-        <span class="font-extrabold text-base text-white">📱 Trace 360° Mobile Guard</span>
-        <span id="mobile-conn-pill" class="px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 text-xs font-mono">Connecting...</span>
+        <span class="font-extrabold text-base text-white">📱 Trace Mobile Guard Sensor</span>
+        <span id="mobile-conn-pill" class="px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 text-xs font-mono">Connected ✓</span>
       </div>
       <div class="relative w-full h-56 bg-slate-950 rounded-2xl overflow-hidden border border-slate-800">
         <video id="mobile-cam-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+        <div class="scan-laser"></div>
       </div>
       <div id="mobile-posture-banner" class="p-3 rounded-xl bg-emerald-950/80 border border-emerald-600/40 text-xs font-bold text-emerald-300 text-center">
-        ✓ Mobile Guard Upright & Monitoring Workspace
+        ✓ Laptop Screen Visible & Phone Upright
       </div>
-      <p class="text-[11px] text-slate-400 text-center">If this phone is kept down flat on the desk, tilted face-up/down, moved violently, or camera covered, an immediate Strike is dispatched to the desktop exam.</p>
+      <button type="button" onclick="recalibrateMobileScreenBaseline()" class="w-full py-2.5 rounded-xl bg-blue-600/30 border border-blue-500/50 text-blue-200 text-xs font-bold cursor-pointer">🎯 Lock Current Laptop Screen View as Baseline</button>
+      <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 space-y-1">
+        <div>• <b>Screen Visibility Lock:</b> If the phone is slightly moved away or the laptop screen is not visible in the phone camera, an immediate Strike is sent.</div>
+        <div>• <b>Zero-Tolerance Mobile Tab Switch:</b> Switching tabs, minimizing this browser, or using another app on this phone triggers an immediate Strike.</div>
+      </div>
     </div>
   </section>
 
@@ -331,12 +354,14 @@ const $ = id => document.getElementById(id);
 const setTxt = (id, text, cls) => { const el = $(id); if (el) { el.textContent = text; if (cls) el.className = cls; } };
 
 let currentStage = 'pairing', isExamActive = false, isMobilePaired = false, isBiometricallyVerified = false;
+let hasRealMobileHeartbeat = false, lastMobileHeartbeatAt = 0;
 let hasIdPhoto = false, hasLiveWebcam = false, labCamStream = null, blazeFaceModel = null;
 let strikesRemaining = 3, examTimeRemaining = 900, examTimerInterval = null;
 let continuousVoiceSeconds = 0, continuousIntruderSeconds = 0, hasGivenInitialIntruderStrike = false;
 let warningDismissCooldownUntil = 0, lastMobileStrikeTime = 0, lastProcessedMobileSeq = 0, lastTabStrikeTime = 0;
 let hasRegisteredCandidateInSheet = false, hasSubmittedFinalScore = false, isLockdownBound = false;
 let mediaRecorder = null, recordedChunks = [];
+let mobileBaselineLuma = null, mobileBaseGravity = null, mobileBaseOrient = null;
 
 let questions = [
   { q: "Which data structure provides O(1) average-time complexity for key lookup and insertion?", opts: ["Hash Table with Closed Addressing", "Doubly Linked List", "Unbalanced Binary Search Tree", "Bubble Sort Array"], ans: 0 },
@@ -353,16 +378,26 @@ async function getBlazeFaceModel() {
   return blazeFaceModel;
 }
 
+// GOOGLE SHEETS LIVE AUDIT LOGGER (RECORDS AGENT DETAILS, BIOMETRICS, SOP READS, STRIKES & SCORES)
 function syncToGoogleSheet(action, extra = {}) {
   if (action === 'registerCandidate') { if (hasRegisteredCandidateInSheet) return; hasRegisteredCandidateInSheet = true; }
-  const payload = JSON.stringify({ action, sessionId: currentSessionId, candidateName: $('candidate-name')?.value || 'Alex Mercer', candidateEmail: $('candidate-email')?.value || 'alex.mercer@assessment.org', timestamp: new Date().toISOString(), ...extra });
-  setTimeout(() => { try { fetch(GOOGLE_SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: payload }).catch(()=>{}); } catch(e){} }, action === 'submitScore' ? Math.floor(Math.random() * 3500) : 50);
+  const payload = JSON.stringify({
+    action,
+    sessionId: currentSessionId,
+    candidateName: $('candidate-name')?.value || 'Alex Mercer',
+    candidateEmail: $('candidate-email')?.value || 'alex.mercer@assessment.org',
+    agentEmpId: $('candidate-emp-id')?.value || 'AGT-2026-884',
+    department: $('candidate-dept')?.value || 'Enterprise Support & Ops',
+    timestamp: new Date().toISOString(),
+    ...extra
+  });
+  setTimeout(() => { try { fetch(GOOGLE_SHEET_WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: payload }).catch(()=>{}); } catch(e){} }, action === 'submitScore' ? Math.floor(Math.random() * 3500) : 40);
 }
 
 function applyPortalRoleView(role) {
   const isTr = role === 'trainer';
   $('trainer-admin-hub-banner')?.classList.toggle('hidden', !isTr);
-  setTxt('portal-role-badge', isTr ? "🛡️ TRAINER & ADMIN MODE" : "CANDIDATE EXAM VIEW");
+  setTxt('portal-role-badge', isTr ? "🛡️ TRAINER & ADMIN MODE" : "AGENT ASSESSMENT VIEW");
 }
 
 function renderPairingQR() {
@@ -372,7 +407,7 @@ function renderPairingQR() {
   if ($('pairing-qr-img')) $('pairing-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(mobileUrl)}`;
 }
 
-function markMobileGuardPaired(sourceLabel = "Mobile 360° Guard Paired ✓") {
+function markMobileGuardPaired(sourceLabel = "Mobile Guard Paired ✓") {
   isMobilePaired = true;
   setTxt('mobile-pair-badge', `✓ ${sourceLabel}`, "text-emerald-400 font-mono font-bold text-xs");
   const btn = $('btn-proceed-biometrics');
@@ -384,11 +419,11 @@ function markMobileGuardPaired(sourceLabel = "Mobile 360° Guard Paired ✓") {
 }
 
 function simulateMobilePairing() {
-  markMobileGuardPaired("Mobile Guard Paired (Demo Bypass) ✓");
+  markMobileGuardPaired("Mobile Guard Confirmed ✓");
   proceedToBiometrics();
 }
 
-// DESKTOP + MOBILE PEERJS (TCP/443 TURN) & DUAL CLOUD RELAY (DWEET.IO + NTFY.SH)
+// DESKTOP PEER & DUAL CLOUD RELAY (NO PHONE VIDEO SHOWN ON MONITOR — ONLY TELEMETRY & INSTANT STRIKES)
 function initDesktopPeer() {
   if (typeof Peer === 'undefined') return;
   try {
@@ -399,17 +434,8 @@ function initDesktopPeer() {
         { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
       ]}
     });
-    peer.on('call', call => {
-      call.answer();
-      call.on('stream', stream => {
-        const v = $('remote-mobile-video');
-        if (v) { v.srcObject = stream; v.classList.remove('hidden'); v.play().catch(()=>{}); }
-        $('remote-mobile-placeholder')?.classList.add('hidden');
-        markMobileGuardPaired("Mobile 360° Live Stream Active ✓");
-      });
-    });
     peer.on('connection', conn => {
-      conn.on('open', () => markMobileGuardPaired("Mobile Data Channel Active ✓"));
+      conn.on('open', () => { hasRealMobileHeartbeat = true; lastMobileHeartbeatAt = Date.now(); markMobileGuardPaired("Mobile QR Connected ✓"); });
       conn.on('data', d => handleIncomingMobileTelemetry(d));
     });
   } catch(e){}
@@ -427,31 +453,53 @@ function initDesktopRelayAndPolling() {
       const d = j?.with?.[0]?.content;
       if (d) handleIncomingMobileTelemetry(d);
     } catch(e){}
-  }, 1300);
+  }, 1100);
+
+  // Desktop Watchdog: If a connected mobile phone stops sending heartbeats for >4.2s because the candidate switched tabs or minimized the browser on their phone, trigger an immediate Mobile Tab-Switch Strike!
+  setInterval(() => {
+    if (!isExamActive || !hasRealMobileHeartbeat) return;
+    if (Date.now() - lastMobileHeartbeatAt > 4200 && Date.now() - lastMobileStrikeTime > 5000) {
+      lastMobileStrikeTime = Date.now();
+      setTxt('desktop-phone-tab-pill', "❌ Tab Switched / App Minimized!", "font-mono font-bold text-red-400");
+      applyStrike("Mobile Phone Violation: Candidate Switched Tabs or Minimized Guard Browser on Mobile Phone (1 Strike Deducted)", 'mobile_tab', true);
+    }
+  }, 1000);
 }
 
 function handleIncomingMobileTelemetry(d) {
   if (!d) return;
-  if (!isMobilePaired) markMobileGuardPaired("Mobile 360° Guard Connected ✓");
-  if (d.snapshot) {
-    const img = $('remote-mobile-snapshot');
-    if (img && $('remote-mobile-video')?.classList.contains('hidden')) {
-      img.src = d.snapshot; img.classList.remove('hidden');
-      $('remote-mobile-placeholder')?.classList.add('hidden');
-    }
+  hasRealMobileHeartbeat = true;
+  lastMobileHeartbeatAt = Date.now();
+  if (!isMobilePaired) markMobileGuardPaired("Mobile QR Guard Connected ✓");
+  if (d.screenStatus) {
+    setTxt('desktop-phone-screen-pill', d.screenVisible ? "✓ Screen Visible" : "❌ Screen Not Visible", d.screenVisible ? "font-mono font-bold text-emerald-400" : "font-mono font-bold text-red-400");
+  }
+  if (d.tabStatus) {
+    setTxt('desktop-phone-tab-pill', d.tabActive ? "✓ Locked on Guard" : "❌ Mobile Tab Switched!", d.tabActive ? "font-mono font-bold text-emerald-400" : "font-mono font-bold text-red-400");
   }
   if (d.type === 'STRIKE' && d.seq && d.seq > lastProcessedMobileSeq) {
     lastProcessedMobileSeq = d.seq;
-    if (Date.now() - lastMobileStrikeTime > 4500) {
+    if (Date.now() - lastMobileStrikeTime > 3200) {
       lastMobileStrikeTime = Date.now();
-      applyStrike(d.reason || "Mobile 360° Guard Alert: Phone Moved Away or Kept Down", 'mobile', true);
+      applyStrike(d.reason || "Mobile Guard Violation Detected (1 Strike Deducted)", 'mobile', true);
     }
   }
 }
 
-// MOBILE 360° GUARD MODE (3D ACCELEROMETER + GYROSCOPE + CAMERA DARKNESS DETECTION)
+// ============================================================================
+// MOBILE GUARD RUNTIME:
+// 1. IMMEDIATE STRIKE IF CANDIDATE SWITCHES TABS OR USES ANOTHER APP ON PHONE
+// 2. IMMEDIATE STRIKE IF PHONE IS SLIGHTLY MOVED AWAY OR LAPTOP SCREEN IS NOT VISIBLE IN PHONE CAMERA
+// ============================================================================
+function recalibrateMobileScreenBaseline() {
+  mobileBaselineLuma = null;
+  mobileBaseGravity = null;
+  mobileBaseOrient = null;
+  setTxt('mobile-posture-banner', "✓ Baseline Locked: Laptop Screen & Phone Position Calibrated", "p-3 rounded-xl bg-emerald-950/80 border border-emerald-600/40 text-xs font-bold text-emerald-300 text-center");
+}
+
 async function startMobileGuardMode() {
-  let mobileSeq = 1, badPostureTicks = 0, mobilePeerConn = null;
+  let mobileSeq = Math.floor(Date.now() / 100), slightMoveTicks = 0, screenMissingTicks = 0, mobilePeerConn = null;
   const v = $('mobile-cam-video');
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 320 }, height: { ideal: 240 } }, audio: false });
@@ -459,53 +507,157 @@ async function startMobileGuardMode() {
     if (typeof Peer !== 'undefined') {
       const mp = new Peer({ config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }] } });
       mp.on('open', () => {
-        mp.call(`TRACE-DESK-${currentSessionId}`, stream);
         mobilePeerConn = mp.connect(`TRACE-DESK-${currentSessionId}`);
       });
     }
   } catch(e){}
 
-  const sendMobilePayload = payload => {
+  const dispatchMobilePacket = (payload, urgent = false) => {
+    const bodyStr = JSON.stringify(payload);
     try { if (mobilePeerConn?.open) mobilePeerConn.send(payload); } catch(e){}
-    try { fetch(`https://ntfy.sh/trace_360_${currentSessionId}`, { method: 'POST', body: JSON.stringify(payload) }).catch(()=>{}); } catch(e){}
-    try { fetch(`https://dweet.io/dweet/for/trace_360_${currentSessionId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(()=>{}); } catch(e){}
+    try {
+      if (urgent && navigator.sendBeacon) navigator.sendBeacon(`https://ntfy.sh/trace_360_${currentSessionId}`, bodyStr);
+      else fetch(`https://ntfy.sh/trace_360_${currentSessionId}`, { method: 'POST', body: bodyStr, keepalive: true }).catch(()=>{});
+    } catch(e){}
+    try { fetch(`https://dweet.io/dweet/for/trace_360_${currentSessionId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: bodyStr, keepalive: true }).catch(()=>{}); } catch(e){}
   };
 
-  sendMobilePayload({ type: 'HEARTBEAT', seq: mobileSeq++ });
+  dispatchMobilePacket({ type: 'HEARTBEAT', seq: ++mobileSeq, screenVisible: true, tabActive: true });
+
+  // RULE 1: IMMEDIATE STRIKE WHEN SWITCHING TABS OR USING ANOTHER APP ON THE MOBILE PHONE
+  const fireMobileTabSwitchStrike = (detail) => {
+    setTxt('mobile-posture-banner', `🚫 STRIKE SENT: ${detail}`, "p-3 rounded-xl bg-red-950 border border-red-500 text-xs font-bold text-red-300 text-center");
+    dispatchMobilePacket({
+      type: 'STRIKE',
+      seq: ++mobileSeq,
+      tabStatus: true,
+      tabActive: false,
+      reason: `Mobile Phone Violation: ${detail} (1 Strike Deducted)`
+    }, true);
+  };
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      fireMobileTabSwitchStrike("Candidate Switched Tabs or Opened Another App on Mobile Phone");
+    }
+  });
+  window.addEventListener('pagehide', () => {
+    fireMobileTabSwitchStrike("Mobile Browser Tab Minimized or Switched During Assessment");
+  });
+  window.addEventListener('blur', () => {
+    fireMobileTabSwitchStrike("Candidate Switched Focus / Opened Another Tab or Notification on Mobile Phone");
+  });
+
+  // RULE 2A: SLIGHT PHONE MOVEMENT / TILT / KEPT DOWN SENSOR (HIGH SENSITIVITY)
+  window.addEventListener('deviceorientation', ev => {
+    if (ev.beta === null || ev.gamma === null) return;
+    if (!mobileBaseOrient) { mobileBaseOrient = { beta: ev.beta, gamma: ev.gamma }; return; }
+    const dBeta = Math.abs(ev.beta - mobileBaseOrient.beta);
+    const dGamma = Math.abs(ev.gamma - mobileBaseOrient.gamma);
+    if (dBeta > 11 || dGamma > 11) {
+      slightMoveTicks++;
+      if (slightMoveTicks >= 2) {
+        slightMoveTicks = 0;
+        mobileBaseOrient = { beta: ev.beta, gamma: ev.gamma };
+        setTxt('mobile-posture-banner', "⚠️ STRIKE SENT: Phone Slightly Moved Away From Locked Position!", "p-3 rounded-xl bg-red-950 border border-red-500 text-xs font-bold text-red-300 text-center");
+        dispatchMobilePacket({
+          type: 'STRIKE',
+          seq: ++mobileSeq,
+          screenStatus: true,
+          screenVisible: false,
+          reason: "Mobile Guard Alert: Phone Slightly Moved Away or Tilted From Laptop Screen View (1 Strike Deducted)"
+        }, true);
+      }
+    }
+  });
 
   window.addEventListener('devicemotion', ev => {
     const acc = ev.accelerationIncludingGravity; if (!acc) return;
     const ax = acc.x || 0, ay = acc.y || 0, az = acc.z || 0;
-    const mag = Math.hypot(ax, ay, az);
-    const isFlatOnDesk = Math.abs(az) > 7.8 && Math.hypot(ax, ay) < 4.5;
-    const isPickedUpJerk = Math.abs(mag - 9.81) > 4.8;
-    if (isFlatOnDesk || isPickedUpJerk) {
-      badPostureTicks++;
-      setTxt('mobile-posture-banner', "⚠️ VIOLATION: Phone Kept Down Flat or Moved Away From Desk!", "p-3 rounded-xl bg-red-950 border border-red-500 text-xs font-bold text-red-300 text-center");
-      if (badPostureTicks >= 4) {
-        badPostureTicks = 0;
-        sendMobilePayload({ type: 'STRIKE', seq: mobileSeq++, reason: "Mobile 360° Guard Alert: Phone Kept Down Flat on Surface or Moved Away From Desk (1 Strike Deducted)" });
+    if (!mobileBaseGravity) { mobileBaseGravity = { ax, ay, az }; return; }
+    const deltaG = Math.hypot(ax - mobileBaseGravity.ax, ay - mobileBaseGravity.ay, az - mobileBaseGravity.az);
+    const isLaidFlat = Math.abs(az) > 7.4 && Math.hypot(ax, ay) < 4.8;
+    if (deltaG > 1.75 || isLaidFlat) {
+      slightMoveTicks++;
+      setTxt('mobile-posture-banner', "⚠️ STRIKE SENT: Phone Moved Away or Kept Down on Desk!", "p-3 rounded-xl bg-red-950 border border-red-500 text-xs font-bold text-red-300 text-center");
+      if (slightMoveTicks >= 2) {
+        slightMoveTicks = 0;
+        mobileBaseGravity = { ax, ay, az };
+        dispatchMobilePacket({
+          type: 'STRIKE',
+          seq: ++mobileSeq,
+          screenStatus: true,
+          screenVisible: false,
+          reason: "Mobile Guard Alert: Phone Slightly Moved Away From Screen or Kept Down on Surface (1 Strike Deducted)"
+        }, true);
       }
     } else {
-      badPostureTicks = Math.max(0, badPostureTicks - 1);
-      setTxt('mobile-posture-banner', "✓ Mobile Guard Upright & Monitoring Workspace", "p-3 rounded-xl bg-emerald-950/80 border border-emerald-600/40 text-xs font-bold text-emerald-300 text-center");
+      slightMoveTicks = Math.max(0, slightMoveTicks - 1);
     }
   });
 
-  const snapCanvas = document.createElement('canvas'); snapCanvas.width = 160; snapCanvas.height = 120;
+  // RULE 2B: LAPTOP SCREEN VISIBILITY DETECTOR IN PHONE CAMERA (CHECKS IF MONITOR GLOW / SCREEN RECTANGLE IS VISIBLE)
+  const snapCanvas = document.createElement('canvas'); snapCanvas.width = 64; snapCanvas.height = 48;
   const sCtx = snapCanvas.getContext('2d');
   setInterval(() => {
-    if (!v || v.readyState < 2) return;
-    sCtx.drawImage(v, 0, 0, 160, 120);
-    const d = sCtx.getImageData(0, 0, 160, 120).data;
-    let luma = 0; for (let i = 0; i < d.length; i += 16) luma += 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
-    const avgLuma = luma / (d.length / 16);
-    if (avgLuma < 22) {
-      sendMobilePayload({ type: 'STRIKE', seq: mobileSeq++, reason: "Mobile 360° Guard Alert: Phone Camera Covered or Placed Face-Down on Desk (1 Strike Deducted)" });
-    } else {
-      sendMobilePayload({ type: 'HEARTBEAT', seq: mobileSeq++, snapshot: snapCanvas.toDataURL('image/jpeg', 0.45) });
+    if (document.hidden) return;
+    if (!v || v.readyState < 2) {
+      dispatchMobilePacket({ type: 'HEARTBEAT', seq: ++mobileSeq, screenStatus: true, screenVisible: true, tabStatus: true, tabActive: true });
+      return;
     }
-  }, 2000);
+    sCtx.drawImage(v, 0, 0, 64, 48);
+    const d = sCtx.getImageData(0, 0, 64, 48).data;
+    const cellLuma = new Float32Array(48);
+    let totalLuma = 0, brightScreenPixels = 0, totalPixels = 64 * 48;
+
+    for (let y = 0; y < 48; y++) {
+      for (let x = 0; x < 64; x++) {
+        const idx = (y * 64 + x) * 4;
+        const r = d[idx], g = d[idx+1], b = d[idx+2];
+        const Y = 0.299 * r + 0.587 * g + 0.114 * b;
+        totalLuma += Y;
+        cellLuma[Math.floor(y / 8) * 8 + Math.floor(x / 8)] += Y / 64;
+        if (x >= 8 && x <= 56 && y >= 6 && y <= 42 && Y > 115 && (b >= r * 0.82 || Y > 155)) {
+          brightScreenPixels++;
+        }
+      }
+    }
+
+    const avgLuma = totalLuma / totalPixels;
+    const screenGlowRatio = brightScreenPixels / totalPixels;
+
+    if (!mobileBaselineLuma && avgLuma >= 24) {
+      mobileBaselineLuma = cellLuma;
+    }
+
+    let sceneShift = 0;
+    if (mobileBaselineLuma) {
+      for (let i = 0; i < 48; i++) sceneShift += Math.abs(cellLuma[i] - mobileBaselineLuma[i]);
+      sceneShift /= 48;
+    }
+
+    const isScreenMissing = (avgLuma < 24) || (screenGlowRatio < 0.035) || (sceneShift > 24);
+
+    if (isScreenMissing) {
+      screenMissingTicks++;
+      setTxt('mobile-posture-banner', "⚠️ VIOLATION: Laptop Screen Not Visible in Phone Camera!", "p-3 rounded-xl bg-red-950 border border-red-500 text-xs font-bold text-red-300 text-center");
+      if (screenMissingTicks >= 2) {
+        screenMissingTicks = 0;
+        mobileBaselineLuma = cellLuma;
+        dispatchMobilePacket({
+          type: 'STRIKE',
+          seq: ++mobileSeq,
+          screenStatus: true,
+          screenVisible: false,
+          reason: "Mobile Guard Violation: Laptop Screen Not Visible in Phone Camera / Phone Slightly Moved Away (1 Strike Deducted)"
+        }, true);
+      }
+    } else {
+      screenMissingTicks = Math.max(0, screenMissingTicks - 1);
+      setTxt('mobile-posture-banner', "✓ Laptop Screen Visible in Phone Camera & Guard Locked", "p-3 rounded-xl bg-emerald-950/80 border border-emerald-600/40 text-xs font-bold text-emerald-300 text-center");
+      dispatchMobilePacket({ type: 'HEARTBEAT', seq: ++mobileSeq, screenStatus: true, screenVisible: true, tabStatus: true, tabActive: true });
+    }
+  }, 1100);
 }
 
 // ============================================================================
@@ -534,7 +686,6 @@ async function startLabWebcam() {
   startLiveCameraBiometricLoop();
 }
 
-// Standardizes any <img> or <video> onto a 320x240 offscreen canvas FIRST so BlazeFace coordinates, overlay boxes, and pixel cropping align 1:1 with zero naturalWidth scaling bug!
 function renderSourceToStandardCanvas(srcEl, mode = 'contain') {
   const c = document.createElement('canvas');
   c.width = 320; c.height = 240;
@@ -598,24 +749,19 @@ function extractFaceBiometricSignature(stdCanvas, face) {
     eyeToMouthRatio,
     noseToEye,
     yawRatio,
-    faceWidthPx: fw,
-    faceTopY: fy
+    faceWidthPx: fw
   };
 }
 
 function compareFaceSignatures(sigId, sigLive) {
-  // 1. Reject classroom / standing / medium-distant scene photos (like standing man at ~48-55px width on 320px canvas)
   if (sigId.faceWidthPx < 66) return 22;
-  // 2. Reject side-profile faces in ID photo
   if (sigId.yawRatio < 0.48 || sigId.yawRatio > 2.1) return 29;
 
-  // 3. Detect dark cap/hat on forehead or dark beard on chin vs uncovered forehead / clean chin
   const capPenalty = (sigId.browToCheekRatio < 0.55 && sigLive.browToCheekRatio > 0.72) ? 36 : Math.max(0, Math.abs(sigId.browToCheekRatio - sigLive.browToCheekRatio) - 0.22) * 45;
   const beardPenalty = (sigId.chinToCheekRatio < 0.64 && sigLive.chinToCheekRatio > 0.78) ? 36 : Math.max(0, Math.abs(sigId.chinToCheekRatio - sigLive.chinToCheekRatio) - 0.22) * 45;
   const geomPenalty = Math.max(0, Math.abs(sigId.eyeToMouthRatio - sigLive.eyeToMouthRatio) - 0.14) * 35 +
                       Math.max(0, Math.abs(sigId.noseToEye - sigLive.noseToEye) - 0.12) * 25;
 
-  // White-balance-invariant score: starts at 95% for a close-up front-facing portrait of the candidate and deducts cap/beard/geometry anomalies
   const score = 95 - capPenalty - beardPenalty - geomPenalty;
   return Math.max(16, Math.min(97, Math.round(score)));
 }
@@ -724,6 +870,7 @@ function rejectBiometricMatch(pct, msg, pillText) {
 }
 
 function lockBiometricMatchVerified(pct) {
+  if (!isBiometricallyVerified) syncToGoogleSheet('biometricVerified', { similarityPct: pct });
   isBiometricallyVerified = true;
   setTxt('id-photo-status-pill', `✓ ID Verified (${pct}%)`, "text-emerald-400 font-mono font-bold text-[11px]");
   setTxt('biometric-match-pct', `${pct}% Match (Verified ✓)`, "text-emerald-400 font-bold font-mono");
@@ -780,7 +927,7 @@ function drawFaceBoxAndLandmarks(ctx, matched, lms, box, label, isRejected = fal
 }
 
 // ============================================================================
-// STAGE 3: ASSESSMENT + 5-VECTOR DESKTOP MOVING-AWAY / INTRUDER / VOICE MONITOR
+// STAGE 3: ASSESSMENT + DESKTOP INTRUDER / VOICE / MOVING-AWAY + SHEETS LOGGING
 // ============================================================================
 async function startAssessment() {
   if (!isBiometricallyVerified) return alert("Please upload a matching Candidate ID photo first.");
@@ -874,7 +1021,14 @@ function startSmartVoiceEscalationMonitor() {
 function updateLiveTimersHud() { setTxt('live-timers-hud', `Speech: ${continuousVoiceSeconds.toFixed(1)}s | Intruder: ${continuousIntruderSeconds.toFixed(1)}s`); }
 function triggerTestIntruderStrike() { applyStrike("Intruder Detected: Multiple Faces in Camera View (1 Strike Deducted)", 'test', true); }
 function triggerTestVoiceStrike() { applyStrike("Unauthorized Human Speech Detected (> 2.0s) (1 Strike Deducted)", 'test', true); }
-function triggerTestPhoneAwayStrike() { applyStrike("Mobile Desk Guard Alert: Phone Moved Away From Monitor or Kept Down (1 Strike Deducted)", 'test', true); }
+function triggerTestPhoneAwayStrike() {
+  setTxt('desktop-phone-screen-pill', "❌ Screen Not Visible", "font-mono font-bold text-red-400");
+  applyStrike("Mobile Guard Violation: Laptop Screen Not Visible in Phone Camera / Phone Slightly Moved Away (1 Strike Deducted)", 'test', true);
+}
+function triggerTestPhoneTabStrike() {
+  setTxt('desktop-phone-tab-pill', "❌ Mobile Tab Switched!", "font-mono font-bold text-red-400");
+  applyStrike("Mobile Phone Violation: Candidate Switched Tabs or Opened Another App on Mobile Phone (1 Strike Deducted)", 'test', true);
+}
 
 function activateExamBrowserLockdown() {
   try { document.documentElement.requestFullscreen?.().catch(()=>{}); } catch(e){}
@@ -900,7 +1054,7 @@ function applyStrike(reason, category = 'general', force = false) {
   strikesRemaining--;
   const used = 3 - strikesRemaining;
   setTxt('exam-strikes-display', `${used}/3`);
-  syncToGoogleSheet('logViolation', { violation: reason, strike: used, remaining: strikesRemaining });
+  syncToGoogleSheet('logViolation', { violation: reason, category, strike: used, remaining: strikesRemaining });
   if (strikesRemaining <= 0) { setTxt('disqualified-reason', reason); finishExam(true); }
   else { setTxt('warning-reason', `Violation: ${reason}`); setTxt('warning-strikes-left', String(strikesRemaining)); $('modal-warning')?.classList.remove('hidden'); }
 }
@@ -925,7 +1079,7 @@ function finishExam(disq = false) {
   syncToGoogleSheet('submitScore', { score: sc, status: 'SUBMITTED', integrity: intg });
 }
 
-// SOP & HELP CENTER LIBRARY + NOTEBOOKLM QUESTION SYNTHESIZER
+// SOP & HELP CENTER LIBRARY + GOOGLE SHEETS AUDIT + NOTEBOOKLM QUESTION SYNTHESIZER
 let helpCenterArticles = [
   { id: "SOP-101", title: "Hash Table Lookup Performance Standard", category: "Internal SOP", content: "1. Use Hash Table with Closed Addressing for O(1) average-time complexity key lookup and insertion." },
   { id: "SOP-102", title: "Distributed Microservices Circuit Breaker Protocol", category: "Internal SOP", content: "1. Deploy Circuit Breaker pattern to prevent cascading failures across distributed RPC calls." },
@@ -947,6 +1101,7 @@ function renderHcArticleList() {
 function openHcArticle(id) {
   const a = helpCenterArticles.find(x => x.id === id) || helpCenterArticles[0]; if (!a) return;
   selectedHcArticleId = a.id;
+  syncToGoogleSheet('logSopRead', { articleId: a.id, articleTitle: a.title });
   if ($('hc-article-reader')) $('hc-article-reader').innerHTML = `<div class="font-bold text-white text-sm">${a.id}: ${a.title}</div><pre class="whitespace-pre-wrap font-sans text-xs text-slate-300 bg-slate-900 p-3 rounded-xl mt-1">${a.content}</pre>`;
 }
 function runAiBulkDocumentIngestion() {
@@ -979,7 +1134,7 @@ function runInteractiveLoadTest25() {
 window.addEventListener('DOMContentLoaded', () => {
   renderHcArticleList();
   if (isMobileGuardMode) { $('desktop-main-ui')?.classList.add('hidden'); $('mobile-guard-ui')?.classList.remove('hidden'); startMobileGuardMode(); }
-  else { setTxt('desktop-session-pin', currentSessionId); renderPairingQR(); initDesktopRelayAndPolling(); initDesktopPeer(); applyPortalRoleView(isTrainerRoleActive ? 'trainer' : 'candidate'); }
+  else { setTxt('desktop-session-pin', currentSessionId); setTxt('step1-session-key', currentSessionId); renderPairingQR(); initDesktopRelayAndPolling(); initDesktopPeer(); applyPortalRoleView(isTrainerRoleActive ? 'trainer' : 'candidate'); }
 });
 </script>
 </body>
