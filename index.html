@@ -496,11 +496,14 @@ form.appendChild(inp);
 });
 }
 document.body.appendChild(form);
-form.submit();
+const jitterMs = (dataMap && dataMap.isManualTest) ? 0 : Math.floor(Math.random() * 1600);
+setTimeout(() => {
+try { form.submit(); } catch(e){}
+}, jitterMs);
 setTimeout(() => {
 try { form.remove(); } catch(e){}
 try { postFrame.remove(); } catch(e){}
-}, 12000);
+}, 14000);
 } catch(e){}
 }
 
@@ -707,7 +710,7 @@ setInterval(registerDesktopPeer, 5000);
 
 function initDesktopRelayAndPolling() {
 const cleanId = currentSessionId.replace(/[^a-zA-Z0-9]/g, '');
-const topics = [`trace_sync_${cleanId}`, `trace_v5_${cleanId}`];
+const primaryTopic = `trace_sync_${cleanId}`;
 try {
 if (typeof BroadcastChannel !== 'undefined') {
 const bc = new BroadcastChannel(`trace_pair_${cleanId}`);
@@ -720,9 +723,8 @@ try { handleMobileGuardMessage(JSON.parse(evt.newValue)); } catch(e){}
 });
 } catch(e){}
 
-topics.forEach(topic => {
 try {
-const es = new EventSource(`https://ntfy.sh/${topic}/sse`);
+const es = new EventSource(`https://ntfy.sh/${primaryTopic}/sse`);
 es.onmessage = evt => {
 try {
 const p = JSON.parse(evt.data);
@@ -733,13 +735,12 @@ catch(_) { if (String(p.message).includes('PHONE_CONNECTED')) markPhoneAsPaired(
 } catch(e){}
 };
 } catch(e){}
-});
 
 const pollRelayOnce = async () => {
-for (const topic of topics) {
+if (isPhonePaired) return;
 try {
-const res = await fetch(`https://ntfy.sh/${topic}/json?poll=1&since=25s`, { cache: 'no-store' });
-if (!res.ok) continue;
+const res = await fetch(`https://ntfy.sh/${primaryTopic}/json?poll=1&since=30s`, { cache: 'no-store' });
+if (!res.ok) return;
 const text = await res.text();
 text.trim().split('\n').forEach(line => {
 if (!line) return;
@@ -756,10 +757,9 @@ if (String(outer.message).includes('PHONE_CONNECTED')) markPhoneAsPaired('Cloud 
 } catch(e){}
 });
 } catch(e){}
-}
 };
-setTimeout(pollRelayOnce, 900);
-setInterval(pollRelayOnce, 3500);
+setTimeout(pollRelayOnce, 800 + Math.floor(Math.random() * 1200));
+setInterval(pollRelayOnce, 7500 + Math.floor(Math.random() * 3500));
 }
 
 function handleMobileGuardMessage(msg) {
@@ -813,14 +813,14 @@ startLabWebcam();
 let globalMobileSendSignal = null;
 function forceMobileResyncNow() {
 if (typeof globalMobileSendSignal === 'function') {
-globalMobileSendSignal('PHONE_CONNECTED', 'Manual Mobile Re-Sync');
+globalMobileSendSignal('PHONE_CONNECTED', 'Manual Mobile Re-Sync', true);
 }
 setTxt('mobile-banner-title', '✓ Sync Signal Transmitted to Desktop! (Code: ' + computeSessionSyncCode(currentSessionId) + ')', 'text-sm font-bold text-emerald-300');
 }
 
 function sendMobileViolationNow(reason) {
 const cleanId = currentSessionId.replace(/[^a-zA-Z0-9]/g, '');
-const topics = [`trace_sync_${cleanId}`, `trace_v5_${cleanId}`];
+const primaryTopic = `trace_sync_${cleanId}`;
 const payload = { id: 'mob_' + Date.now() + '_' + Math.random(), type: 'VIOLATION', reason, ts: Date.now() };
 if (mobilePeerConn && mobilePeerConn.open) {
 try { mobilePeerConn.send(payload); } catch(e){}
@@ -829,9 +829,7 @@ try {
 if (typeof BroadcastChannel !== 'undefined') new BroadcastChannel(`trace_pair_${cleanId}`).postMessage(payload);
 localStorage.setItem(`trace_pair_${cleanId}`, JSON.stringify(payload));
 } catch(e){}
-topics.forEach(topic => {
-fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=UTF-8' } }).catch(()=>{});
-});
+fetch(`https://ntfy.sh/${primaryTopic}`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=UTF-8' } }).catch(()=>{});
 setTxt('mobile-banner-title', '⚠️ VIOLATION TRANSMITTED TO DESKTOP', 'text-sm font-bold text-red-400');
 setTxt('mobile-monitor-val', 'AWAY / ALERT ❌', 'text-red-400 font-bold text-sm mt-0.5');
 }
@@ -841,8 +839,8 @@ const syncCode = computeSessionSyncCode(currentSessionId);
 setTxt('mobile-pin-badge', `PIN: ${currentSessionId}`);
 setTxt('mobile-sync-code-display', syncCode);
 const cleanId = currentSessionId.replace(/[^a-zA-Z0-9]/g, '');
-const topics = [`trace_sync_${cleanId}`, `trace_v5_${cleanId}`];
-const sendSignal = (type, reason = '') => {
+const primaryTopic = `trace_sync_${cleanId}`;
+const sendSignal = (type, reason = '', forceCloud = false) => {
 const payload = { id: 'sig_' + Date.now() + '_' + Math.random(), type, reason, syncCode, ts: Date.now() };
 if (mobilePeerConn && mobilePeerConn.open) {
 try { mobilePeerConn.send(payload); } catch(e){}
@@ -851,9 +849,9 @@ try {
 if (typeof BroadcastChannel !== 'undefined') new BroadcastChannel(`trace_pair_${cleanId}`).postMessage(payload);
 localStorage.setItem(`trace_pair_${cleanId}`, JSON.stringify(payload));
 } catch(e){}
-topics.forEach(topic => {
-fetch(`https://ntfy.sh/${topic}`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=UTF-8' } }).catch(()=>{});
-});
+if (type !== 'HEARTBEAT' || forceCloud) {
+fetch(`https://ntfy.sh/${primaryTopic}`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=UTF-8' } }).catch(()=>{});
+}
 };
 globalMobileSendSignal = sendSignal;
 
@@ -871,7 +869,7 @@ try {
 const conn = peer.connect(currentSessionId + '-DESKTOP', { reliable: true });
 mobilePeerConn = conn;
 conn.on('open', () => {
-sendSignal('PHONE_CONNECTED');
+sendSignal('PHONE_CONNECTED', 'WebRTC Open', false);
 setTxt('mobile-banner-title', '✓ Paired & Locked to Desktop Session (' + syncCode + ')', 'text-sm font-bold text-emerald-300');
 });
 conn.on('data', d => {
@@ -883,14 +881,13 @@ setTxt('mobile-banner-title', '✓ Paired & Verified by Desktop (' + syncCode + 
 };
 peer.on('open', () => {
 connectToDesktopPeer();
-setInterval(connectToDesktopPeer, 2000);
+setInterval(connectToDesktopPeer, 2500);
 });
 } catch(e){}
 }
 
-sendSignal('PHONE_CONNECTED');
-setTimeout(() => sendSignal('PHONE_CONNECTED'), 1200);
-setInterval(() => sendSignal('HEARTBEAT'), 6000);
+sendSignal('PHONE_CONNECTED', 'Initial Pair', true);
+setInterval(() => sendSignal('HEARTBEAT'), 5000);
 
 const mobileBootTime = Date.now();
 let lastMobTabAlert = 0;
