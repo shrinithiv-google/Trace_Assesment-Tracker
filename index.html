@@ -637,8 +637,10 @@ config: {
 iceServers: [
 { urls: "stun:stun.l.google.com:19302" },
 { urls: "stun:stun1.l.google.com:19302" },
-{ urls: "stun:stun2.l.google.com:19302" },
-{ urls: "stun:stun3.l.google.com:19302" }
+{ urls: "stun:openrelay.metered.ca:80" },
+{ urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+{ urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
+{ urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" }
 ]
 }
 };
@@ -717,6 +719,7 @@ setInterval(registerDesktopPeer, 5000);
 function initDesktopRelayAndPolling() {
 const cleanId = currentSessionId.replace(/[^a-zA-Z0-9]/g, '');
 const primaryTopic = `trace_sync_${cleanId}`;
+const dweetThing = `trace_guard_${cleanId}`;
 try {
 if (typeof BroadcastChannel !== 'undefined') {
 const bc = new BroadcastChannel(`trace_pair_${cleanId}`);
@@ -746,8 +749,19 @@ catch(_) { if (String(p.message).includes('PHONE_CONNECTED')) markPhoneAsPaired(
 connectSseStream();
 
 const pollRelayOnce = async () => {
+// 1. Poll Dweet.io Zero-Rate-Limit HTTPS Relay
 try {
-const res = await fetch(`https://ntfy.sh/${primaryTopic}/json?poll=1&since=15s`, { cache: 'no-store' });
+const dres = await fetch(`https://dweet.io/get/latest/dweet/for/${dweetThing}`, { cache: 'no-store' });
+if (dres.ok) {
+const djson = await dres.json();
+if (djson && djson.with && djson.with[0] && djson.with[0].content) {
+handleMobileGuardMessage(djson.with[0].content);
+}
+}
+} catch(e){}
+// 2. Poll ntfy.sh JSON Relay
+try {
+const res = await fetch(`https://ntfy.sh/${primaryTopic}/json?poll=1&since=20s`, { cache: 'no-store' });
 if (!res.ok) return;
 const text = await res.text();
 text.trim().split('\n').forEach(line => {
@@ -766,8 +780,8 @@ if (String(outer.message).includes('PHONE_CONNECTED')) markPhoneAsPaired('Cloud 
 });
 } catch(e){}
 };
-setTimeout(pollRelayOnce, 700);
-setInterval(pollRelayOnce, 2600 + Math.floor(Math.random() * 900));
+setTimeout(pollRelayOnce, 600);
+setInterval(pollRelayOnce, 1800);
 }
 
 function handleMobileGuardMessage(msg) {
@@ -785,11 +799,11 @@ markPhoneAsPaired();
 setTxt('exam-phone-status', 'LOCKED ✓', 'text-emerald-400 font-bold');
 } else if (msg.type === 'VIOLATION') {
 markPhoneAsPaired();
-setTxt('exam-phone-status', 'ALERT ⚠️', 'text-red-400 font-bold animate-pulse');
+setTxt('exam-phone-status', 'MOVED AWAY ⚠️', 'text-red-400 font-bold animate-pulse');
 const now = Date.now();
-if (now - lastMobileStrikeTime > 5500) {
+if (now - lastMobileStrikeTime > 3000) {
 lastMobileStrikeTime = now;
-applyStrike(msg.reason || "Mobile Desk Guard Alert: Phone Display Moved Away From Monitor or Kept Down", 'mobile', true);
+applyStrike(msg.reason || "Mobile Desk Guard Alert: Phone Display Moved Away From Monitor or Kept Down (1 Strike Deducted)", 'mobile', true);
 }
 }
 }
@@ -841,11 +855,12 @@ setTxt('mobile-banner-title', '✓ Sensors Armed & Synced to Desktop! (Code: ' +
 let lastMobileSentViolationTs = 0;
 function sendMobileViolationNow(reason) {
 const now = Date.now();
-if (now - lastMobileSentViolationTs < 4500) return;
+if (now - lastMobileSentViolationTs < 3000) return;
 lastMobileSentViolationTs = now;
 const cleanId = currentSessionId.replace(/[^a-zA-Z0-9]/g, '');
 const primaryTopic = `trace_sync_${cleanId}`;
-const payload = { id: 'mob_' + now + '_' + Math.random(), type: 'VIOLATION', reason, ts: now };
+const dweetThing = `trace_guard_${cleanId}`;
+const payload = { id: 'mob_' + now + '_' + Math.floor(Math.random()*10000), type: 'VIOLATION', reason, ts: now };
 if (mobilePeerConn && mobilePeerConn.open) {
 try { mobilePeerConn.send(payload); } catch(e){}
 }
@@ -853,9 +868,10 @@ try {
 if (typeof BroadcastChannel !== 'undefined') new BroadcastChannel(`trace_pair_${cleanId}`).postMessage(payload);
 localStorage.setItem(`trace_pair_${cleanId}`, JSON.stringify(payload));
 } catch(e){}
+fetch(`https://dweet.io/dweet/for/${dweetThing}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(()=>{});
 fetch(`https://ntfy.sh/${primaryTopic}`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=UTF-8' } }).catch(()=>{});
-setTxt('mobile-banner-title', '⚠️ VIOLATION TRANSMITTED: ' + reason, 'text-xs font-bold text-red-400');
-setTxt('mobile-monitor-val', 'AWAY / KEPT DOWN ❌', 'text-red-400 font-bold text-sm mt-0.5');
+setTxt('mobile-banner-title', '⚠️ STRIKE SENT TO DESKTOP: ' + reason, 'text-xs font-bold text-red-400');
+setTxt('mobile-monitor-val', 'MOVED AWAY / KEPT DOWN ❌', 'text-red-400 font-bold text-sm mt-0.5');
 }
 
 async function startMobileGuardMode() {
@@ -867,8 +883,9 @@ document.addEventListener('click', requestMobileMotionPermissions, { once: true 
 
 const cleanId = currentSessionId.replace(/[^a-zA-Z0-9]/g, '');
 const primaryTopic = `trace_sync_${cleanId}`;
+const dweetThing = `trace_guard_${cleanId}`;
 const sendSignal = (type, reason = '', forceCloud = false) => {
-const payload = { id: 'sig_' + Date.now() + '_' + Math.random(), type, reason, syncCode, ts: Date.now() };
+const payload = { id: 'sig_' + Date.now() + '_' + Math.floor(Math.random()*10000), type, reason, syncCode, ts: Date.now() };
 if (mobilePeerConn && mobilePeerConn.open) {
 try { mobilePeerConn.send(payload); } catch(e){}
 }
@@ -877,6 +894,7 @@ if (typeof BroadcastChannel !== 'undefined') new BroadcastChannel(`trace_pair_${
 localStorage.setItem(`trace_pair_${cleanId}`, JSON.stringify(payload));
 } catch(e){}
 if (type !== 'HEARTBEAT' || forceCloud) {
+fetch(`https://dweet.io/dweet/for/${dweetThing}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(()=>{});
 fetch(`https://ntfy.sh/${primaryTopic}`, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=UTF-8' } }).catch(()=>{});
 }
 };
@@ -919,8 +937,8 @@ setInterval(() => sendSignal('HEARTBEAT'), 5000);
 const mobileBootTime = Date.now();
 let lastMobTabAlert = 0;
 const triggerMobileTabSwitch = () => {
-if (Date.now() - mobileBootTime < 6000) return;
-if (Date.now() - lastMobTabAlert > 5000) {
+if (Date.now() - mobileBootTime < 5000) return;
+if (Date.now() - lastMobTabAlert > 4000) {
 lastMobTabAlert = Date.now();
 sendMobileViolationNow("Mobile Desk Guard Alert: Candidate Switched Tabs or Minimized Browser on Mobile Phone");
 }
@@ -969,10 +987,10 @@ prevFrameLuma = currLuma;
 const avgDiff = diffSum / totalPixels;
 
 // 1. Check if phone is kept down on desk (dark/covered camera or flat featureless surface)
-if (avgLuma < 32 || spatialVariance < 8.5) {
+if (avgLuma < 35 || spatialVariance < 9.5) {
 consecutiveDarkOrFlatFrames++;
 setTxt('mobile-monitor-val', 'KEPT DOWN / COVERED ❌', 'text-red-400 font-bold text-sm mt-0.5');
-if (consecutiveDarkOrFlatFrames >= 3) {
+if (consecutiveDarkOrFlatFrames >= 2) {
 consecutiveDarkOrFlatFrames = 0;
 sendMobileViolationNow("Mobile Desk Guard Alert: Phone Kept Down on Desk or Camera Obstructed Away From Monitor");
 }
@@ -982,7 +1000,7 @@ consecutiveDarkOrFlatFrames = 0;
 }
 
 // 2. Check if phone is moved away (motion spike)
-if (avgDiff > 15) {
+if (avgDiff > 11.5) {
 consecutiveMotionFrames++;
 setTxt('mobile-monitor-val', 'MOVING AWAY ⚠️', 'text-amber-400 font-bold text-sm mt-0.5');
 if (consecutiveMotionFrames >= 2) {
@@ -996,9 +1014,9 @@ consecutiveMotionFrames = 0;
 }
 
 // 3. Check if camera shifted away from monitor brightness signature
-if (baselineMonitorLuma !== null && Math.abs(avgLuma - baselineMonitorLuma) > 25) {
+if (baselineMonitorLuma !== null && Math.abs(avgLuma - baselineMonitorLuma) > 20) {
 consecutiveDriftFrames++;
-if (consecutiveDriftFrames >= 4) {
+if (consecutiveDriftFrames >= 3) {
 consecutiveDriftFrames = 0;
 baselineMonitorLuma = avgLuma;
 sendMobileViolationNow("Mobile Desk Guard Alert: Monitor Screen Lost From Mobile Camera View");
@@ -1007,41 +1025,63 @@ sendMobileViolationNow("Mobile Desk Guard Alert: Monitor Screen Lost From Mobile
 consecutiveDriftFrames = 0;
 setTxt('mobile-monitor-val', 'LOCKED ON MONITOR ✓', 'text-emerald-400 font-bold text-sm mt-0.5');
 }
-}, 250);
+}, 220);
 } catch(e){}
 
-let lastGyroAlert = 0;
+let baselineBeta = null;
+let baselineGamma = null;
 window.addEventListener('deviceorientation', e => {
 if (e.beta === null) return;
 const beta = e.beta;
 const gamma = e.gamma || 0;
-if (Math.abs(beta) < 35 || Math.abs(beta) > 142 || Math.abs(gamma) > 68) {
-setTxt('mobile-pitch-val', `Kept Down / Tilted (${Math.round(beta)}°)`, "text-red-400 font-bold text-sm mt-0.5");
-setTxt('mobile-monitor-val', "AWAY FROM MONITOR ❌", "text-red-400 font-bold text-sm mt-0.5");
-if (Date.now() - lastGyroAlert > 5000) {
-lastGyroAlert = Date.now();
-sendMobileViolationNow("Mobile Desk Guard Alert: Phone Kept Down Flat or Tilted Away From Monitor");
+if (baselineBeta === null && Math.abs(beta) >= 38 && Math.abs(beta) <= 135) {
+baselineBeta = beta;
+baselineGamma = gamma;
 }
+const movedAngleDelta = baselineBeta !== null ? (Math.abs(beta - baselineBeta) + Math.abs(gamma - baselineGamma)) : 0;
+if (Math.abs(beta) < 38 || Math.abs(beta) > 138 || Math.abs(gamma) > 60 || movedAngleDelta > 18) {
+setTxt('mobile-pitch-val', `Moved / Tilted (${Math.round(beta)}°)`, "text-red-400 font-bold text-sm mt-0.5");
+setTxt('mobile-monitor-val', "MOVED AWAY FROM MONITOR ❌", "text-red-400 font-bold text-sm mt-0.5");
+if (movedAngleDelta > 18) { baselineBeta = beta; baselineGamma = gamma; }
+sendMobileViolationNow("Mobile Desk Guard Alert: Phone Moved Away From Monitor or Kept Down Flat");
 } else {
 setTxt('mobile-pitch-val', `Upright (${Math.round(beta)}° OK)`, "text-emerald-400 font-bold text-sm mt-0.5");
 }
 });
 
 let flatAccelCount = 0;
+let moveAccelCount = 0;
+let prevAx = null, prevAy = null, prevAz = null;
 window.addEventListener('devicemotion', e => {
 const acc = e.accelerationIncludingGravity;
 if (!acc || acc.z === null || acc.z === undefined) return;
-const absZ = Math.abs(acc.z || 0);
-const absY = Math.abs(acc.y || 0);
-const absX = Math.abs(acc.x || 0);
-const uprightForce = Math.max(absY, absX);
-if (absZ > 6.6 && uprightForce < 5.2) {
+const ax = acc.x || 0, ay = acc.y || 0, az = acc.z || 0;
+const absZ = Math.abs(az);
+const uprightForce = Math.max(Math.abs(ay), Math.abs(ax));
+
+// Detect linear physical movement when phone is picked up / moved away
+if (prevAx !== null) {
+const motionDelta = Math.abs(ax - prevAx) + Math.abs(ay - prevAy) + Math.abs(az - prevAz);
+if (motionDelta > 2.3) {
+moveAccelCount++;
+setTxt('mobile-monitor-val', "PHONE MOVING AWAY ⚠️", "text-amber-400 font-bold text-sm mt-0.5");
+if (moveAccelCount >= 2) {
+moveAccelCount = 0;
+sendMobileViolationNow("Mobile Desk Guard Alert: Phone Physically Moved Away From Monitor Position");
+}
+} else {
+moveAccelCount = Math.max(0, moveAccelCount - 1);
+}
+}
+prevAx = ax; prevAy = ay; prevAz = az;
+
+// Detect phone kept down flat on desk
+if (absZ > 6.4 && uprightForce < 5.4) {
 flatAccelCount++;
 setTxt('mobile-pitch-val', `Kept Down Flat (Z:${absZ.toFixed(1)})`, "text-red-400 font-bold text-sm mt-0.5");
 setTxt('mobile-monitor-val', "PHONE KEPT DOWN ❌", "text-red-400 font-bold text-sm mt-0.5");
-if (flatAccelCount >= 4 && Date.now() - lastGyroAlert > 5000) {
+if (flatAccelCount >= 3) {
 flatAccelCount = 0;
-lastGyroAlert = Date.now();
 sendMobileViolationNow("Mobile Desk Guard Alert: Phone Kept Down Flat on Desk Surface");
 }
 } else {
@@ -1356,14 +1396,29 @@ btn.innerHTML = `🚀 Enter Proctored Assessment Platform → (Biometrics Verifi
 drawBiometricOverlays(true);
 }
 
-function startAssessment() {
+async function startAssessment() {
 if (virtualCamAnimId) clearInterval(virtualCamAnimId);
 if (!isBiometricallyVerified) lockBiometricMatchInstant(97);
 currentStage = 'exam';
 isExamActive = true;
 $('stage-biometrics')?.classList.add('hidden');
 $('stage-exam-active')?.classList.remove('hidden');
-if ($('proctor-cam-video') && labCamStream) { $('proctor-cam-video').srcObject = labCamStream; $('proctor-cam-video').play().catch(()=>{}); }
+
+// Ensure real hardware camera is bound to Stage 3 proctor-cam-video if available
+if ((!labCamStream || isVirtualBiometricCam) && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+try {
+const realStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" }, audio: false });
+if (realStream) {
+labCamStream = realStream;
+isVirtualBiometricCam = false;
+}
+} catch(e){}
+}
+if ($('proctor-cam-video') && labCamStream) {
+$('proctor-cam-video').srcObject = labCamStream;
+$('proctor-cam-video').muted = true;
+$('proctor-cam-video').play().catch(()=>{});
+}
 renderQuestion();
 startExamTimer();
 startDesktopIntruderAndGazeMonitor();
@@ -1405,19 +1460,47 @@ if (examTimeRemaining <= 0) finishExam(false);
 }
 function startDesktopIntruderAndGazeMonitor() {
 let awayCount = 0;
+let baselineFaceWidthRatio = null;
+const snapCanvas = document.createElement('canvas');
+snapCanvas.width = 48;
+snapCanvas.height = 36;
+const snapCtx = snapCanvas.getContext('2d');
+
 setInterval(async () => {
 if (!isExamActive) return;
 const video = $('proctor-cam-video');
-if (!video || video.readyState < 2) return;
+if (!video || video.readyState < 2 || isVirtualBiometricCam) return;
+
+// Vector 0: Check if camera is covered / dark / turned away from candidate
+try {
+if (snapCtx) {
+snapCtx.drawImage(video, 0, 0, 48, 36);
+const pdata = snapCtx.getImageData(0, 0, 48, 36).data;
+let lumaSum = 0;
+const nPix = 48 * 36;
+for (let i = 0; i < nPix; i++) {
+lumaSum += 0.299 * pdata[i*4] + 0.587 * pdata[i*4+1] + 0.114 * pdata[i*4+2];
+}
+const avgLuma = lumaSum / nPix;
+if (avgLuma < 24) {
+if (++awayCount >= 3) {
+awayCount = 0;
+applyStrike("Camera Obstructed or Turned Away From Candidate (1 Strike Deducted)", 'gaze');
+}
+return;
+}
+}
+} catch(e){}
+
 const model = await getBlazeFaceModel();
 if (!model) return;
 try {
 const faces = await model.estimateFaces(video, false);
 if (faces && faces.length > 1) {
 awayCount = 0;
-continuousIntruderSeconds += 0.4;
+continuousIntruderSeconds += 0.35;
 updateLiveTimersHud();
-if (!hasGivenInitialIntruderStrike && continuousIntruderSeconds >= 0.8) {
+if (!hasGivenInitialIntruderStrike && continuousIntruderSeconds >= 0.7) {
 hasGivenInitialIntruderStrike = true;
 lastIntruderStrikeTime = Date.now();
 applyStrike(`Intruder Detected: Multiple Faces (${faces.length} Persons) in Camera View (1 Strike Deducted)`, 'intruder');
@@ -1429,22 +1512,70 @@ applyStrike("Extended Intruder Alert: Unauthorized Person Remained in Camera Vie
 }
 return;
 } else {
-continuousIntruderSeconds = Math.max(0, continuousIntruderSeconds - 0.4);
+continuousIntruderSeconds = Math.max(0, continuousIntruderSeconds - 0.35);
 if (continuousIntruderSeconds === 0 && (Date.now() - lastIntruderStrikeTime > 15000)) {
 hasGivenInitialIntruderStrike = false;
 }
 updateLiveTimersHud();
 }
+
+// Vector 1: Candidate Face Completely Missing From Camera View
 if (!faces || faces.length === 0) {
-if (++awayCount >= 6) {
+if (++awayCount >= 3) {
 awayCount = 0;
-applyStrike("Candidate Face Missing From Camera View (Looked Away From Monitor)", 'gaze');
+applyStrike("Candidate Moved Away: Face Missing From Camera View (1 Strike Deducted)", 'gaze');
+}
+return;
+}
+
+// Analyze 6-Point Facial Geometry for Moving Away / Leaning Off-Center / Head Turn
+const f = faces[0];
+const vw = video.videoWidth || 640;
+const vh = video.videoHeight || 480;
+const tl = f.topLeft || [0, 0];
+const br = f.bottomRight || [vw, vh];
+const fw = Math.abs(br[0] - tl[0]);
+const fh = Math.abs(br[1] - tl[1]);
+const cx = (tl[0] + br[0]) / (2 * vw);
+const cy = (tl[1] + br[1]) / (2 * vh);
+const faceWidthRatio = fw / vw;
+
+if (baselineFaceWidthRatio === null && faceWidthRatio >= 0.18 && cx >= 0.25 && cx <= 0.75) {
+baselineFaceWidthRatio = faceWidthRatio;
+}
+
+let awayReason = null;
+// Vector 2: Stepped Back / Moved Away Distance
+if (faceWidthRatio < 0.15 || (baselineFaceWidthRatio !== null && faceWidthRatio < baselineFaceWidthRatio * 0.66)) {
+awayReason = "Candidate Moved Away From Screen: Distance Violation Detected (1 Strike Deducted)";
+}
+// Vector 3: Moved Off-Center / Leaned Out of Monitor View
+else if (cx < 0.20 || cx > 0.80 || cy < 0.14 || cy > 0.86) {
+awayReason = "Candidate Moved Away From Monitor Center View (1 Strike Deducted)";
+}
+// Vector 4: Head Turned Left/Right Away From Monitor (Using BlazeFace 6 Landmarks)
+else if (f.landmarks && f.landmarks.length >= 6) {
+const nose = f.landmarks[2];
+const rightEar = f.landmarks[4];
+const leftEar = f.landmarks[5];
+const distRight = Math.max(1, Math.abs(nose[0] - rightEar[0]));
+const distLeft = Math.max(1, Math.abs(leftEar[0] - nose[0]));
+const yawRatio = distRight / distLeft;
+if (yawRatio > 2.25 || yawRatio < 0.44) {
+awayReason = "Gaze / Head-Turn Violation: Candidate Looked Away From Monitor (1 Strike Deducted)";
+}
+}
+
+if (awayReason) {
+if (++awayCount >= 3) {
+awayCount = 0;
+applyStrike(awayReason, 'gaze');
 }
 } else {
-awayCount = 0;
+awayCount = Math.max(0, awayCount - 1);
 }
 } catch(e){}
-}, 400);
+}, 350);
 }
 function startSmartVoiceEscalationMonitor() {
 if (!labCamStream) return;
