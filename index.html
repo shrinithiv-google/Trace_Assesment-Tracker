@@ -30,7 +30,7 @@
             <span class="font-extrabold text-base text-white">Trace</span>
             <span id="portal-role-badge" class="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-blue-950/90 text-blue-300 border border-blue-700/50">AGENT ASSESSMENT VIEW</span>
           </div>
-          <p class="text-[11px] text-slate-400">Mobile QR Guard • 1:1 Facial Landmark Biometrics • In-App SOP & Google Sheets Audit</p>
+          <p class="text-[11px] text-slate-400">Continuous Seat Presence • Mobile Screen/Keyboard & Tab Guard • 1:1 Biometrics • Google Sheets Audit</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -139,8 +139,8 @@
             <div class="p-3 bg-white rounded-2xl shadow-xl border-2 border-blue-500/30">
               <img id="pairing-qr-img" alt="Pairing QR" class="w-40 h-40 object-contain" />
             </div>
-            <p class="text-xs text-slate-300 font-semibold max-w-sm">Scan this QR with your mobile phone and place the phone facing your laptop screen.</p>
-            <p class="text-[11px] text-slate-400 max-w-sm">Active Mobile Guard Rules: Moving the phone away, losing laptop screen visibility, or switching tabs/apps on the phone triggers an immediate Strike.</p>
+            <p class="text-xs text-slate-300 font-semibold max-w-sm">Scan this QR with your mobile phone and place it where your entire laptop screen is visible.</p>
+            <p class="text-[11px] text-slate-400 max-w-sm">If the phone moves so the full laptop screen is not visible (or only the keyboard is visible), or if tabs are switched on the phone, a Strike is issued during the exam.</p>
             <input id="mobile-pair-url-input" type="text" readonly class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-400 text-center" />
           </div>
 
@@ -219,7 +219,7 @@
       <button id="btn-enter-exam" type="button" onclick="startAssessment()" disabled class="btn-lock">🔒 Upload Matching Candidate ID Photo to Unlock Assessment</button>
     </section>
 
-    <!-- STAGE 3: ACTIVE PROCTORED ASSESSMENT + SOP HELP CENTER + INTRUDER / VOICE / MOBILE TAB & SCREEN MONITOR -->
+    <!-- STAGE 3: ACTIVE PROCTORED ASSESSMENT + CONTINUOUS SEAT OCCUPANCY + SOP HELP CENTER -->
     <section id="stage-exam-active" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div class="lg:col-span-8 glass rounded-3xl p-6 space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
@@ -256,25 +256,28 @@
         </div>
       </div>
 
-      <!-- RIGHT SIDEBAR: LIVE AI PROCTORING TELEMETRY & DEMO STRIKE TRIGGERS -->
+      <!-- RIGHT SIDEBAR: LIVE SEAT PRESENCE, AI PROCTORING TELEMETRY & DEMO STRIKE TRIGGERS -->
       <div class="lg:col-span-4 space-y-4">
         <div class="glass rounded-3xl p-4 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-emerald-400">👁️ Live AI Proctor & Mobile Status</span>
+            <span class="text-xs font-bold text-emerald-400">👁️ Live Seat & AI Proctor Feed</span>
             <span id="live-timers-hud" class="text-[10px] font-mono text-slate-400">Speech: 0.0s | Intruder: 0.0s</span>
           </div>
           <div class="relative w-full h-44 bg-slate-950 rounded-2xl overflow-hidden border border-slate-800">
             <video id="proctor-cam-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+            <canvas id="proctor-overlay-canvas" width="320" height="180" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
             <div class="scan-laser"></div>
           </div>
           <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] space-y-1">
-            <div class="flex justify-between"><span class="text-slate-400">Phone Screen Visibility:</span><span id="desktop-phone-screen-pill" class="font-mono font-bold text-emerald-400">✓ Screen Visible</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Candidate Seat Presence:</span><span id="desktop-seat-presence-pill" class="font-mono font-bold text-emerald-400">✓ In Seat (Present)</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Full Screen vs Keyboard:</span><span id="desktop-phone-screen-pill" class="font-mono font-bold text-emerald-400">✓ Full Screen Visible</span></div>
             <div class="flex justify-between"><span class="text-slate-400">Phone Tab / App Focus:</span><span id="desktop-phone-tab-pill" class="font-mono font-bold text-emerald-400">✓ Locked on Guard</span></div>
           </div>
           <div class="pt-2 border-t border-slate-800 space-y-1.5">
-            <div class="text-[10px] font-bold text-slate-400 uppercase">Instant Demo Violation Simulators:</div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase">Instant Violation Simulators:</div>
             <div class="grid grid-cols-1 gap-1.5">
-              <button type="button" onclick="triggerTestPhoneAwayStrike()" class="w-full py-1.5 px-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[11px] font-bold text-left cursor-pointer">📱 Simulate Phone Moved / Screen Not Visible Strike</button>
+              <button type="button" onclick="triggerTestSeatVacantStrike()" class="w-full py-1.5 px-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-[11px] font-bold text-left cursor-pointer">💺 Simulate Candidate Left Seat (No One in Seat) Strike</button>
+              <button type="button" onclick="triggerTestPhoneAwayStrike()" class="w-full py-1.5 px-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[11px] font-bold text-left cursor-pointer">📱 Simulate Full Screen Not Visible / Keyboard Only Strike</button>
               <button type="button" onclick="triggerTestPhoneTabStrike()" class="w-full py-1.5 px-3 rounded-xl bg-pink-500/20 border border-pink-500/40 text-pink-300 text-[11px] font-bold text-left cursor-pointer">📲 Simulate Mobile Phone Tab-Switch Strike</button>
               <button type="button" onclick="triggerTestIntruderStrike()" class="w-full py-1.5 px-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-[11px] font-bold text-left cursor-pointer">👥 Simulate Multi-Face Intruder Strike</button>
               <button type="button" onclick="triggerTestVoiceStrike()" class="w-full py-1.5 px-3 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-300 text-[11px] font-bold text-left cursor-pointer">🎙️ Simulate Voice / Speech (>2.0s) Strike</button>
@@ -310,12 +313,12 @@
         <div class="scan-laser"></div>
       </div>
       <div id="mobile-posture-banner" class="p-3 rounded-xl bg-emerald-950/80 border border-emerald-600/40 text-xs font-bold text-emerald-300 text-center">
-        ✓ Laptop Screen Visible & Phone Upright
+        ✓ Full Laptop Screen Framed & Guard Active
       </div>
-      <button type="button" onclick="recalibrateMobileScreenBaseline()" class="w-full py-2.5 rounded-xl bg-blue-600/30 border border-blue-500/50 text-blue-200 text-xs font-bold cursor-pointer">🎯 Lock Current Laptop Screen View as Baseline</button>
+      <button type="button" onclick="recalibrateMobileScreenBaseline()" class="w-full py-2.5 rounded-xl bg-blue-600/30 border border-blue-500/50 text-blue-200 text-xs font-bold cursor-pointer">🎯 Re-Lock Current Full Laptop Screen View</button>
       <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 space-y-1">
-        <div>• <b>Screen Visibility Lock:</b> If the phone is slightly moved away or the laptop screen is not visible in the phone camera, an immediate Strike is sent.</div>
-        <div>• <b>Zero-Tolerance Mobile Tab Switch:</b> Switching tabs, minimizing this browser, or using another app on this phone triggers an immediate Strike.</div>
+        <div>• <b>Full-Screen vs Keyboard Detection:</b> Keep the entire laptop screen in view. If the phone moves, tilts down to show only the keyboard, or is kept flat, a Strike is sent.</div>
+        <div>• <b>Mobile Tab Switch Lock:</b> Switching browser tabs or opening another app on this phone triggers an immediate Strike.</div>
       </div>
     </div>
   </section>
@@ -354,14 +357,14 @@ const $ = id => document.getElementById(id);
 const setTxt = (id, text, cls) => { const el = $(id); if (el) { el.textContent = text; if (cls) el.className = cls; } };
 
 let currentStage = 'pairing', isExamActive = false, isMobilePaired = false, isBiometricallyVerified = false;
-let hasRealMobileHeartbeat = false, lastMobileHeartbeatAt = 0;
+let hasRealMobileHeartbeat = false, lastMobileHeartbeatAt = 0, examStartGraceUntil = 0;
 let hasIdPhoto = false, hasLiveWebcam = false, labCamStream = null, blazeFaceModel = null;
 let strikesRemaining = 3, examTimeRemaining = 900, examTimerInterval = null;
 let continuousVoiceSeconds = 0, continuousIntruderSeconds = 0, hasGivenInitialIntruderStrike = false;
-let warningDismissCooldownUntil = 0, lastMobileStrikeTime = 0, lastProcessedMobileSeq = 0, lastTabStrikeTime = 0;
+let warningDismissCooldownUntil = 0, lastMobileStrikeTime = 0, lastProcessedMobileSeq = 0, lastTabStrikeTime = 0, lastSeatStrikeTime = 0;
 let hasRegisteredCandidateInSheet = false, hasSubmittedFinalScore = false, isLockdownBound = false;
 let mediaRecorder = null, recordedChunks = [];
-let mobileBaselineLuma = null, mobileBaseGravity = null, mobileBaseOrient = null;
+let mobileBaselineLuma = null, mobileBaseGravity = null, mobileBaseOrient = null, mobileStartTime = Date.now();
 
 let questions = [
   { q: "Which data structure provides O(1) average-time complexity for key lookup and insertion?", opts: ["Hash Table with Closed Addressing", "Doubly Linked List", "Unbalanced Binary Search Tree", "Bubble Sort Array"], ans: 0 },
@@ -378,7 +381,7 @@ async function getBlazeFaceModel() {
   return blazeFaceModel;
 }
 
-// GOOGLE SHEETS LIVE AUDIT LOGGER (RECORDS AGENT DETAILS, BIOMETRICS, SOP READS, STRIKES & SCORES)
+// GOOGLE SHEETS LIVE AUDIT LOGGER (RECORDS AGENT DETAILS, BIOMETRICS, SOP READS, SEAT VACANCY, MOBILE STRIKES & SCORES)
 function syncToGoogleSheet(action, extra = {}) {
   if (action === 'registerCandidate') { if (hasRegisteredCandidateInSheet) return; hasRegisteredCandidateInSheet = true; }
   const payload = JSON.stringify({
@@ -423,7 +426,7 @@ function simulateMobilePairing() {
   proceedToBiometrics();
 }
 
-// DESKTOP PEER & DUAL CLOUD RELAY (NO PHONE VIDEO SHOWN ON MONITOR — ONLY TELEMETRY & INSTANT STRIKES)
+// DESKTOP PEER & DUAL CLOUD RELAY (NO PHONE VIDEO SHOWN ON MONITOR — ONLY TELEMETRY & STRIKES DURING ACTIVE EXAM)
 function initDesktopPeer() {
   if (typeof Peer === 'undefined') return;
   try {
@@ -455,13 +458,13 @@ function initDesktopRelayAndPolling() {
     } catch(e){}
   }, 1100);
 
-  // Desktop Watchdog: If a connected mobile phone stops sending heartbeats for >4.2s because the candidate switched tabs or minimized the browser on their phone, trigger an immediate Mobile Tab-Switch Strike!
+  // Desktop Watchdog: If a connected mobile phone stops sending heartbeats because the candidate switched tabs or minimized the browser on their phone during the active exam, trigger an immediate Strike!
   setInterval(() => {
-    if (!isExamActive || !hasRealMobileHeartbeat) return;
-    if (Date.now() - lastMobileHeartbeatAt > 4200 && Date.now() - lastMobileStrikeTime > 5000) {
+    if (!isExamActive || !hasRealMobileHeartbeat || Date.now() < examStartGraceUntil) return;
+    if (Date.now() - lastMobileHeartbeatAt > 4500 && Date.now() - lastMobileStrikeTime > 5000) {
       lastMobileStrikeTime = Date.now();
-      setTxt('desktop-phone-tab-pill', "❌ Tab Switched / App Minimized!", "font-mono font-bold text-red-400");
-      applyStrike("Mobile Phone Violation: Candidate Switched Tabs or Minimized Guard Browser on Mobile Phone (1 Strike Deducted)", 'mobile_tab', true);
+      setTxt('desktop-phone-tab-pill', "❌ Tab Switched / Minimized!", "font-mono font-bold text-red-400");
+      applyStrike("Mobile Phone Violation: Candidate Switched Tabs or Minimized Browser on Mobile Phone (1 Strike Deducted)", 'mobile_tab', false);
     }
   }, 1000);
 }
@@ -472,34 +475,39 @@ function handleIncomingMobileTelemetry(d) {
   lastMobileHeartbeatAt = Date.now();
   if (!isMobilePaired) markMobileGuardPaired("Mobile QR Guard Connected ✓");
   if (d.screenStatus) {
-    setTxt('desktop-phone-screen-pill', d.screenVisible ? "✓ Screen Visible" : "❌ Screen Not Visible", d.screenVisible ? "font-mono font-bold text-emerald-400" : "font-mono font-bold text-red-400");
+    setTxt('desktop-phone-screen-pill', d.screenVisible ? "✓ Full Screen Visible" : "❌ Screen Missing / Keyboard Only!", d.screenVisible ? "font-mono font-bold text-emerald-400" : "font-mono font-bold text-red-400");
   }
   if (d.tabStatus) {
     setTxt('desktop-phone-tab-pill', d.tabActive ? "✓ Locked on Guard" : "❌ Mobile Tab Switched!", d.tabActive ? "font-mono font-bold text-emerald-400" : "font-mono font-bold text-red-400");
   }
+  // Only deduct exam strikes when the exam is actively running (and after the 3.5s initial exam stabilization window)
   if (d.type === 'STRIKE' && d.seq && d.seq > lastProcessedMobileSeq) {
     lastProcessedMobileSeq = d.seq;
-    if (Date.now() - lastMobileStrikeTime > 3200) {
+    if (!isExamActive || Date.now() < examStartGraceUntil) return;
+    if (Date.now() - lastMobileStrikeTime > 3800) {
       lastMobileStrikeTime = Date.now();
-      applyStrike(d.reason || "Mobile Guard Violation Detected (1 Strike Deducted)", 'mobile', true);
+      applyStrike(d.reason || "Mobile Guard Violation: Full Laptop Screen Not Visible or Phone Moved (1 Strike Deducted)", 'mobile', false);
     }
   }
 }
 
 // ============================================================================
 // MOBILE GUARD RUNTIME:
-// 1. IMMEDIATE STRIKE IF CANDIDATE SWITCHES TABS OR USES ANOTHER APP ON PHONE
-// 2. IMMEDIATE STRIKE IF PHONE IS SLIGHTLY MOVED AWAY OR LAPTOP SCREEN IS NOT VISIBLE IN PHONE CAMERA
+// 1. CALIBRATES FOR 3.5s SO LIGHT HAND TREMORS DO NOT CAUSE FALSE STRIKES
+// 2. STRIKES WHEN PHONE MOVES, TILTS TO SHOW ONLY KEYBOARD, OR FULL LAPTOP SCREEN IS NOT VISIBLE
+// 3. STRIKES IMMEDIATELY WHEN SWITCHING TABS OR APPS ON THE PHONE
 // ============================================================================
 function recalibrateMobileScreenBaseline() {
   mobileBaselineLuma = null;
   mobileBaseGravity = null;
   mobileBaseOrient = null;
-  setTxt('mobile-posture-banner', "✓ Baseline Locked: Laptop Screen & Phone Position Calibrated", "p-3 rounded-xl bg-emerald-950/80 border border-emerald-600/40 text-xs font-bold text-emerald-300 text-center");
+  mobileStartTime = Date.now();
+  setTxt('mobile-posture-banner', "✓ Calibrated: Full Laptop Screen & Phone Posture Locked", "p-3 rounded-xl bg-emerald-950/80 border border-emerald-600/40 text-xs font-bold text-emerald-300 text-center");
 }
 
 async function startMobileGuardMode() {
-  let mobileSeq = Math.floor(Date.now() / 100), slightMoveTicks = 0, screenMissingTicks = 0, mobilePeerConn = null;
+  mobileStartTime = Date.now();
+  let mobileSeq = Math.floor(Date.now() / 100), moveTicks = 0, screenMissingTicks = 0, mobilePeerConn = null;
   const v = $('mobile-cam-video');
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 320 }, height: { ideal: 240 } }, audio: false });
@@ -522,9 +530,9 @@ async function startMobileGuardMode() {
     try { fetch(`https://dweet.io/dweet/for/trace_360_${currentSessionId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: bodyStr, keepalive: true }).catch(()=>{}); } catch(e){}
   };
 
-  dispatchMobilePacket({ type: 'HEARTBEAT', seq: ++mobileSeq, screenVisible: true, tabActive: true });
+  dispatchMobilePacket({ type: 'HEARTBEAT', seq: ++mobileSeq, screenStatus: true, screenVisible: true, tabStatus: true, tabActive: true });
 
-  // RULE 1: IMMEDIATE STRIKE WHEN SWITCHING TABS OR USING ANOTHER APP ON THE MOBILE PHONE
+  // 1. IMMEDIATE STRIKE WHEN SWITCHING TABS OR OPENING ANOTHER APP ON THE MOBILE PHONE
   const fireMobileTabSwitchStrike = (detail) => {
     setTxt('mobile-posture-banner', `🚫 STRIKE SENT: ${detail}`, "p-3 rounded-xl bg-red-950 border border-red-500 text-xs font-bold text-red-300 text-center");
     dispatchMobilePacket({
@@ -544,89 +552,85 @@ async function startMobileGuardMode() {
   window.addEventListener('pagehide', () => {
     fireMobileTabSwitchStrike("Mobile Browser Tab Minimized or Switched During Assessment");
   });
-  window.addEventListener('blur', () => {
-    fireMobileTabSwitchStrike("Candidate Switched Focus / Opened Another Tab or Notification on Mobile Phone");
-  });
 
-  // RULE 2A: SLIGHT PHONE MOVEMENT / TILT / KEPT DOWN SENSOR (HIGH SENSITIVITY)
+  // 2. PHONE MOVEMENT / TILTED DOWN AT KEYBOARD / KEPT FLAT ON DESK DETECTOR (WITH 3.5s INITIAL STABILIZATION)
   window.addEventListener('deviceorientation', ev => {
+    if (Date.now() - mobileStartTime < 3500) return;
     if (ev.beta === null || ev.gamma === null) return;
     if (!mobileBaseOrient) { mobileBaseOrient = { beta: ev.beta, gamma: ev.gamma }; return; }
     const dBeta = Math.abs(ev.beta - mobileBaseOrient.beta);
     const dGamma = Math.abs(ev.gamma - mobileBaseOrient.gamma);
-    if (dBeta > 11 || dGamma > 11) {
-      slightMoveTicks++;
-      if (slightMoveTicks >= 2) {
-        slightMoveTicks = 0;
+    // Ignores tiny 1-14 degree micro-vibrations; triggers when tilted >= 16 degrees (e.g. tilted down toward keyboard or rotated away from screen)
+    if (dBeta >= 16 || dGamma >= 16) {
+      moveTicks++;
+      if (moveTicks >= 3) {
+        moveTicks = 0;
         mobileBaseOrient = { beta: ev.beta, gamma: ev.gamma };
-        setTxt('mobile-posture-banner', "⚠️ STRIKE SENT: Phone Slightly Moved Away From Locked Position!", "p-3 rounded-xl bg-red-950 border border-red-500 text-xs font-bold text-red-300 text-center");
+        setTxt('mobile-posture-banner', "⚠️ STRIKE: Phone Tilted / Full Laptop Screen Not Visible (Keyboard Angle)!", "p-3 rounded-xl bg-red-950 border border-red-500 text-xs font-bold text-red-300 text-center");
         dispatchMobilePacket({
           type: 'STRIKE',
           seq: ++mobileSeq,
           screenStatus: true,
           screenVisible: false,
-          reason: "Mobile Guard Alert: Phone Slightly Moved Away or Tilted From Laptop Screen View (1 Strike Deducted)"
+          reason: "Mobile Guard Violation: Phone Moved or Tilted Toward Keyboard — Entire Laptop Screen Not Visible (1 Strike Deducted)"
         }, true);
       }
+    } else {
+      moveTicks = Math.max(0, moveTicks - 1);
     }
   });
 
   window.addEventListener('devicemotion', ev => {
+    if (Date.now() - mobileStartTime < 3500) return;
     const acc = ev.accelerationIncludingGravity; if (!acc) return;
     const ax = acc.x || 0, ay = acc.y || 0, az = acc.z || 0;
     if (!mobileBaseGravity) { mobileBaseGravity = { ax, ay, az }; return; }
     const deltaG = Math.hypot(ax - mobileBaseGravity.ax, ay - mobileBaseGravity.ay, az - mobileBaseGravity.az);
-    const isLaidFlat = Math.abs(az) > 7.4 && Math.hypot(ax, ay) < 4.8;
-    if (deltaG > 1.75 || isLaidFlat) {
-      slightMoveTicks++;
-      setTxt('mobile-posture-banner', "⚠️ STRIKE SENT: Phone Moved Away or Kept Down on Desk!", "p-3 rounded-xl bg-red-950 border border-red-500 text-xs font-bold text-red-300 text-center");
-      if (slightMoveTicks >= 2) {
-        slightMoveTicks = 0;
+    const isLaidFlat = Math.abs(az) > 7.6 && Math.hypot(ax, ay) < 4.5;
+    if (deltaG > 2.2 || isLaidFlat) {
+      moveTicks++;
+      if (moveTicks >= 3) {
+        moveTicks = 0;
         mobileBaseGravity = { ax, ay, az };
+        setTxt('mobile-posture-banner', "⚠️ STRIKE: Phone Moved or Kept Down — Full Screen Out of View!", "p-3 rounded-xl bg-red-950 border border-red-500 text-xs font-bold text-red-300 text-center");
         dispatchMobilePacket({
           type: 'STRIKE',
           seq: ++mobileSeq,
           screenStatus: true,
           screenVisible: false,
-          reason: "Mobile Guard Alert: Phone Slightly Moved Away From Screen or Kept Down on Surface (1 Strike Deducted)"
+          reason: "Mobile Guard Violation: Phone Moved or Kept Down on Desk — Entire Laptop Screen Not Visible (1 Strike Deducted)"
         }, true);
       }
-    } else {
-      slightMoveTicks = Math.max(0, slightMoveTicks - 1);
     }
   });
 
-  // RULE 2B: LAPTOP SCREEN VISIBILITY DETECTOR IN PHONE CAMERA (CHECKS IF MONITOR GLOW / SCREEN RECTANGLE IS VISIBLE)
+  // 3. CAMERA FRAME CHECK: ENSURES ENTIRE UPPER LAPTOP SCREEN REMAINS IN VIEW (NOT JUST KEYBOARD OR OBSTRUCTED VIEW)
   const snapCanvas = document.createElement('canvas'); snapCanvas.width = 64; snapCanvas.height = 48;
   const sCtx = snapCanvas.getContext('2d');
   setInterval(() => {
     if (document.hidden) return;
-    if (!v || v.readyState < 2) {
+    if (!v || v.readyState < 2 || Date.now() - mobileStartTime < 3500) {
       dispatchMobilePacket({ type: 'HEARTBEAT', seq: ++mobileSeq, screenStatus: true, screenVisible: true, tabStatus: true, tabActive: true });
       return;
     }
     sCtx.drawImage(v, 0, 0, 64, 48);
     const d = sCtx.getImageData(0, 0, 64, 48).data;
     const cellLuma = new Float32Array(48);
-    let totalLuma = 0, brightScreenPixels = 0, totalPixels = 64 * 48;
+    let totalLuma = 0, upperScreenLuma = 0, lowerKeyboardLuma = 0;
 
     for (let y = 0; y < 48; y++) {
       for (let x = 0; x < 64; x++) {
         const idx = (y * 64 + x) * 4;
-        const r = d[idx], g = d[idx+1], b = d[idx+2];
-        const Y = 0.299 * r + 0.587 * g + 0.114 * b;
+        const Y = 0.299 * d[idx] + 0.587 * d[idx+1] + 0.114 * d[idx+2];
         totalLuma += Y;
         cellLuma[Math.floor(y / 8) * 8 + Math.floor(x / 8)] += Y / 64;
-        if (x >= 8 && x <= 56 && y >= 6 && y <= 42 && Y > 115 && (b >= r * 0.82 || Y > 155)) {
-          brightScreenPixels++;
-        }
+        if (y < 24) upperScreenLuma += Y;
+        else lowerKeyboardLuma += Y;
       }
     }
 
-    const avgLuma = totalLuma / totalPixels;
-    const screenGlowRatio = brightScreenPixels / totalPixels;
-
-    if (!mobileBaselineLuma && avgLuma >= 24) {
+    const avgLuma = totalLuma / (64 * 48);
+    if (!mobileBaselineLuma && avgLuma >= 22) {
       mobileBaselineLuma = cellLuma;
     }
 
@@ -636,11 +640,12 @@ async function startMobileGuardMode() {
       sceneShift /= 48;
     }
 
-    const isScreenMissing = (avgLuma < 24) || (screenGlowRatio < 0.035) || (sceneShift > 24);
+    // Detects if camera is covered/dark (< 20) OR if the view shifted significantly away from the calibrated full-screen view (sceneShift > 30, e.g. pointed down at keyboard only or moved away)
+    const isFullScreenLost = (avgLuma < 20) || (sceneShift > 30);
 
-    if (isScreenMissing) {
+    if (isFullScreenLost) {
       screenMissingTicks++;
-      setTxt('mobile-posture-banner', "⚠️ VIOLATION: Laptop Screen Not Visible in Phone Camera!", "p-3 rounded-xl bg-red-950 border border-red-500 text-xs font-bold text-red-300 text-center");
+      setTxt('mobile-posture-banner', "⚠️ VIOLATION: Entire Laptop Screen Not Visible (Keyboard / Moved View)!", "p-3 rounded-xl bg-red-950 border border-red-500 text-xs font-bold text-red-300 text-center");
       if (screenMissingTicks >= 2) {
         screenMissingTicks = 0;
         mobileBaselineLuma = cellLuma;
@@ -649,12 +654,12 @@ async function startMobileGuardMode() {
           seq: ++mobileSeq,
           screenStatus: true,
           screenVisible: false,
-          reason: "Mobile Guard Violation: Laptop Screen Not Visible in Phone Camera / Phone Slightly Moved Away (1 Strike Deducted)"
+          reason: "Mobile Guard Violation: Entire Laptop Screen Not Visible in Phone Camera (Keyboard-Only View or Phone Moved) — 1 Strike Deducted"
         }, true);
       }
     } else {
       screenMissingTicks = Math.max(0, screenMissingTicks - 1);
-      setTxt('mobile-posture-banner', "✓ Laptop Screen Visible in Phone Camera & Guard Locked", "p-3 rounded-xl bg-emerald-950/80 border border-emerald-600/40 text-xs font-bold text-emerald-300 text-center");
+      setTxt('mobile-posture-banner', "✓ Full Laptop Screen Framed & Guard Active", "p-3 rounded-xl bg-emerald-950/80 border border-emerald-600/40 text-xs font-bold text-emerald-300 text-center");
       dispatchMobilePacket({ type: 'HEARTBEAT', seq: ++mobileSeq, screenStatus: true, screenVisible: true, tabStatus: true, tabActive: true });
     }
   }, 1100);
@@ -927,11 +932,12 @@ function drawFaceBoxAndLandmarks(ctx, matched, lms, box, label, isRejected = fal
 }
 
 // ============================================================================
-// STAGE 3: ASSESSMENT + DESKTOP INTRUDER / VOICE / MOVING-AWAY + SHEETS LOGGING
+// STAGE 3: ASSESSMENT + CONTINUOUS SEAT PRESENCE (NO ONE IN SEAT = STRIKE) + INTRUDER / VOICE
 // ============================================================================
 async function startAssessment() {
   if (!isBiometricallyVerified) return alert("Please upload a matching Candidate ID photo first.");
   currentStage = 'exam'; isExamActive = true;
+  examStartGraceUntil = Date.now() + 3500; // 3.5s stabilization window when entering exam
   $('stage-biometrics')?.classList.add('hidden');
   $('stage-exam-active')?.classList.remove('hidden');
   if ($('proctor-cam-video') && labCamStream) { $('proctor-cam-video').srcObject = labCamStream; $('proctor-cam-video').muted = true; $('proctor-cam-video').play().catch(()=>{}); }
@@ -960,40 +966,99 @@ function renderQuestion() {
 function navigateQuestion(d) { const n = currentQuestionIdx + d; if (n >= 0 && n < questions.length) { currentQuestionIdx = n; renderQuestion(); } }
 
 function startDesktopIntruderAndGazeMonitor() {
-  let awayCount = 0, baseRatio = null;
+  let vacantTicks = 0, postureAwayTicks = 0, baseRatio = null;
   const sc = document.createElement('canvas'); sc.width = 48; sc.height = 36; const sctx = sc.getContext('2d');
+
   setInterval(async () => {
     if (!isExamActive) return;
     const video = $('proctor-cam-video'); if (!video || video.readyState < 2) return;
+    const pCanvas = $('proctor-overlay-canvas');
+    const pCtx = pCanvas?.getContext('2d');
+    if (pCtx) pCtx.clearRect(0, 0, 320, 180);
+
     try {
       sctx.drawImage(video, 0, 0, 48, 36);
       const d = sctx.getImageData(0, 0, 48, 36).data;
       let luma = 0; for (let i = 0; i < 1728; i++) luma += 0.299*d[i*4] + 0.587*d[i*4+1] + 0.114*d[i*4+2];
-      if ((luma / 1728) < 24) { if (++awayCount >= 3) { awayCount = 0; applyStrike("Camera Obstructed or Turned Away From Candidate (1 Strike Deducted)", 'gaze'); } return; }
+      if ((luma / 1728) < 22) {
+        if (++vacantTicks >= 3) {
+          vacantTicks = 0;
+          setTxt('desktop-seat-presence-pill', "❌ Camera Blocked / Vacant!", "font-mono font-bold text-red-400");
+          applyStrike("Camera Obstructed or Turned Away From Seat (1 Strike Deducted)", 'seat_vacant');
+        }
+        return;
+      }
     } catch(e){}
+
     const model = await getBlazeFaceModel(); if (!model) return;
     try {
       const faces = await model.estimateFaces(video, false);
+      const vw = video.videoWidth || 640, vh = video.videoHeight || 480;
+
+      // CASE 1: MULTIPLE FACES (INTRUDER IN SEAT / ROOM)
       if (faces && faces.length > 1) {
-        awayCount = 0; continuousIntruderSeconds += 0.35; updateLiveTimersHud();
-        if (!hasGivenInitialIntruderStrike && continuousIntruderSeconds >= 0.7) { hasGivenInitialIntruderStrike = true; applyStrike(`Intruder Detected: Multiple Faces (${faces.length} Persons) in Camera View`, 'intruder'); }
+        vacantTicks = 0; continuousIntruderSeconds += 0.35; updateLiveTimersHud();
+        setTxt('desktop-seat-presence-pill', `❌ ${faces.length} People Detected!`, "font-mono font-bold text-red-400");
+        if (continuousIntruderSeconds >= 0.7) {
+          continuousIntruderSeconds = 0;
+          applyStrike(`Intruder Detected: Multiple People (${faces.length} Faces) in Exam Camera View (1 Strike Deducted)`, 'intruder');
+        }
         return;
       }
+
+      // CASE 2: NO ONE IN SEAT (CANDIDATE MOVED AWAY / LEFT THEIR SEAT!)
       if (!faces || faces.length === 0) {
-        if (++awayCount >= 3) { awayCount = 0; applyStrike("Candidate Moved Away: Face Missing From Camera View (1 Strike Deducted)", 'gaze'); }
+        vacantTicks++;
+        setTxt('desktop-seat-presence-pill', "🚫 NO ONE IN SEAT!", "font-mono font-bold text-red-400");
+        if (pCtx) {
+          pCtx.strokeStyle = '#ef4444'; pCtx.lineWidth = 3; pCtx.strokeRect(8, 8, 304, 164);
+          pCtx.fillStyle = 'rgba(127, 29, 29, 0.92)'; pCtx.fillRect(14, 14, 292, 24);
+          pCtx.fillStyle = '#fff'; pCtx.font = 'bold 11px monospace'; pCtx.fillText('🚫 SEAT VACANT: NO ONE IN SEAT!', 22, 30);
+        }
+        // If no one is in the seat for ~1.0s (3 ticks), issue a Seat Vacancy Strike (and repeat if seat stays empty!)
+        if (vacantTicks >= 3 && Date.now() - lastSeatStrikeTime > 4200) {
+          vacantTicks = 0;
+          lastSeatStrikeTime = Date.now();
+          applyStrike("Seat Vacancy Violation: Candidate Moved Away From Seat — No One Present in Seat During Exam (1 Strike Deducted)", 'seat_vacant');
+        }
         return;
       }
-      const f = faces[0], vw = video.videoWidth || 640, vh = video.videoHeight || 480;
-      const fw = Math.abs(f.bottomRight[0] - f.topLeft[0]), cx = (f.topLeft[0] + f.bottomRight[0]) / (2 * vw), cy = (f.topLeft[1] + f.bottomRight[1]) / (2 * vh), ratio = fw / vw;
-      if (baseRatio === null && ratio >= 0.18 && cx >= 0.25 && cx <= 0.75) baseRatio = ratio;
-      let reason = null;
-      if (ratio < 0.15 || (baseRatio !== null && ratio < baseRatio * 0.66)) reason = "Candidate Moved Away From Screen: Distance Violation Detected (1 Strike Deducted)";
-      else if (cx < 0.20 || cx > 0.80 || cy < 0.14 || cy > 0.86) reason = "Candidate Moved Away From Monitor Center View (1 Strike Deducted)";
-      else if (f.landmarks?.length >= 6) {
-        const yaw = Math.max(1, Math.abs(f.landmarks[2][0] - f.landmarks[4][0])) / Math.max(1, Math.abs(f.landmarks[5][0] - f.landmarks[2][0]));
-        if (yaw > 2.25 || yaw < 0.44) reason = "Gaze / Head-Turn Violation: Candidate Looked Away From Monitor (1 Strike Deducted)";
+
+      // CASE 3: CANDIDATE IS DETECTED — CHECK IF THEY ARE PROPERLY SEATED OR STEPPING AWAY / LOOKING AWAY
+      vacantTicks = 0;
+      const f = faces[0];
+      const fw = Math.abs(f.bottomRight[0] - f.topLeft[0]), fh = Math.abs(f.bottomRight[1] - f.topLeft[1]);
+      const cx = (f.topLeft[0] + f.bottomRight[0]) / (2 * vw), cy = (f.topLeft[1] + f.bottomRight[1]) / (2 * vh), ratio = fw / vw;
+      if (baseRatio === null && ratio >= 0.16 && cx >= 0.25 && cx <= 0.75) baseRatio = ratio;
+
+      // Draw live green/red tracking box on Stage 3 proctor camera
+      if (pCtx) {
+        const sx = 320 / vw, sy = 180 / vh;
+        pCtx.strokeStyle = '#10b981'; pCtx.lineWidth = 2;
+        pCtx.strokeRect(f.topLeft[0] * sx, f.topLeft[1] * sy, fw * sx, fh * sy);
       }
-      if (reason) { if (++awayCount >= 3) { awayCount = 0; applyStrike(reason, 'gaze'); } } else awayCount = Math.max(0, awayCount - 1);
+
+      let reason = null;
+      if (ratio < 0.13 || (baseRatio !== null && ratio < baseRatio * 0.62)) {
+        reason = "Seat Distance Violation: Candidate Pushed Back / Moved Away From Seated Position (1 Strike Deducted)";
+      } else if (cx < 0.17 || cx > 0.83 || cy < 0.12 || cy > 0.88) {
+        reason = "Seat Position Violation: Candidate Leaning Out of Seat Frame (1 Strike Deducted)";
+      } else if (f.landmarks?.length >= 6) {
+        const yaw = Math.max(1, Math.abs(f.landmarks[2][0] - f.landmarks[4][0])) / Math.max(1, Math.abs(f.landmarks[5][0] - f.landmarks[2][0]));
+        if (yaw > 2.35 || yaw < 0.42) reason = "Gaze / Head-Turn Violation: Candidate Turned Head Away From Exam Screen (1 Strike Deducted)";
+      }
+
+      if (reason) {
+        setTxt('desktop-seat-presence-pill', "⚠️ Moving Out of Seat!", "font-mono font-bold text-amber-400");
+        if (++postureAwayTicks >= 3 && Date.now() - lastSeatStrikeTime > 4200) {
+          postureAwayTicks = 0;
+          lastSeatStrikeTime = Date.now();
+          applyStrike(reason, 'gaze');
+        }
+      } else {
+        postureAwayTicks = Math.max(0, postureAwayTicks - 1);
+        setTxt('desktop-seat-presence-pill', "✓ In Seat (Present)", "font-mono font-bold text-emerald-400");
+      }
     } catch(e){}
   }, 350);
 }
@@ -1019,11 +1084,15 @@ function startSmartVoiceEscalationMonitor() {
 }
 
 function updateLiveTimersHud() { setTxt('live-timers-hud', `Speech: ${continuousVoiceSeconds.toFixed(1)}s | Intruder: ${continuousIntruderSeconds.toFixed(1)}s`); }
+function triggerTestSeatVacantStrike() {
+  setTxt('desktop-seat-presence-pill', "🚫 NO ONE IN SEAT!", "font-mono font-bold text-red-400");
+  applyStrike("Seat Vacancy Violation: Candidate Moved Away From Seat — No One Present in Seat During Exam (1 Strike Deducted)", 'test', true);
+}
 function triggerTestIntruderStrike() { applyStrike("Intruder Detected: Multiple Faces in Camera View (1 Strike Deducted)", 'test', true); }
 function triggerTestVoiceStrike() { applyStrike("Unauthorized Human Speech Detected (> 2.0s) (1 Strike Deducted)", 'test', true); }
 function triggerTestPhoneAwayStrike() {
-  setTxt('desktop-phone-screen-pill', "❌ Screen Not Visible", "font-mono font-bold text-red-400");
-  applyStrike("Mobile Guard Violation: Laptop Screen Not Visible in Phone Camera / Phone Slightly Moved Away (1 Strike Deducted)", 'test', true);
+  setTxt('desktop-phone-screen-pill', "❌ Screen Missing / Keyboard Only!", "font-mono font-bold text-red-400");
+  applyStrike("Mobile Guard Violation: Entire Laptop Screen Not Visible in Phone Camera (Keyboard-Only View or Phone Moved) — 1 Strike Deducted", 'test', true);
 }
 function triggerTestPhoneTabStrike() {
   setTxt('desktop-phone-tab-pill', "❌ Mobile Tab Switched!", "font-mono font-bold text-red-400");
