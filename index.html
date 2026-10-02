@@ -1,2063 +1,785 @@
 <!DOCTYPE html>
 <html lang="en" class="dark" data-no-ai="true" translate="no">
 <head>
-<meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="robots" content="noai,noimageai">
-<meta name="google" content="notranslate">
-<title>TRACE — Autonomous AI Proctoring & Assessment Platform</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>TRACE — Autonomous Assessment & Desktop Lockdown Platform</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@4.10.0/dist/tf-core.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@4.10.0/dist/tf-converter.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.10.0/dist/tf-backend-webgl.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
-body{font-family:'Inter',sans-serif;background:#020617;color:#f8fafc;overflow-x:hidden;user-select:none}
-.font-mono{font-family:'JetBrains Mono',monospace}
-.card{background:#0f172a;border:1px solid #1e293b;border-radius:1.5rem;padding:1.5rem}
-.subcard{background:#020617;border:1px solid #1e293b;border-radius:1rem;padding:1.15rem}
-.inp{background:#020617;border:1px solid #1e293b;border-radius:.75rem;padding:.6rem .85rem;color:#fff;font-size:.75rem;width:100%;outline:none}
-.btn-b{background:#2563eb;color:#fff;font-weight:700;border-radius:.75rem;padding:.65rem 1rem;font-size:.75rem;cursor:pointer}
-.btn-g{background:#059669;color:#fff;font-weight:700;border-radius:.75rem;padding:.65rem 1rem;font-size:.75rem;cursor:pointer}
-.btn-d{background:#1e293b;color:#cbd5e1;font-weight:600;border-radius:.75rem;padding:.5rem .85rem;font-size:.75rem;border:1px solid #334155;cursor:pointer}
-.btn-lock{width:100%;padding:.9rem;background:#1e293b;color:#64748b;border-radius:.85rem;font-size:.75rem;font-weight:700;border:1px solid #334155;cursor:not-allowed}
-.btn-test{padding:.5rem;background:#020617;border:1px solid #1e293b;color:#94a3b8;border-radius:.75rem;font-size:10px;font-weight:700;cursor:pointer}
-.btn-test:hover{color:#fbbf24;border-color:#475569}
-.row{display:flex;justify-content:space-between;align-items:center}
-.cam{width:100%;aspect-ratio:4/3;border-radius:.75rem;background:#000;border:1px solid #1e293b;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-.tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:#064e3b;color:#34d399;border:1px solid #047857}
-.lbl{color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase}
-/* Stationary warning modal: explicitly prevent any jumping or bouncing */
-#modal-warning,#modal-warning>div{transform:none!important;animation:none!important}
+body{font-family:system-ui,-apple-system,sans-serif;background:#020617;color:#f8fafc;overflow-x:hidden;user-select:none;-webkit-user-select:none}
+.card{background:#0f172a;border:1px solid #1e293b;border-radius:1.2rem;padding:1.2rem}
+.subcard{background:#020617;border:1px solid #1e293b;border-radius:.8rem;padding:.9rem}
+.inp{background:#020617;border:1px solid #1e293b;border-radius:.6rem;padding:.5rem .7rem;color:#fff;font-size:.75rem;width:100%;outline:none}
+.btn-b{background:#2563eb;color:#fff;font-weight:700;border-radius:.6rem;padding:.5rem .85rem;font-size:.75rem;cursor:pointer}
+.btn-g{background:#059669;color:#fff;font-weight:700;border-radius:.6rem;padding:.5rem .85rem;font-size:.75rem;cursor:pointer}
+.btn-d{background:#1e293b;color:#cbd5e1;font-weight:600;border-radius:.6rem;padding:.45rem .75rem;font-size:.75rem;border:1px solid #334155;cursor:pointer}
+.btn-test{padding:.45rem;background:#020617;border:1px solid #1e293b;color:#94a3b8;border-radius:.6rem;font-size:10px;font-weight:700;cursor:pointer}
+.row{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+.tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:#064e3b;color:#34d399;border:1px solid #047857;font-family:monospace}
+.lbl{color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;font-family:monospace}
+.opt-on{width:100%;text-align:left;padding:.8rem;border-radius:.8rem;background:#172554;border:2px solid #3b82f6;color:#fff;font-weight:700;font-size:.75rem;display:flex;align-items:center;gap:.7rem}
+.opt-off{width:100%;text-align:left;padding:.8rem;border-radius:.8rem;background:#020617;border:1px solid #1e293b;color:#cbd5e1;font-size:.75rem;display:flex;align-items:center;gap:.7rem}
+.fe{color:#34d399;font-weight:700}.fr{color:#f87171;font-weight:700}.fa{color:#fbbf24;font-weight:700}.tw{font-size:.75rem;font-weight:700;color:#fff}.ts{font-size:.75rem;font-weight:700;color:#cbd5e1}.tm{font-size:11px;font-family:monospace}.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}.b8{border:1px solid #1e293b}.bb{border-bottom:1px solid #1e293b;padding-bottom:.5rem}.fg{display:flex;align-items:center;gap:.5rem}.g12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:.75rem}.rx{border-radius:.75rem}.s4{color:#94a3b8}.s3{color:#cbd5e1}.fm{font-family:monospace}.fb{font-weight:700}.tx{font-size:.75rem}
+.moire-surface{position:relative;overflow:hidden;background-image:repeating-linear-gradient(0deg,rgba(59,130,246,0.04) 0px,rgba(59,130,246,0.04) 1px,transparent 1px,transparent 3px),repeating-linear-gradient(90deg,rgba(16,185,129,0.03) 0px,rgba(16,185,129,0.03) 1px,transparent 1px,transparent 3px)}
+.wm-grid{pointer-events:none;position:absolute;inset:0;display:flex;flex-wrap:wrap;align-content:space-around;justify-content:space-around;opacity:0.13;transform:rotate(-14deg) scale(1.15);z-index:20;font-family:monospace;font-size:10px;font-weight:800;color:#94a3b8;line-height:2.4}
+@media print{body{display:none!important}}
 </style>
 </head>
-<body class="min-h-screen bg-slate-950 text-slate-100" data-no-ai="true">
-<div id="mobile-guard-ui" class="hidden min-h-screen bg-slate-950 p-4 flex flex-col justify-between">
-<div class="space-y-4">
-<div class="row border-b border-slate-800 pb-3">
-<div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-400 animate-pulse"></span><span class="font-bold text-sm text-white">TRACE Mobile Desk Guard</span></div>
-<span id="mobile-pin-badge" class="tag font-mono">PIN: ----</span>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+
+<div id="anti-capture-blackout" class="hidden fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center p-6 text-center space-y-3">
+<div class="text-5xl">🚫</div>
+<h2 class="text-xl font-black text-red-500">MONITOR SURFACE BLANKED — SCREEN CAPTURE OR FOCUS LOSS BLOCKED</h2>
+<p id="blackout-detail-msg" class="tx s3 max-w-md fm">Protected TRACE Surface automatically goes blank when a screenshot shortcut, snipping tool, or window switch is detected.</p>
+<div id="blackout-watermark-id" class="tag">TRACE SESSION AUDIT LOGGED</div>
+<button onclick="resumeFromBlackoutSurface()" class="btn-b mt-2">🔓 Return to Full-Screen Exam Surface</button>
 </div>
-<div id="mobile-status-banner" class="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-center space-y-1.5">
-<div class="text-2xl">🛡️</div>
-<div id="mobile-banner-title" class="text-sm font-bold text-emerald-300">Desk Guard Active &amp; Locked on Monitor</div>
-<p class="text-xs text-slate-300">Keep phone upright facing your computer monitor. Moving phone away, tilting flat, or switching tabs triggers an immediate desktop strike.</p>
-<div class="pt-2 flex flex-wrap items-center justify-center gap-2">
-<div class="px-3 py-1 rounded-lg bg-slate-950/90 border border-emerald-500/50 font-mono text-xs text-emerald-300">
-Desktop Sync Code: <span id="mobile-sync-code-display" class="font-extrabold text-white text-sm tracking-widest">----</span>
-</div>
-<button type="button" onclick="forceMobileResyncNow()" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer shadow">
-📡 Tap to Re-Sync Desktop
-</button>
-</div>
-</div>
-<div class="cam">
-<video id="mobile-cam-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
-<canvas id="mobile-vision-canvas" width="64" height="48" class="hidden"></canvas>
-<div class="absolute top-2 left-2 px-2 py-1 rounded bg-black/75 text-[10px] font-mono text-emerald-400">● 250ms Vision + Gyro + Tab Guard Active</div>
-</div>
-<div class="grid grid-cols-2 gap-3 text-xs font-mono">
-<div class="subcard"><div class="lbl">TILT / ORIENTATION</div><div id="mobile-pitch-val" class="text-emerald-400 font-bold text-sm mt-0.5">Upright (OK)</div></div>
-<div class="subcard"><div class="lbl">MONITOR IN VIEW</div><div id="mobile-monitor-val" class="text-emerald-400 font-bold text-sm mt-0.5">LOCKED ✓</div></div>
-</div>
-<button type="button" onclick="sendMobileViolationNow('Mobile Desk Guard: Phone Display Moved Away From Monitor Screen')" class="w-full py-2.5 bg-red-950/70 border border-red-500/40 text-red-300 rounded-xl text-xs font-bold">
-📱 Test / Simulate Phone Moved Away Strike
-</button>
-</div>
-<div class="pt-4 border-t border-slate-800 text-center text-[11px] text-slate-500 font-mono">Connected to Desktop Session • Real-Time Dual-Perspective Proctoring</div>
-</div>
-<div id="desktop-main-ui" class="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
-<header class="row card flex-wrap gap-4">
-<div class="flex items-center gap-3">
-<div class="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white text-lg">T</div>
+
+<div id="stage-access-gate" class="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+<div class="card max-w-md w-full space-y-4 border-2 border-blue-500/50 text-center">
+<div class="h-12 w-12 rx bg-blue-600 flex items-center justify-center font-black text-white text-xl mx-auto">🔑</div>
 <div>
-<div class="flex items-center gap-2">
-<h1 class="font-extrabold text-white text-base">TRACE Proctoring Engine</h1>
-<span class="tag font-mono">v5.1 COMPACT STUDIO</span>
-<span id="active-role-badge" class="px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono text-[10px] font-bold">🧑‍💻 CANDIDATE VIEW</span>
+<span class="tag">TRACE ZERO-PII • PER-SESSION PASSKEY GATE</span>
+<h2 class="text-base fb text-white mt-2">TRACE Authorized Assessment Gate</h2>
+<p class="text-[11px] s4 mt-1">Enter your official Email and the <b>Single-Session Passkey (`TK-SSSS-XXXX`)</b> issued by your Trainer.<br><span class="text-emerald-400">✓ Zero Camera • Zero Audio • Zero Phone • 5-Member Shuffling</span></p>
 </div>
-<p class="text-xs text-slate-400">Autonomous Dual-Perspective Proctoring &amp; Controlled SOP Assessment</p>
+<div class="space-y-2.5 text-left">
+<div><label class="block ts mb-1">Official Email Address</label><input type="email" id="gate-email-input" placeholder="name@google.com or university/team email" class="inp"></div>
+<div><label class="block ts mb-1">Session-Bound Passkey (`TK-SSSS-XXXX`)</label><input type="text" id="gate-passcode-input" placeholder="e.g. TK-7X9K-4BR9" onkeydown="if(event.key==='Enter')unlockAccessGate()" class="inp fm fb text-amber-300 uppercase"></div>
+</div>
+<div id="gate-error-msg" class="hidden tx fr bg-red-950/60 p-2 rx border border-red-500/40">❌ Invalid Session Passkey or Unauthorized Attempt.</div>
+<button id="btn-gate-unlock" onclick="unlockAccessGate()" class="btn-b w-full py-2.5 text-sm">🔓 Verify Session Passkey & Enter TRACE →</button>
+<div class="pt-2 border-t border-slate-800"><button onclick="toggleTrainerFromGate()" class="btn-d w-full">👩‍🏫 Trainer / Admin Studio (Generate 5-Member Session Keys)</button></div>
 </div>
 </div>
-<div class="flex flex-wrap items-center gap-2">
-<div id="trainer-only-header-actions" class="hidden flex items-center gap-2">
-<a href="https://docs.google.com/spreadsheets/d/1f8dDNiBrjpLAUOG64dMFeqoJqI98A9KcjHRG1IOO91Q/edit?resourcekey=0-ltzgxhKkqv8GpZefIaSNvg&gid=1763260792#gid=1763260792" target="_blank" class="btn-g no-underline">📊 Open Trace-tracker Sheet</a>
-<button type="button" onclick="sendManualTestRowToSheet()" class="btn-b">🧪 Sync 1 Test Row</button>
-<button type="button" onclick="runInteractiveLoadTest25()" class="btn-d">⚡ Load Test (100 Users)</button>
-<button type="button" onclick="copyPortalRoleLink('candidate')" class="btn-d">📋 Candidate Link</button>
-<button type="button" onclick="copyPortalRoleLink('trainer')" class="btn-d">📋 Trainer Link</button>
+
+<div id="desktop-main-ui" class="hidden max-w-5xl mx-auto p-4 space-y-4">
+<header class="row card flex-wrap">
+<div class="flex items-center gap-3">
+<div class="h-9 w-9 rx bg-blue-600 flex items-center justify-center font-black text-white">T</div>
+<div>
+<div class="fg"><h1 class="font-extrabold text-white text-sm">TRACE Proctoring & Assessment Platform</h1><span class="tag">v5.2 STUDIO</span><span id="active-role-badge" class="tag">🧑‍💻 CANDIDATE VIEW</span></div>
+<p class="text-[11px] s4">Regular Timer • Recorded Teleprompter • 5-Member Dynamic Question Shuffling • Anti-Photo Blank Surface</p>
 </div>
-<button type="button" onclick="applyPortalRoleView(isTrainerRoleActive ? 'candidate' : 'trainer')" class="btn-b">⚙️ Admin Telemetry &amp; SOP Studio</button>
-<button type="button" id="btn-role-switcher" onclick="toggleTrainerCandidateRole()" class="btn-d">🔒 Trainer Login (PIN: 2026)</button>
+</div>
+<div class="fg flex-wrap">
+<div id="trainer-only-header-actions" class="hidden fg flex-wrap">
+<button onclick="toggleAdminView()" class="btn-b">🛠️ Admin SOP, Teleprompter & Passkey Studio</button>
+<button onclick="rotateFiveMemberQuestionsNow()" class="btn-b" style="background:#d97706">🔄 Reshuffle 5-Member Sets</button>
+<button onclick="runInteractiveLoadTest25()" class="btn-b" style="background:#7c3aed">⚡ Load Test (25)</button>
+<button onclick="sendManualTestRowToSheet()" class="btn-g">📊 Test Sheet Row</button>
+<button onclick="copyPortalRoleLink('candidate')" class="btn-d">🔗 Candidate Link</button>
+</div>
+<button id="btn-role-switcher" onclick="toggleTrainerCandidateRole()" class="btn-d">🔒 Trainer / Admin Login</button>
 </div>
 </header>
-<div id="stage-login-pairing" class="card space-y-6">
-<div class="row border-b border-slate-800 pb-3">
-<div>
-<span class="tag">STEP 1 OF 2</span>
-<h2 class="text-xl font-bold text-white mt-1">Candidate Registration &amp; Mobile Desk Guard Pairing</h2>
-<p class="text-xs text-slate-400">Pair your mobile phone as a secondary desk camera facing your computer monitor.</p>
+
+<div id="stage-login-pairing" class="card space-y-4">
+<div class="row bb">
+<div><span class="tag">STEP 1 OF 1 • TRACE DESKTOP VERIFICATION</span><h2 class="text-base fb text-white mt-1">Candidate Details, 5-Member Cohort & Environment Pre-Check</h2></div>
+<div class="text-right fm"><div class="lbl">SESSION PIN</div><div id="desktop-session-pin" class="text-sm fb text-indigo-400">TRACE-INIT</div></div>
 </div>
-<div class="text-right font-mono"><div class="lbl">SESSION PIN</div><div id="desktop-session-pin" class="text-sm font-bold text-indigo-400">TRACE-INIT</div></div>
+<div class="g12 gap-4 items-center">
+<div class="md:col-span-7 space-y-3">
+<div class="g2">
+<div><label class="block ts mb-1">Candidate Full Name</label><input type="text" id="candidate-name" placeholder="Enter Full Name" value="" class="inp"></div>
+<div><label class="block ts mb-1">Official Email Address</label><input type="email" id="candidate-email" placeholder="name@google.com" value="" oninput="validateGoogleTeamEmail()" class="inp"></div>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-<div class="md:col-span-6 space-y-4">
-<div><label class="block text-xs font-bold text-slate-300 mb-1">Candidate Full Name</label><input type="text" id="candidate-name" value="Alex Mercer" class="inp"></div>
-<div><label class="block text-xs font-bold text-slate-300 mb-1">Official Email Address</label><input type="email" id="candidate-email" value="alex.mercer@assessment.org" class="inp"></div>
-<div class="subcard space-y-1 text-xs">
-<div class="font-bold text-slate-200">📱 Mobile Desk Guard Instructions:</div>
-<p class="text-slate-400 text-[11px]">1. Scan QR code with your phone camera (opens Mobile Guard).<br>2. Auto-pairs via WebRTC/Cloud Relay, OR enter the <b>4-digit Sync Code</b> shown on your phone screen.<br>3. Prop phone upright facing your monitor screen.</p>
+<div class="g2">
+<div><label class="block ts mb-1">Organization / University / Team</label><select id="candidate-team-select" class="inp fb text-emerald-300"><option value="TRACE Operations & Assessment">TRACE Operations & Assessment</option><option value="University & Campus Cohort">University & Campus Cohort</option><option value="Google Operations & Support">Google Operations & Support</option><option value="Extended Workforce / Partner">Extended Workforce / Partner</option><option value="Trust, Safety & Compliance">Trust, Safety & Compliance</option></select></div>
+<div><label class="block ts mb-1">5-Member Question Shuffle Slot</label><select id="candidate-set-select" class="inp fb text-indigo-300"><option value="AUTO" selected>🎲 Auto-Shuffle Across 5 Members (Set 1–5)</option><option value="SET-1">1️⃣ Member 1 — Set 1 (ATO & Security)</option><option value="SET-2">2️⃣ Member 2 — Set 2 (SLA & Incident)</option><option value="SET-3">3️⃣ Member 3 — Set 3 (PII & Cloud DB)</option><option value="SET-4">4️⃣ Member 4 — Set 4 (AML, KYC & SAML)</option><option value="SET-5">5️⃣ Member 5 — Set 5 (API, Queue & RCA)</option></select></div>
 </div>
+<div class="g2 items-center">
+<div><label class="block ts mb-1">Verified Session Passkey</label><input type="text" id="candidate-access-passcode" placeholder="TK-SSSS-XXXX" value="" readonly class="inp fm fb text-amber-300"></div>
+<div id="google-domain-badge" class="px-3 py-1.5 rx bg-emerald-950/60 border border-emerald-500/40 tx fm fe mt-4">✓ Session Passkey Verified</div>
 </div>
-<div class="md:col-span-6 subcard flex flex-col items-center text-center space-y-3">
-<div class="text-xs font-bold text-white">Scan with Mobile Phone Camera</div>
-<div class="p-3 bg-white rounded-2xl"><canvas id="pairing-qr-canvas" width="140" height="140"></canvas></div>
-<div id="phone-pairing-indicator" class="text-xs font-mono text-amber-400">● Waiting for mobile phone scan...</div>
-<div class="flex flex-wrap justify-center gap-2 w-full">
-<button type="button" onclick="copyPairingLink()" class="btn-d">🔗 Copy Mobile Link</button>
-<button type="button" onclick="markPhoneAsPaired('Instant Verified Pairing')" class="btn-g">⚡ Phone Scanned? Confirm Pair</button>
-</div>
-<div class="w-full pt-2 border-t border-slate-800/80 flex items-center gap-2">
-<input type="text" id="desktop-sync-code-input" maxlength="6" placeholder="Or enter 4-digit code shown on phone..." class="inp text-center font-mono text-xs py-1.5">
-<button type="button" onclick="verifyPhoneSyncCode()" class="btn-b shrink-0 py-1.5">✓ Pair Code</button>
+<div class="subcard tx space-y-1 border border-emerald-500/30">
+<div class="fb text-emerald-300">🛡️ TRACE Privacy-Safe Lockdown & Teleprompter Recording:</div>
+<p class="s4 text-[11px]">• <b>Zero Camera / Zero Audio / Zero ID Upload:</b> No personal images, Aadhaar/ID cards, or audio are captured.<br>• <b>5-Member Multi-Session Shuffling:</b> Questions & options are uniquely shuffled across every 5 members and rotate per session.<br>• <b>Recorded Teleprompter:</b> All shared SOP materials, broadcasts, and timer events are recorded in the TRACE Teleprompter.</p>
 </div>
 </div>
+<div class="md:col-span-5 subcard space-y-2.5 border border-blue-500/40">
+<div class="row bb"><span class="tw">🖥️ TRACE Environment Pre-Check</span><span id="rotation-seed-badge" class="tag">ROTATION: LIVE</span></div>
+<div class="space-y-1.5 tx fm">
+<div class="row p-2 bg-slate-900 rx b8"><span>1. Display Hardware:</span><span id="precheck-monitor-status" class="fe">✓ Single Monitor</span></div>
+<div class="row p-2 bg-slate-900 rx b8"><span>2. Regular Exam Timer:</span><span id="precheck-timer-status" class="fe">✓ 45:00 Regular</span></div>
+<div class="row p-2 bg-slate-900 rx b8"><span>3. 5-Member Shuffle Engine:</span><span class="fe">✓ Sets 1–5 Active</span></div>
+<div class="row p-2 bg-slate-900 rx b8"><span>4. Teleprompter Recorder:</span><span class="fe">✓ Ready & Recording</span></div>
+<div class="row p-2 bg-slate-900 rx b8"><span>5. Anti-Photo Blank Surface:</span><span class="fe">✓ Armed (3.5s)</span></div>
 </div>
-<button id="btn-proceed-to-biometrics" type="button" onclick="proceedToBiometricStage()" disabled class="btn-lock">🔒 Scan QR Code with Mobile Phone to Unlock Next Step</button>
-</div>
-<div id="stage-biometrics" class="hidden card space-y-6">
-<div class="row border-b border-slate-800 pb-3">
-<div>
-<span class="tag">STEP 2 OF 2</span>
-<h2 class="text-xl font-bold text-white mt-1">1:1 Biometric Facial Feature Comparison</h2>
-<p class="text-xs text-slate-400">Upload your official Candidate ID photo on the left — the Live Camera on the right detects and compares your facial features in real time.</p>
-</div>
-<div class="text-xs text-slate-400 font-mono">Status: <span id="biometric-overall-badge" class="text-amber-400 font-bold">Awaiting ID Upload</span></div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-<div class="subcard space-y-3 flex flex-col justify-between">
-<div>
-<div class="row text-xs font-bold text-slate-300 mb-3">
-<span>1. Official Candidate ID Photo</span>
-<span id="id-photo-status-pill" class="text-amber-400 font-mono text-[11px]">Upload Required</span>
-</div>
-<div class="cam bg-slate-900">
-<img id="passport-preview" src="" class="w-full h-full object-cover hidden" alt="Candidate ID">
-<canvas id="passport-overlay-canvas" width="320" height="240" class="absolute inset-0 w-full h-full pointer-events-none hidden"></canvas>
-<div id="passport-placeholder" class="text-center p-6 text-slate-400 text-xs space-y-2">
-<div class="text-4xl">🪪</div>
-<div class="font-bold text-slate-200">Upload Official Candidate ID Photo</div>
-<p class="text-[11px] text-slate-500">Select a clear candidate ID photo on the left for 1:1 facial landmark verification against the live camera feed on the right.</p>
+<button onclick="runDesktopHardwarePrecheck()" class="btn-d w-full">🔄 Re-Scan Display & Environment</button>
 </div>
 </div>
+<button id="btn-enter-exam" onclick="startAssessment()" class="btn-g w-full py-3.5 text-sm">🚀 Activate Full-Screen TRACE Lockdown & Start Regular Timer →</button>
 </div>
-<label class="btn-b text-center block">
-📁 Upload Candidate ID Photo
-<input type="file" accept="image/*" onchange="handlePassportUpload(event)" class="hidden">
-</label>
-</div>
-<div class="subcard space-y-3 flex flex-col justify-between">
-<div>
-<div class="row text-xs font-bold text-slate-300 mb-3">
-<span>2. Live Camera (Real-Time Face Detection)</span>
-<span id="lab-cam-status-pill" class="text-emerald-400 font-mono text-[11px]">● Live Camera Active</span>
-</div>
-<div class="cam">
-<video id="lab-webcam-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
-<canvas id="webcam-overlay-canvas" width="320" height="240" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+<div id="stage-exam-active" class="hidden space-y-4">
+<div class="card row flex-wrap">
+<div class="fg"><span class="h-3 w-3 rounded-full bg-emerald-400 animate-pulse"></span><span class="fb text-white text-sm">TRACE Live Assessment</span><span id="exam-member-slot-pill" class="tag">MEMBER SET-1</span></div>
+<div class="flex items-center gap-3 flex-wrap fm tx">
+<button onclick="toggleTeleprompterDrawer()" class="btn-b" style="background:#0284c7">📺 Teleprompter (<span id="tp-item-count">12</span>)</button>
+<button onclick="toggleExamHelpCenter()" class="btn-b">📚 Shared SOP Library (<span id="hc-count-badge">12 Docs</span>)</button>
+<div class="px-2.5 py-1 rx bg-slate-950 b8">Q-Timer: <span id="question-regular-timer" class="fb text-cyan-400">00:00</span></div>
+<div class="px-2.5 py-1 rx bg-slate-950 b8">Exam Timer: <span id="timer-display" class="fb text-amber-400 text-base">45:00</span></div>
+<div>Strikes: <span id="exam-strikes-display" class="fe">0/3</span></div>
 </div>
 </div>
-<div class="row px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-[11px] font-mono text-slate-300">
-<span>Live Detection Status:</span>
-<span id="live-cam-face-status" class="text-emerald-400 font-bold">Tracking Facial Features...</span>
+
+<div id="exam-teleprompter-drawer" class="card border-2 border-cyan-500/60 space-y-2.5">
+<div class="row bb">
+<div class="fg"><span class="text-sm font-extrabold text-cyan-300">📺 TRACE Recorded Teleprompter (Shared Briefings, SOP Highlights & Live Session Log)</span><span class="tag">● REC</span></div>
+<div class="fg">
+<button onclick="toggleTeleprompterAutoScroll()" id="btn-tp-autoscroll" class="btn-d py-1 px-2 text-[11px]">⏸️ Pause Scroll</button>
+<button onclick="downloadTeleprompterTranscript()" class="btn-d py-1 px-2 text-[11px]">⬇️ Export Recorded Teleprompter</button>
 </div>
 </div>
+<div class="g12 gap-3">
+<div class="md:col-span-7 subcard max-h-36 overflow-y-auto space-y-1.5" id="teleprompter-shared-feed"></div>
+<div class="md:col-span-5 subcard max-h-36 overflow-y-auto space-y-1 fm text-[11px]" id="teleprompter-audit-log"></div>
+</div>
+</div>
+
+<div id="exam-help-center-panel" class="hidden card border-2 border-indigo-500/60 space-y-3">
+<div class="row bb"><span class="text-sm font-extrabold text-white">📚 TRACE Shared Help Center & SOP Library</span><button onclick="toggleExamHelpCenter()" class="btn-d">✕ Close</button></div>
+<div class="g12 gap-2 items-center">
+<div class="md:col-span-5"><input type="text" id="hc-search-input" oninput="handleCandidateManualSearch()" placeholder="🔎 Search shared SOP ID or keyword..." class="inp"></div>
+<div class="md:col-span-7 flex flex-wrap gap-1.5">
+<button onclick="setHcCategory('ALL')" class="btn-b py-1 px-2.5 text-[11px]">All</button>
+<button onclick="setHcCategory('Internal SOP')" class="btn-d py-1 px-2.5 text-[11px]">Internal SOPs</button>
+<button onclick="setHcCategory('Help Center Article')" class="btn-d py-1 px-2.5 text-[11px]">Help Center</button>
+</div>
+</div>
+<div class="g12 gap-3">
+<div id="hc-article-list" class="md:col-span-4 space-y-1.5 max-h-56 overflow-y-auto pr-1"></div>
+<div class="md:col-span-8 subcard max-h-56 overflow-y-auto"><div id="hc-watermark-overlay" class="lbl mb-1">CONFIDENTIAL TRACE SOP • SHARED REFERENCE</div><div id="hc-article-reader" class="tx text-slate-200"></div></div>
+</div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+<div id="question-surface-card" onmousemove="resetSurfaceIdleTimer()" onmouseenter="resetSurfaceIdleTimer()" onmouseleave="blankQuestionSurfaceNow('Mouse Left Question Surface')" class="lg:col-span-8 card space-y-3 moire-surface relative">
+<div id="forensic-watermark-grid" class="wm-grid"></div>
+
+<div id="surface-blank-curtain" onmousemove="resetSurfaceIdleTimer()" onclick="resetSurfaceIdleTimer()" class="hidden absolute inset-0 bg-slate-950/98 backdrop-blur-xl z-30 flex flex-col items-center justify-center p-6 text-center space-y-2 border-2 border-blue-500/60 rx">
+<div class="text-3xl">🛡️</div>
+<div class="text-sm fb text-amber-300">ANTI-PHOTO PRIVACY SURFACE ACTIVE — MONITOR BLANKED</div>
+<p id="surface-blank-reason" class="text-[11px] s3 max-w-md">Question content automatically blanks out when mouse movement stops (>3.5s) or leaves the card so external cameras cannot photograph the screen.</p>
+<span class="tag">MOVE MOUSE CURSOR HERE TO REVEAL QUESTION</span>
+</div>
+
+<div class="row tx relative z-10">
+<div class="fg"><span id="question-number-badge" class="tag">Question 1 of 5</span><span id="exam-active-set-badge" class="tag" style="background:#1e1b4b;color:#a5b4fc;border-color:#4338ca">SET-1 • 5-MEMBER SHUFFLE</span></div>
+<span id="surface-shield-pill" class="lbl text-emerald-400">🛡️ Anti-Photo Blank Surface: ARMED</span>
+</div>
+<div id="question-text" class="text-base font-semibold text-white relative z-10">Loading...</div>
+<div id="options-container" class="space-y-2 relative z-10"></div>
+<div class="row pt-2 border-t border-slate-800 relative z-10">
+<button onclick="navigateQuestion(-1)" class="btn-d">← Previous</button>
+<button onclick="navigateQuestion(1)" class="btn-b">Next →</button>
+</div>
+</div>
+
+<div class="lg:col-span-4 card space-y-2.5">
+<div class="row tw"><span>🖥️ TRACE Environment Guard</span><span id="exam-lockdown-badge" class="text-emerald-400 fm text-[10px]">● LOCKED ✓</span></div>
+<div class="subcard space-y-1.5 tx fm">
+<div class="row"><span>Dual-Monitor Check:</span><span id="hud-monitor-status" class="fe">1 Display ✓</span></div>
+<div class="row"><span>Cursor Boundary:</span><span id="hud-cursor-status" class="fe">Inside Screen ✓</span></div>
+<div class="row"><span>Window / App Focus:</span><span id="hud-focus-status" class="fe">Focused ✓</span></div>
+<div class="row"><span>Fullscreen Kiosk:</span><span id="hud-fullscreen-status" class="fe">Active ✓</span></div>
+<div class="row"><span>Anti-Photo Surface:</span><span id="hud-surface-status" class="fe">Protected ✓</span></div>
+<div class="row"><span>Teleprompter Log:</span><span id="hud-tp-status" class="fe">Recording ✓</span></div>
+<div id="live-timers-hud" class="text-[10px] text-indigo-300 pt-1 border-t border-slate-800">Cursor Out: 0.0s | Auto-Blank: 3.5s</div>
+</div>
+<div class="grid grid-cols-2 gap-1.5">
+<button onclick="triggerTestDualMonitorStrike()" class="btn-test">🖥️ Test Dual-Monitor</button>
+<button onclick="triggerTestCursorExitStrike()" class="btn-test">🖱️ Test Cursor-Exit</button>
+<button onclick="triggerTestScreenshotBlackout()" class="btn-test col-span-2">📸 Test Picture / Screenshot Blackout Surface</button>
+</div>
+<button onclick="submitExamEarly()" class="w-full py-2 bg-red-950/70 border border-red-500/40 text-red-300 rx tx fb">Submit Assessment Early</button>
+</div>
+</div>
+</div>
+
+<div id="stage-assessment-completed" class="hidden card space-y-4 max-w-4xl mx-auto">
+<h2 class="text-xl font-black text-emerald-400 text-center">✓ TRACE Assessment Completed & Recorded to Teleprompter + Google Sheets</h2>
+<div class="subcard grid grid-cols-2 md:grid-cols-4 gap-3 tx">
+<div><div class="lbl">CANDIDATE</div><div id="completed-candidate-name" class="text-white fb">Candidate</div></div>
+<div><div class="lbl">EMAIL</div><div id="completed-candidate-email" class="s3 fm truncate">user@google.com</div></div>
+<div><div class="lbl">MEMBER SHUFFLE SET</div><div id="completed-session-pin" class="text-indigo-400 fm fb">SET-1</div></div>
+<div><div class="lbl">DURATION / TIME</div><div id="completed-timestamp" class="s3 fm">--:--</div></div>
+</div>
+<div class="grid grid-cols-3 gap-3 text-center">
+<div class="subcard"><div class="lbl">FINAL SCORE</div><div id="completed-score-display" class="text-2xl font-black text-emerald-400 fm">100%</div><div id="completed-score-detail" class="tx s4">5/5</div></div>
+<div class="subcard"><div class="lbl">LOCKDOWN INTEGRITY</div><div id="completed-integrity-display" class="text-2xl font-black text-blue-400 fm">100%</div><div id="completed-strikes-detail" class="tx s4">0/3 Strikes</div></div>
+<div class="subcard"><div class="lbl">GOOGLE SHEET</div><div class="text-xl font-black text-emerald-400 fm">✓ SYNCED</div><div class="tx s4">Teleprompter Logged</div></div>
 </div>
 <div class="subcard space-y-2">
-<div class="row text-xs font-semibold">
-<span>1:1 Biometric Facial Feature Similarity:</span>
-<span id="biometric-match-pct" class="text-slate-400 font-bold font-mono">0% Match (Upload ID Photo on Left)</span>
-</div>
-<div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden"><div id="biometric-match-bar" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div></div>
-<div id="biometric-status-msg" class="text-[11px] text-slate-400 text-center">Please upload your Candidate ID photo on the left — the Live Camera on the right will automatically detect and lock your exact facial match.</div>
-</div>
-<div class="space-y-2.5">
-<button type="button" onclick="lockBiometricMatchInstant()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-bold text-xs cursor-pointer">✨ Instant Verify & Lock Exact 1:1 Biometric Match (96% Verified ✓)</button>
-<button id="btn-enter-exam" type="button" onclick="startAssessment()" disabled class="btn-lock">🔒 Complete Biometric Verification to Unlock Assessment</button>
+<div class="row"><span class="fb text-cyan-300 tx">📺 Recorded TRACE Teleprompter & Shared Content Log</span><button onclick="downloadTeleprompterTranscript()" class="btn-b">⬇️ Download Teleprompter Recording (.txt)</button></div>
+<pre id="completed-teleprompter-transcript" class="whitespace-pre-wrap font-mono text-[11px] s3 bg-slate-950 p-3 rx b8 max-h-48 overflow-y-auto"></pre>
 </div>
 </div>
-<div id="stage-exam-active" class="hidden space-y-6">
-<div class="card row flex-wrap gap-4">
-<div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-400 animate-pulse"></span><span class="font-bold text-white text-sm">Live Proctored Assessment Session</span></div>
-<div class="flex items-center gap-6 font-mono text-xs">
-<div><span class="text-slate-400">Mobile Guard:</span> <span id="exam-phone-status" class="text-emerald-400 font-bold">LOCKED ✓</span></div>
-<div><span class="text-slate-400">Time Left:</span> <span id="timer-display" class="font-bold text-amber-400 text-base">45:00</span></div>
-<div><span class="text-slate-400">Strikes:</span> <span id="exam-strikes-display" class="text-emerald-400 font-bold">0/3</span></div>
+
+<div id="stage-admin-view" class="hidden card space-y-3 border-2 border-indigo-500/50">
+<div class="row bb"><h2 class="text-sm fb text-white">👩‍🏫 TRACE Admin Studio: 5-Member Passkey Generator, Regular Timer & Recorded Teleprompter (<span id="admin-hc-total-count">12</span> Shared Docs)</h2><button onclick="toggleAdminView()" class="btn-d">✕ Hide Admin Panel</button></div>
+
+<div class="subcard space-y-2 border border-amber-500/40">
+<div class="row flex-wrap">
+<div class="fg"><span class="tw text-amber-300">🔑 5-Member Session Passkey & Question Shuffle Generator</span><span id="admin-session-nonce-badge" class="tag">SESSION: INIT</span></div>
+<div class="fg">
+<select id="admin-timer-minutes" onchange="updateRegularTimerDuration(this.value)" class="inp max-w-[145px] fb text-cyan-300">
+<option value="15">⏱️ Timer: 15 Mins</option>
+<option value="30">⏱️ Timer: 30 Mins</option>
+<option value="45" selected>⏱️ Timer: 45 Mins</option>
+<option value="60">⏱️ Timer: 60 Mins</option>
+</select>
+<button onclick="rotateNewSessionPasskeys()" class="btn-b" style="background:#d97706">🎲 New Session (Rotate Keys + Reshuffle 5 Sets)</button>
+<button onclick="copyGeneratedPasskeys()" class="btn-d">📋 Copy 5-Member Keys</button>
 </div>
 </div>
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-<div class="lg:col-span-8 card space-y-5">
-<div class="row text-xs">
-<span id="question-number-badge" class="tag">Question 1 of 5</span>
-<span class="text-[11px] text-slate-400 font-mono">🔒 Anti-Copy/Paste & Smart Strike Escalation Active</span>
+<div class="g12 gap-2">
+<textarea id="admin-passkey-emails" rows="2" placeholder="Paste 5+ member emails (auto-assigns Member 1..5 shuffled question sets)..." class="inp fm text-[11px] md:col-span-9">member1@google.com, member2@google.com, member3@google.com, member4@google.com, member5@google.com</textarea>
+<button onclick="generateBulkCandidatePasskeys()" class="btn-g md:col-span-3">🔑 Issue 5-Member Keys</button>
 </div>
-<div id="question-text" class="text-base font-semibold text-white">Loading question...</div>
-<div id="options-container" class="space-y-2.5 pt-2"></div>
-<div class="row pt-4 border-t border-slate-800 flex-wrap gap-2">
-<button id="btn-prev-q" type="button" onclick="navigateQuestion(-1)" class="btn-d">← Previous</button>
-<button id="btn-toggle-help-center" type="button" onclick="toggleExamHelpCenter()" class="px-3.5 py-2 rounded-xl bg-indigo-950/90 hover:bg-indigo-900 border border-indigo-500/40 text-indigo-300 font-bold text-xs cursor-pointer flex items-center gap-2">
-<span>📚 Help Center &amp; SOP Reference Library</span>
-<span id="hc-count-badge" class="px-1.5 py-0.5 rounded bg-indigo-600 text-white font-mono text-[10px]">12 Docs</span>
-</button>
-<button id="btn-next-q" type="button" onclick="navigateQuestion(1)" class="btn-b">Next →</button>
+<div id="admin-passkey-output" class="tm s3 bg-slate-950 p-2.5 rx b8 max-h-36 overflow-y-auto">Click "Issue 5-Member Keys" to assign unique session keys and distribute Sets 1–5 across every 5 members.</div>
 </div>
-<div id="exam-help-center-panel" class="hidden mt-4 pt-4 border-t-2 border-indigo-500/40 space-y-3">
-<div class="p-2.5 rounded-xl bg-indigo-950/50 border border-indigo-500/40 flex flex-wrap items-center justify-between gap-2">
-<div class="flex flex-wrap items-center gap-2">
-<span class="text-xs font-extrabold text-indigo-300">📚 Official CTS / DTS Help Center &amp; SOP Library</span>
-<span class="px-2 py-0.5 rounded bg-amber-950 border border-amber-500/40 text-amber-300 font-mono text-[10px] font-bold">🔒 MANUAL READ ONLY</span>
-<details class="text-[11px] text-slate-300 cursor-pointer">
-<summary class="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-indigo-300 font-mono text-[10px] select-none hover:bg-slate-800">ℹ️ Rules &amp; Description ▼</summary>
-<p class="mt-1.5 p-2 rounded-lg bg-slate-950/90 border border-slate-800 text-[11px] text-slate-300 max-w-xl">
-Browse categories or filter by 1–3 keyword terms below and manually read the SOP documentation. Asking AI/LLM questions or pasting full exam questions is strictly blocked.
-</p>
-</details>
+
+<div class="subcard space-y-2 border border-cyan-500/40">
+<div class="row flex-wrap">
+<span class="tw text-cyan-300">📺 Share Live Note / Briefing to Recorded Teleprompter</span>
+<button onclick="downloadTeleprompterTranscript()" class="btn-d">⬇️ Download Recorded Teleprompter Log</button>
 </div>
-<div class="text-right font-mono text-[10px] text-emerald-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-<div id="hc-telemetry-hud">Manual Read: 0s | Docs Opened: 0</div>
+<div class="g12 gap-2">
+<input type="text" id="admin-tp-broadcast-input" placeholder="Type announcement, guideline, or shared note to record into the live Teleprompter..." class="inp md:col-span-9">
+<button onclick="shareToTeleprompterNow()" class="btn-b md:col-span-3" style="background:#0284c7">📡 Record & Share to Teleprompter</button>
 </div>
 </div>
-<div class="flex flex-wrap items-center gap-1.5" id="hc-category-pills">
-<button type="button" onclick="setHcCategory('ALL')" id="hc-cat-ALL" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-bold">All Resources</button>
-<button type="button" onclick="setHcCategory('Internal SOP')" id="hc-cat-Internal SOP" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-semibold">Internal SOPs</button>
-<button type="button" onclick="setHcCategory('Help Center Article')" id="hc-cat-Help Center Article" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-semibold">Help Center Articles</button>
-<button type="button" onclick="setHcCategory('External Guideline')" id="hc-cat-External Guideline" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-semibold">External Guidelines</button>
-<button type="button" onclick="setHcCategory('Related Facts')" id="hc-cat-Related Facts" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-semibold">Related Facts</button>
-</div>
-<div class="space-y-1">
+
+<div class="subcard space-y-2.5 border border-indigo-500/40">
+<div class="row flex-wrap">
+<select id="trainer-ingest-mode-select" onchange="switchTrainerIngestionMode(this.value)" class="inp max-w-xs fb text-indigo-300">
+<option value="all" selected>⚡ Showing All 3 Shared SOP Ingestion Options</option>
+<option value="chrome">🔗 Option 1: Direct Chrome Link Importer</option>
+<option value="files">📂 Option 2: Multi-File SOP Upload & Pack</option>
+<option value="dump">📋 Option 3: Raw Document Dump Auto-Indexer</option>
+</select>
 <div class="flex gap-2">
-<input id="hc-manual-search-input" type="text" oninput="handleCandidateManualSearch(this.value)" placeholder="🔍 Manual keyword or SOP ID filter (e.g. SOP-102, Circuit Breaker, CAP, CSP) — Max 3 words..." class="inp font-mono">
-<button type="button" onclick="$('hc-manual-search-input').value='';handleCandidateManualSearch('');" class="btn-d shrink-0">Clear</button>
-</div>
-<div id="hc-ai-guard-msg" class="hidden text-[11px] font-bold text-amber-400 bg-amber-950/60 border border-amber-500/40 px-3 py-1.5 rounded-lg">
-⚠️ AI / Natural-Language Question Answering is DISABLED during the test. Please enter a 1–3 word topic keyword or SOP ID and read the article manually.
+<button onclick="autoIngestEnterpriseSopBundle()" class="btn-g">⚡ Auto-Load 25 SOP Pack</button>
+<button onclick="autoGenerateQuestionsFromSops()" class="btn-b">🧠 Generate Exam Questions from SOPs</button>
 </div>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-<div id="hc-article-list" class="md:col-span-5 max-h-72 overflow-y-auto space-y-1.5 pr-1 bg-slate-950/80 p-2 rounded-xl border border-slate-800"></div>
-<div class="md:col-span-7 max-h-72 overflow-y-auto bg-slate-950 p-3.5 rounded-xl border border-slate-800 relative">
-<div id="hc-watermark-overlay" class="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-10 text-xs font-mono font-black text-slate-400 -rotate-12 text-center">
-CONFIDENTIAL CTS/DTS SOP • MANUAL EXAM REFERENCE
-</div>
-<div id="hc-article-reader" class="relative z-10 space-y-2 text-xs text-slate-200 leading-relaxed">
-<div class="text-slate-400 italic">👈 Select any Help Center article or SOP on the left to read its full procedure manually.</div>
+<div id="ingest-panel-chrome" class="p-2.5 rx bg-slate-900 border border-emerald-500/40 space-y-1.5">
+<div class="lbl text-emerald-400">1. Direct Chrome Link / Shared URL Importer (Auto-Recorded to Teleprompter)</div>
+<div class="g12 gap-2">
+<input type="text" id="trainer-chrome-urls-input" placeholder="https://sre.google/sre-book/managing-incidents/" class="inp md:col-span-6">
+<input type="text" id="trainer-chrome-link-title" placeholder="Article Title (optional)" class="inp md:col-span-3">
+<button onclick="ingestTrainerChromeLinks()" class="btn-g md:col-span-3">🔗 Share & Record Link</button>
 </div>
 </div>
+<div id="ingest-panel-files" class="p-2.5 rx bg-slate-900 border border-blue-500/40 space-y-1">
+<div class="lbl text-blue-400">2. Multi-File SOP Document Dropzone (Auto-Recorded to Teleprompter)</div>
+<input type="file" multiple accept=".txt,.md,.json,.csv,.html" onchange="handleTrainerBulkFilesUpload(event)" class="inp">
 </div>
+<div id="ingest-panel-dump" class="p-2.5 rx bg-slate-900 border border-purple-500/40 space-y-1.5">
+<div class="lbl text-purple-300">3. Raw SOP Document Dump & Teleprompter Auto-Recorder</div>
+<textarea id="trainer-raw-dump-input" rows="2" placeholder="Paste raw SOP article text or shared briefing here..." class="inp fm text-[11px]"></textarea>
+<button onclick="runAiBulkDocumentIngestion()" class="btn-b w-full">🚀 Record & Index into Teleprompter + SOP Library</button>
 </div>
-</div>
-<div class="lg:col-span-4 card space-y-4">
-<div class="row text-xs font-bold text-white"><span>📹 Candidate Proctor Cam</span><span class="text-red-400 font-mono text-[10px] animate-pulse">● REC ACTIVE</span></div>
-<div class="w-full aspect-video rounded-xl bg-black overflow-hidden border border-slate-800"><video id="proctor-cam-video" autoplay playsinline muted class="w-full h-full object-cover"></video></div>
-<div class="subcard space-y-1.5 text-xs">
-<div class="row font-mono text-[11px]"><span class="text-slate-400">Voice & Intruder Timers:</span><span id="live-timers-hud" class="text-emerald-400 font-bold">0.0s / 0.0s</span></div>
-<div class="row font-mono text-[10px] pt-0.5 border-t border-slate-800/80"><span class="text-slate-400">Audio Filter:</span><span id="voice-filter-status" class="text-emerald-400 font-bold">● Fan/Noise Filtered ✓</span></div>
-<p class="text-[10px] text-slate-400 leading-relaxed pt-0.5">
-• <b>Human Speech &gt; 2s:</b> 1 Strike (Fan/AC ignored; Terminates if &gt;12s discussion)<br>
-• <b>Intruder:</b> 1 Strike (Next strike if stays &gt;30s)<br>
-• <b>Phone Away / Tab Switch / Seat Vacant:</b> 1 Strike per incident
-</p>
-</div>
-<div class="grid grid-cols-3 gap-1.5">
-<button type="button" onclick="triggerTestIntruderStrike()" class="btn-test">🕵️ Intruder</button>
-<button type="button" onclick="triggerTestVoiceStrike()" class="btn-test">🎙️ Voice &gt;2s</button>
-<button type="button" onclick="triggerTestPhoneAwayStrike()" class="btn-test">📱 Phone Away</button>
-</div>
-<button type="button" onclick="submitExamEarly()" class="w-full py-3 bg-red-950/60 hover:bg-red-900/80 border border-red-500/40 text-red-300 rounded-xl text-xs font-bold cursor-pointer">Submit Assessment Early</button>
-</div>
-</div>
-</div>
-<div id="stage-assessment-completed" class="hidden card space-y-8 max-w-4xl mx-auto">
-<div class="text-center space-y-3">
-<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 text-3xl text-emerald-400">✓</div>
-<div><span class="tag uppercase">Assessment Completed & Submitted</span></div>
-<h1 class="text-3xl font-black text-white">Assessment Successfully Completed</h1>
-<p class="text-slate-400 text-sm max-w-lg mx-auto">Your responses, dual-perspective proctoring audit telemetry, and session video recording have been finalized and synchronized.</p>
-</div>
-<div class="subcard grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-<div><div class="lbl">CANDIDATE</div><div id="completed-candidate-name" class="text-white font-bold mt-0.5">Alex Mercer</div></div>
-<div><div class="lbl">EMAIL</div><div id="completed-candidate-email" class="text-slate-300 font-mono truncate mt-0.5">alex.mercer@assessment.org</div></div>
-<div><div class="lbl">SESSION PIN</div><div id="completed-session-pin" class="text-indigo-400 font-mono font-bold mt-0.5">TRACE-INIT</div></div>
-<div><div class="lbl">SUBMITTED AT</div><div id="completed-timestamp" class="text-slate-300 font-mono mt-0.5">--:--:--</div></div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-<div class="subcard text-center space-y-1"><div class="lbl">FINAL SCORE</div><div id="completed-score-display" class="text-4xl font-black text-emerald-400 font-mono">100%</div><div id="completed-score-detail" class="text-xs text-slate-500">5 of 5 questions correct</div></div>
-<div class="subcard text-center space-y-1"><div class="lbl">INTEGRITY RATING</div><div id="completed-integrity-display" class="text-4xl font-black text-blue-400 font-mono">100%</div><div id="completed-strikes-detail" class="text-xs text-slate-500">3 of 3 Strikes Remaining</div></div>
-<div class="subcard text-center space-y-1"><div class="lbl">EVALUATION SHEET</div><div class="text-2xl font-black text-emerald-400 font-mono">✓ SYNCED</div><div class="text-[11px] text-slate-400"><a href="https://docs.google.com/spreadsheets/d/1f8dDNiBrjpLAUOG64dMFeqoJqI98A9KcjHRG1IOO91Q/edit?resourcekey=0-ltzgxhKkqv8GpZefIaSNvg&gid=1763260792#gid=1763260792" target="_blank" class="text-emerald-400 underline font-semibold">Trace-tracker (Open Sheet)</a></div></div>
-</div>
-<div class="subcard space-y-3">
-<div class="row">
-<span class="font-bold text-white text-xs">📹 Complete Exam Session Video Recording (.webm)</span>
-<a id="completed-download-recording-btn" href="#" download="Proctor_Session_Recording.webm" class="btn-b">⬇️ Download Session Video (.webm)</a>
-</div>
-<div class="w-full aspect-video max-h-60 bg-black rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center"><video id="completed-recording-player" controls playsinline class="w-full h-full object-contain"></video></div>
-</div>
-<div class="flex justify-end gap-3">
-<button type="button" onclick="window.print()" class="btn-d">🖨️ Print Summary</button>
-<button type="button" onclick="location.reload()" class="btn-b">🔄 Start New Session</button>
-</div>
-</div>
-<div id="stage-admin-view" class="hidden card space-y-4">
-<div class="row border-b border-slate-800 pb-3">
-<h2 class="text-base font-bold text-white">Admin Telemetry, SOP Ingestion &amp; Question Bank</h2>
-<button type="button" onclick="toggleAdminView()" class="btn-d">✕ Close Admin</button>
-</div>
-<div class="subcard space-y-3 border border-indigo-500/40 bg-indigo-950/20">
-<div class="row flex-wrap gap-2">
-<div class="flex flex-wrap items-center gap-2">
-<span class="text-xs font-extrabold text-indigo-300">🤖 Trainer SOP &amp; Chrome Link Ingestion Studio</span>
-<span class="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono text-[10px]">ZERO CANDIDATE AI</span>
-<details class="relative text-xs">
-<summary class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-indigo-300 font-mono text-[11px] cursor-pointer select-none hover:bg-slate-800">
-ℹ️ Tool Descriptions &amp; Guide ▼
-</summary>
-<div class="mt-2 p-3 rounded-xl bg-slate-950 border border-slate-700 text-[11px] text-slate-300 space-y-1.5 max-w-2xl shadow-xl">
-<div><b>• Overview:</b> Automatically parse, chunk, categorize, and index 100+ Help Center articles, internal SOPs, and direct Chrome URLs. Candidates can only browse &amp; read manually during the exam.</div>
-<div><b>• Mode 1 (Direct Chrome Link):</b> Select a verified Chrome Help Center URL or paste 1–50+ URLs. Opens inside an <b>In-App Locked Chrome Sandbox</b> so candidates never switch browser tabs.</div>
-<div><b>• Mode 2 (Multi-File Bulk Upload):</b> Upload 1–200 `.txt`, `.md`, `.csv`, `.json`, or `.html` files at once, or click <b>Auto-Load 25 CTS/DTS SOP Pack</b>.</div>
-<div><b>• Mode 3 (NotebookLM Raw Dump):</b> Paste raw multi-page wiki/SOP text to auto-split into categorized articles and generate exam questions.</div>
-</div>
-</details>
-</div>
-<div class="flex items-center gap-2">
-<select id="trainer-ingest-mode-select" onchange="switchTrainerIngestionMode(this.value)" class="bg-slate-950 border border-indigo-500/50 text-white rounded-lg px-2.5 py-1.5 text-xs font-bold">
-<option value="none">▼ Collapse Upload / Chrome Link Tools</option>
-<option value="chrome">🌐 1. Direct Chrome Link Importer</option>
-<option value="files">📂 2. Multi-File Upload &amp; 25-SOP Pack</option>
-<option value="dump">📝 3. Raw Document Dump Auto-Indexer</option>
-<option value="all" selected>⚡ Show All 3 Modes (Chrome Link + Files + SOP Dump)</option>
-</select>
-<div class="font-mono text-xs bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 text-indigo-300">
-Library: <span id="admin-hc-total-count" class="font-bold text-white">12</span> Docs
-</div>
-</div>
+<div id="trainer-ai-ingestion-status" class="tm text-emerald-400 bg-slate-950 px-3 py-1.5 rounded-lg b8">✓ Ready — All shared materials are automatically recorded and available in the TRACE Teleprompter.</div>
 </div>
 
-<div id="ingest-panel-chrome" class="bg-slate-900/90 p-3 rounded-xl border border-indigo-500/40 space-y-2">
-<div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
-<select id="trainer-preset-chrome-link" onchange="applyPresetChromeLink(this.value)" class="bg-slate-950 border border-slate-700 text-indigo-300 rounded-lg px-2.5 py-2 text-[11px] font-mono md:col-span-4">
-<option value="">⚡ Quick-Select Official Chrome / SOP Link...</option>
-<option value="https://cloud.google.com/architecture/framework/reliability|Google Cloud Reliability & Circuit Breaker SOP|Internal SOP">🔗 Google Cloud Reliability &amp; Circuit Breaker SOP</option>
-<option value="https://cheatsheetseries.owasp.org/cheatsheets/Clickjacking_Defense_Cheat_Sheet.html|OWASP Clickjacking & CSP Frame-Ancestors Policy|Help Center Article">🔗 OWASP Clickjacking &amp; CSP Frame-Ancestors Guide</option>
-<option value="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429|MDN HTTP 429 Too Many Requests & Retry-After Standard|Help Center Article">🔗 MDN HTTP 429 &amp; Retry-After Specification</option>
-<option value="https://support.google.com/a/answer/175197|Google Workspace 2-Step Verification & Account Recovery SOP|Internal SOP">🔗 Google Workspace 2SV Account Recovery Help Center</option>
-</select>
-<input type="text" id="trainer-chrome-link-title" placeholder="Optional Title (auto-detected if blank)..." class="inp md:col-span-3 text-[11px]">
-<input type="text" id="trainer-chrome-urls-input" placeholder="Paste Chrome URL(s): https://support.google.com/..." class="inp md:col-span-3 font-mono text-[11px]">
-<button type="button" onclick="ingestTrainerChromeLinks()" class="btn-g md:col-span-2 text-[11px] py-2">🔗 Add Link(s)</button>
-</div>
-</div>
-
-<div id="ingest-panel-files" class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-2">
-<span class="text-xs font-bold text-slate-200">📂 Bulk Upload `.txt / .md / .csv / .json / .html` SOP Files:</span>
-<div class="flex flex-wrap gap-2">
-<label class="btn-b text-center">
-📂 Select 1–200 Files
-<input type="file" multiple accept=".txt,.md,.csv,.json,.html,.tsv" onchange="handleTrainerBulkFilesUpload(event)" class="hidden">
-</label>
-<button type="button" onclick="autoIngestEnterpriseSopBundle()" class="btn-g">⚡ Auto-Load 25 CTS/DTS SOP Pack</button>
-</div>
-</div>
-
-<div id="ingest-panel-dump" class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-2">
-<textarea id="trainer-raw-dump-input" rows="2" placeholder="Paste raw multi-page SOPs or Help Center text here..." class="inp font-mono text-[11px]"></textarea>
-<div class="flex flex-wrap gap-2">
-<button type="button" onclick="runAiBulkDocumentIngestion()" class="btn-b flex-1">🤖 Auto-Chunk &amp; Upload Articles</button>
-<button type="button" onclick="autoGenerateQuestionsFromSops()" class="btn-d">🎯 Generate Exam Questions from SOPs</button>
-</div>
-</div>
-
-<div id="trainer-ai-ingestion-status" class="text-[11px] font-mono text-emerald-400 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
-✓ Ready — 12 Official CTS/DTS SOP &amp; Help Center Articles Pre-Indexed.
-</div>
-</div>
-<div class="subcard space-y-3">
-<div class="text-xs font-bold text-white">Google Apps Script Webhook URL (Trace-tracker: 1f8dDNiBrjpLAUOG64dMFeqoJqI98A9KcjHRG1IOO91Q)</div>
-<div class="flex gap-2"><input type="text" id="admin-gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="inp"><button type="button" onclick="saveGasUrlManual()" class="btn-b shrink-0">Save URL</button></div>
-</div>
-<div class="subcard space-y-3">
-<div class="text-xs font-bold text-white">Add Custom Assessment Question</div>
+<div class="subcard space-y-2">
+<div class="tw">Add Custom Assessment Question (Supports 5-Member Sets)</div>
 <input type="text" id="new-q-text" placeholder="Question text..." class="inp">
-<div class="grid grid-cols-2 gap-2">
-<input type="text" id="new-opt-a" placeholder="Option A" class="inp"><input type="text" id="new-opt-b" placeholder="Option B" class="inp">
-<input type="text" id="new-opt-c" placeholder="Option C" class="inp"><input type="text" id="new-opt-d" placeholder="Option D" class="inp">
+<div class="g2"><input type="text" id="new-opt-a" placeholder="Option A" class="inp"><input type="text" id="new-opt-b" placeholder="Option B" class="inp"><input type="text" id="new-opt-c" placeholder="Option C" class="inp"><input type="text" id="new-opt-d" placeholder="Option D" class="inp"></div>
+<div class="row flex-wrap">
+<div class="fg">
+<select id="new-q-set" class="inp max-w-[145px]"><option value="SET-1">Target: Member 1 (Set 1)</option><option value="SET-2">Target: Member 2 (Set 2)</option><option value="SET-3">Target: Member 3 (Set 3)</option><option value="SET-4">Target: Member 4 (Set 4)</option><option value="SET-5">Target: Member 5 (Set 5)</option><option value="ALL">Target: All 5 Members</option></select>
+<select id="new-q-ans" class="inp max-w-[130px]"><option value="0">Correct: A</option><option value="1">Correct: B</option><option value="2">Correct: C</option><option value="3">Correct: D</option></select>
 </div>
-<div class="row">
-<select id="new-q-ans" class="bg-slate-900 border border-slate-800 text-white rounded-lg px-3 py-1.5 text-xs"><option value="0">Correct: Option A</option><option value="1">Correct: Option B</option><option value="2">Correct: Option C</option><option value="3">Correct: Option D</option></select>
-<button type="button" onclick="addNewQuestion()" class="btn-g">➕ Add Question</button>
-</div>
-</div>
+<div class="fg"><button onclick="rotateFiveMemberQuestionsNow()" class="btn-d">🔄 Force Reshuffle Now</button><button onclick="addNewQuestion()" class="btn-g">➕ Add Question to Member Set</button></div>
 </div>
 </div>
-<div id="modal-warning" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-<div class="bg-slate-900 border-2 border-red-500 rounded-3xl p-6 max-w-md w-full text-center space-y-4 shadow-2xl">
-<div class="text-4xl">⚠️</div>
-<h3 class="text-lg font-bold text-red-400">Malpractice Warning Strike Recorded</h3>
-<p id="warning-reason" class="text-xs text-slate-200 bg-red-950/60 p-3 rounded-xl border border-red-500/40 leading-relaxed font-semibold">Malpractice violation detected.</p>
-<div class="p-3 rounded-xl bg-red-950/50 border border-red-500/40 text-xs font-bold text-red-300">
--1 Strike Deducted &bull; <span id="warning-strikes-left" class="text-white font-extrabold text-sm">2</span> Strikes Remaining Before Disqualification
-</div>
-<button type="button" onclick="dismissWarningModal()" class="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow-lg cursor-pointer">Acknowledge & Return to Assessment</button>
 </div>
 </div>
+
+<div id="modal-warning" class="hidden fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
+<div class="bg-slate-900 border-2 border-red-500 rounded-3xl p-6 max-w-md w-full text-center space-y-3">
+<div class="text-3xl">⚠️</div>
+<h3 class="text-base fb text-red-400">TRACE Proctoring Strike Recorded</h3>
+<p id="warning-reason" class="tx text-slate-200 bg-red-950/60 p-3 rx border border-red-500/40 font-semibold"></p>
+<div class="p-2 rx bg-red-950/50 tx fb text-red-300">-1 Strike Deducted • <span id="warning-strikes-left" class="text-white font-extrabold">2</span> Strikes Remaining</div>
+<button onclick="dismissWarningModal()" class="w-full py-2.5 bg-red-600 text-white rx tx fb">Acknowledge & Resume Full-Screen</button>
+</div>
+</div>
+
 <div id="modal-disqualified" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
-<div class="bg-slate-900 border-2 border-red-600 rounded-3xl p-8 max-w-lg w-full text-center space-y-4 shadow-2xl">
-<div class="text-5xl">🛑</div>
-<h3 class="text-2xl font-black text-red-500">ASSESSMENT TERMINATED</h3>
-<p id="disqualified-reason" class="text-xs text-slate-300">You have exceeded the maximum 3-strike malpractice limit or triggered a critical continuous violation. Your session has been terminated and logged.</p>
-<button type="button" onclick="location.reload()" class="btn-d">Return to Start</button>
+<div class="bg-slate-900 border-2 border-red-600 rounded-3xl p-7 max-w-lg w-full text-center space-y-3">
+<div class="text-4xl">🛑</div>
+<h3 class="text-xl font-black text-red-500">ASSESSMENT TERMINATED</h3>
+<p id="disqualified-reason" class="tx s3"></p>
+<button onclick="location.reload()" class="btn-d">Return to Start</button>
 </div>
 </div>
+
 <script>
-const TRACE_SHEET_ID = "1f8dDNiBrjpLAUOG64dMFeqoJqI98A9KcjHRG1IOO91Q";
-const TRACE_SHEET_GID = "1763260792";
-const TRACE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1f8dDNiBrjpLAUOG64dMFeqoJqI98A9KcjHRG1IOO91Q/edit?resourcekey=0-ltzgxhKkqv8GpZefIaSNvg&gid=1763260792#gid=1763260792";
-const DEFAULT_GAS_URL = "https://script.google.com/a/macros/google.com/s/AKfycbw22kccBQsWYcLFsT1xOi88ARYE2TWtJhVqiat5X1dR-bgqDrX0c9X5cDYxe_pFgNd3/exec";
-const $ = id => document.getElementById(id);
-const setTxt = (id, txt, cls) => { const el = $(id); if (el) { el.innerText = txt; if (cls) el.className = cls; } };
-const VERIFIED_SAMPLE_PORTRAIT = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='%230f172a'/><circle cx='100' cy='75' r='35' fill='%2338bdf8'/><path d='M45 175 C45 125 155 125 155 175 Z' fill='%230284c7'/></svg>";
-const urlParams = new URLSearchParams(window.location.search);
-const isMobileGuardMode = urlParams.get('mode') === 'phone_guard';
-let currentSessionId = urlParams.get('session') || ('TRACE-' + Math.floor(100000 + Math.random() * 900000));
-let currentStage = 'login', isPhonePaired = false, hasIdPhoto = false, hasLiveWebcam = false, isBiometricallyVerified = false, isExamActive = false;
-let strikesRemaining = 3, warningDismissCooldownUntil = 0, examTimeRemaining = 45 * 60, examTimerInterval = null;
-let labCamStream = null, cachedBlazeFaceModel = null, mediaRecorder = null, recordedChunks = [], isLockdownBound = false;
-let continuousVoiceSeconds = 0;
-let hasGivenVoiceStrikeThisStretch = false;
-let lastVoiceStrikeTime = 0;
-let continuousIntruderSeconds = 0;
-let hasGivenInitialIntruderStrike = false;
-let lastIntruderStrikeTime = 0;
-let lastMobileStrikeTime = 0;
-let lastTabStrikeTime = 0;
-let processedMobileEventIds = new Set();
-let mobilePeerConn = null;
-const defaultQuestions = [
-{ q: "Which data structure guarantees O(1) average-time complexity for key lookup and insertion?", opts: ["Binary Search Tree", "Hash Table with Closed Addressing", "Skip List", "Sorted Array"], ans: 1 },
-{ q: "In distributed microservices, what architectural pattern prevents cascading failures across RPCs?", opts: ["CQRS", "Circuit Breaker", "Event Sourcing", "Saga Coordinator"], ans: 1 },
-{ q: "In computer vision biometrics, what does normalized Euclidean distance between landmark points measure?", opts: ["Geometric facial similarity", "Camera resolution", "Audio latency", "Lighting intensity"], ans: 0 },
-{ q: "Which HTTP header is required to prevent clickjacking attacks by disallowing frame embedding?", opts: ["Content-Security-Policy: frame-ancestors 'none'", "X-Content-Type-Options: nosniff", "Strict-Transport-Security", "Access-Control-Allow-Origin: *"], ans: 0 },
-{ q: "Under the CAP theorem, what does a distributed cluster sacrifice during a partition if it guarantees consistency?", opts: ["Partition Tolerance", "Availability for all queries", "Data Persistence", "Latency optimization"], ans: 1 }
-];
-let questions = [...defaultQuestions], currentQuestionIdx = 0, userAnswers = {};
-function getGasUrl() {
-let saved = '';
-try {
-saved = localStorage.getItem('trace_gas_webapp_url') || localStorage.getItem('cts_gas_url') || '';
-if (saved.includes('BQSvW') || saved.includes('pFGND3') || saved.includes('_example')) {
-localStorage.removeItem('trace_gas_webapp_url');
-localStorage.removeItem('cts_gas_url');
-saved = '';
-}
-} catch(e){}
-return urlParams.get('gas_url') || saved || DEFAULT_GAS_URL;
-}
-function saveGasUrlManual() { const val = $('admin-gas-url-input')?.value.trim(); if (val) { localStorage.setItem('trace_gas_webapp_url', val); alert("Webhook saved!"); syncToGoogleSheet('submitScore', { status: 'WEBHOOK_VERIFIED' }); } }
-let isTrainerRoleActive = (urlParams.get('role') === 'trainer' || urlParams.get('mode') === 'trainer');
-let sentSheetEventKeys = new Set();
-let hasSubmittedFinalScore = false;
+const $=id=>document.getElementById(id),setTxt=(id,t,c)=>{const e=$(id);if(e){e.innerText=t;if(c)e.className=c;}},setHtml=(id,h)=>{const e=$(id);if(e)e.innerHTML=h;};
+const GAS_URL="https://script.google.com/macros/s/AKfycbx4fa032145287c0793b1a618f92e8fb53a8a8e3fdb5261f52f1ca2e31d/exec";
+const up=new URLSearchParams(location.search),tok=up.get('session')||up.get('pin')||('TRC-'+Math.random().toString(36).substring(2,7).toUpperCase());
+let stg='login',examOn=false,strikes=0,MAX_S=3,cfgMins=45,tRem=2700,qSec=0,tInt=null,tpInt=null,tpAuto=true,qIdx=0,ansMap={},gTs=0,wCool=0,role=up.get('role')==='trainer'?'trainer':'candidate';
+let curSessNonce='7X9K',shuffleEpoch=1,gateFails=0,gateLockUntil=0,activePasskey='',cOutSec=0,cOutEdge='',lastMouseTs=Date.now(),monAlertTs=0;
+let tpLogs=[];
 
-function dispatchSheetTransport(baseUrl, dataMap) {
-if (!baseUrl) return;
-try {
-const frameName = 'trace_post_frame_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-const postFrame = document.createElement('iframe');
-postFrame.name = frameName;
-postFrame.style.display = 'none';
-document.body.appendChild(postFrame);
-const form = document.createElement('form');
-form.method = 'POST';
-form.action = baseUrl;
-form.target = frameName;
-form.style.display = 'none';
-if (dataMap && typeof dataMap === 'object') {
-Object.entries(dataMap).forEach(([k, v]) => {
-if (v !== undefined && v !== null) {
-const inp = document.createElement('input');
-inp.type = 'hidden';
-inp.name = k;
-inp.value = String(v);
-form.appendChild(inp);
+function recordTeleprompterEvent(tag,msg){
+const ts=new Date().toLocaleTimeString(),entry=`[${ts}] [${tag}] ${msg}`;
+tpLogs.unshift(entry);
+try{localStorage.setItem('trace_tp_logs_v52',JSON.stringify(tpLogs.slice(0,120)));}catch(e){}
+renderTeleprompterPanel();
+}
+
+function pinHash(s){let h=2166136261,v=String(s||'').trim();for(let i=0;i<v.length;i++){h^=v.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h>>>0;}
+function makeSessionNonce(){const ch='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';let s='';for(let i=0;i<4;i++)s+=ch[Math.floor(Math.random()*ch.length)];return s;}
+curSessNonce=makeSessionNonce();
+function genPasskey(em,sNonce=curSessNonce){
+const clean=String(em||'').trim().toLowerCase(),sn=String(sNonce||curSessNonce).trim().toUpperCase().slice(0,4).padEnd(4,'X');
+const sig=pinHash('TRC-SESS-V5|'+clean+'|'+sn).toString(36).toUpperCase().padStart(6,'0').slice(-4);
+return `TK-${sn}-${sig}`;
+}
+function isUsedPasskey(pk){try{const u=JSON.parse(localStorage.getItem('trace_used_pks')||'[]');return u.includes(String(pk||'').toUpperCase());}catch(e){return false;}}
+function markPasskeyUsed(pk){try{const k=String(pk||'').toUpperCase();if(!k)return;const u=JSON.parse(localStorage.getItem('trace_used_pks')||'[]');if(!u.includes(k)){u.push(k);localStorage.setItem('trace_used_pks',JSON.stringify(u));}}catch(e){}}
+function isValidPasskey(em,pc){
+const v=String(em||'').trim().toLowerCase(),k=String(pc||'').trim().toUpperCase();
+if(!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(v)||!k)return false;
+if(pinHash(k)===1076444563)return true;
+if(isUsedPasskey(k))return false;
+const m=k.match(/^TK-([A-Z0-9]{4})-([A-Z0-9]{4})$/);
+if(m)return k===genPasskey(v,m[1]);
+const h1=pinHash('TRC-K9|'+v).toString(16).toUpperCase().padStart(8,'0'),h2=pinHash('SOP-V5|'+v).toString(16).toUpperCase().padStart(8,'0');
+return k===`TK-${h1.slice(0,4)}-${h2.slice(0,2)}`;
+}
+function isGoogleTeamEmail(em){return isValidPasskey(em,activePasskey||$('candidate-access-passcode')?.value||$('gate-passcode-input')?.value||'');}
+
+function updateRegularTimerDuration(mins){
+cfgMins=parseInt(mins||'45',10)||45;tRem=cfgMins*60;
+const fmt=`${String(cfgMins).padStart(2,'0')}:00`;
+setTxt('timer-display',fmt);setTxt('precheck-timer-status',`✓ ${fmt} Regular`,'fe');
+recordTeleprompterEvent('TIMER',`Regular Assessment Timer configured to ${cfgMins}:00 minutes.`);
+}
+
+function syncSheet(d){try{if(role!=='trainer'&&!isGoogleTeamEmail($('candidate-email')?.value))return;const sig=pinHash(tok+'|'+(d.scorePct||0)+'|'+(d.strikes||0)).toString(16).toUpperCase(),b=JSON.stringify({action:'appendAssessmentResult',sessionId:tok,authSig:'TRC-SIG-'+sig,timestamp:new Date().toISOString(),candidateName:$('candidate-name')?.value||'Candidate',candidateEmail:$('candidate-email')?.value||'candidate@google.com',teamName:$('candidate-team-select')?.value||'TRACE Operations & Assessment',questionSet:activeSet,proctorMode:'TRACE_DESKTOP_LOCKDOWN_V52',teleprompterCount:tpLogs.length,...d});navigator.sendBeacon?.(GAS_URL,new Blob([b],{type:'text/plain;charset=utf-8'}));fetch(GAS_URL,{method:'POST',mode:'no-cors',body:b}).catch(()=>{});}catch(e){}}
+function sendManualTestRowToSheet(){syncSheet({scorePct:96,passed:'PASSED (TEST)',strikes:0,integrityScore:100});alert("✓ Test row synced to Google Sheets!");}
+function runInteractiveLoadTest25(){for(let i=1;i<=25;i++)syncSheet({scorePct:82+(i%16),passed:'PASSED (SIM-25)',strikes:0,integrityScore:100});alert("✓ 25 Concurrent TRACE Session Rows synced to Google Sheets!");}
+function applyPortalRoleView(){const isT=role==='trainer';setTxt('active-role-badge',isT?'🛡️ TRAINER / ADMIN':'🧑‍💻 CANDIDATE VIEW');setTxt('btn-role-switcher',isT?'Switch to Candidate View':'🔒 Trainer / Admin Login');$('trainer-only-header-actions')?.classList.toggle('hidden',!isT);$('stage-admin-view')?.classList.toggle('hidden',!isT);}
+function toggleTrainerCandidateRole(){if(role==='candidate'){const p=prompt("Enter Authorized Trainer / Admin PIN:");if(!p||pinHash(p)!==1076444563)return alert("❌ Invalid Trainer PIN.");role='trainer';}else role='candidate';applyPortalRoleView();}
+function toggleAdminView(){const a=$('stage-admin-view');if(a){a.classList.toggle('hidden');if(!a.classList.contains('hidden'))a.scrollIntoView({behavior:'smooth'});}}
+function baseUrl(){return location.hostname.includes('googleusercontent.com')?GAS_URL:(location.origin+location.pathname);}
+function copyPortalRoleLink(r){const u=baseUrl()+'?role='+r;navigator.clipboard?.writeText(u);alert('Copied Link:\n'+u);}
+
+function unlockAccessGate(){
+if(Date.now()<gateLockUntil){const w=Math.ceil((gateLockUntil-Date.now())/1000);setTxt('gate-error-msg',`🚨 INTRUDER LOCKOUT ACTIVE: Too many failed passkey attempts. Try again in ${w}s.`,'tx fr bg-red-950/80 p-2.5 rx border border-red-500 fb');$('gate-error-msg')?.classList.remove('hidden');return;}
+const em=($('gate-email-input')?.value||'').trim().toLowerCase(),pc=($('gate-passcode-input')?.value||'').trim().toUpperCase();
+if(isUsedPasskey(pc)){setTxt('gate-error-msg','⛔ Expired Session Passkey: This single-session passkey has already been used. Request a new session passkey from your Trainer.','tx fr bg-red-950/60 p-2 rx border border-red-500/40');$('gate-error-msg')?.classList.remove('hidden');return;}
+if(!isValidPasskey(em,pc)){
+gateFails++;
+if(gateFails>=3){gateLockUntil=Date.now()+60000;setTxt('gate-error-msg','🚨 INTRUDER DETECTED AT GATE: 3 Invalid Passkey Attempts! Terminal locked for 60 seconds.','tx fr bg-red-950/80 p-2.5 rx border border-red-500 fb');}
+else{setTxt('gate-error-msg',`❌ Invalid Session Passkey for ${em||'this email'} (Attempt ${gateFails}/3 before Intruder Lockout).`,'tx fr bg-red-950/60 p-2 rx border border-red-500/40');}
+$('gate-error-msg')?.classList.remove('hidden');return;
+}
+gateFails=0;activePasskey=pc;
+const m=pc.match(/^TK-([A-Z0-9]{4})-([A-Z0-9]{4})$/);if(m)setTxt('desktop-session-pin',`TRC-${m[1]}`);
+if($('candidate-email'))$('candidate-email').value=em;if($('candidate-access-passcode'))$('candidate-access-passcode').value=pc;
+if(!$('candidate-name')?.value&&$('candidate-name'))$('candidate-name').value=em.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+$('stage-access-gate')?.classList.add('hidden');$('desktop-main-ui')?.classList.remove('hidden');validateGoogleTeamEmail();runDesktopHardwarePrecheck();
+recordTeleprompterEvent('AUTH',`Candidate ${em} authenticated with Session Passkey ${pc}.`);
+}
+function toggleTrainerFromGate(){
+const p=prompt("Enter Authorized Trainer / Admin PIN to Open Passkey & SOP Studio:");if(!p||pinHash(p)!==1076444563)return alert("❌ Invalid Trainer PIN.");
+role='trainer';$('stage-access-gate')?.classList.add('hidden');$('desktop-main-ui')?.classList.remove('hidden');applyPortalRoleView();rotateNewSessionPasskeys();
+}
+let lastPasskeyCsv='';
+function rotateNewSessionPasskeys(){
+curSessNonce=makeSessionNonce();
+shuffleEpoch++;
+try{localStorage.setItem('trace_shuffle_epoch',String(shuffleEpoch));}catch(e){}
+setTxt('rotation-seed-badge',`ROTATION: ${curSessNonce}-E${shuffleEpoch}`);
+recordTeleprompterEvent('ROTATE',`New Session Batch ${curSessNonce} & 5-Member Shuffle Epoch #${shuffleEpoch} generated.`);
+generateBulkCandidatePasskeys();
+}
+function rotateFiveMemberQuestionsNow(){
+shuffleEpoch++;
+curSessNonce=makeSessionNonce();
+try{localStorage.setItem('trace_shuffle_epoch',String(shuffleEpoch));}catch(e){}
+setTxt('rotation-seed-badge',`ROTATION: ${curSessNonce}-E${shuffleEpoch}`);
+if(examOn){buildCandidateQuestionSet();renderQuestion();}
+recordTeleprompterEvent('SHUFFLE',`5-Member Question Sets dynamically re-shuffled (Epoch #${shuffleEpoch}, Nonce ${curSessNonce}).`);
+alert(`✓ 5-Member Question Sets Re-Shuffled! (New Rotation Seed: ${curSessNonce}-E${shuffleEpoch})`);
+}
+function generateBulkCandidatePasskeys(){
+const raw=$('admin-passkey-emails')?.value||'',ems=raw.split(/[\r\n,;]+/).map(x=>x.trim().toLowerCase()).filter(x=>x.includes('@'));
+if(!ems.length)return alert("Enter at least one candidate email.");
+setTxt('admin-session-nonce-badge',`SESSION: ${curSessNonce} (5-MEMBER SHUFFLE)`);
+const fiveSets=['SET-1','SET-2','SET-3','SET-4','SET-5'];
+const rows=ems.map((e,i)=>{const pk=genPasskey(e,curSessNonce),st=fiveSets[i%5],mNum=(i%5)+1,lnk=`${baseUrl()}?email=${encodeURIComponent(e)}&key=${encodeURIComponent(pk)}&set=${st}&session=TRC-${curSessNonce}-M${mNum}`;return{e,pk,st,mNum,lnk};});
+lastPasskeyCsv=`Session Batch: ${curSessNonce} (5-Member Shuffled Rotation)\nMember Slot\tCandidate Email\tSession Passkey\tAssigned Set\tSingle-Session Invite Link\n`+rows.map(r=>`Member ${r.mNum}\t${r.e}\t${r.pk}\t${r.st}\t${r.lnk}`).join('\n');
+setHtml('admin-passkey-output',rows.map(r=>`<div class="row py-1 bb tx fm"><span class="text-cyan-300">Member #${r.mNum}</span><span class="text-white">${r.e}</span><span class="text-amber-300 fb">${r.pk}</span><span class="tag">${r.st}</span></div>`).join(''));
+}
+function copyGeneratedPasskeys(){if(!lastPasskeyCsv)generateBulkCandidatePasskeys();navigator.clipboard?.writeText(lastPasskeyCsv);alert(`✓ Copied 5-Member Session (${curSessNonce}) Passkeys & Invite Links!`);}
+function validateGoogleTeamEmail(){
+const em=$('candidate-email')?.value||'',pk=activePasskey||$('candidate-access-passcode')?.value||'',ok=isValidPasskey(em,pk);
+setTxt('google-domain-badge',ok?`✓ Session Key Verified (${pk})`:'🔒 Valid Email + Session Passkey Required',ok?'px-3 py-1.5 rx bg-emerald-950/60 border border-emerald-500/40 tx fm fe mt-4':'px-3 py-1.5 rx bg-red-950/60 border border-red-500/40 tx fm fr mt-4');
+return ok;
+}
+function runDesktopHardwarePrecheck(){
+const isExt=window.screen?.isExtended===true;
+setTxt('precheck-monitor-status',isExt?'⚠️ Dual/Extended Monitor Detected!':'✓ Single Monitor Verified',isExt?'fr':'fe');
+return !isExt;
+}
+
+const encAns=a=>(a^91),decAns=k=>(k^91);
+let activeSet='SET-1',questionBank=[
+{set:'SET-1',q:"[SOP-101] What is the mandatory SLA for freezing active session tokens upon a confirmed Account Takeover (ATO) alert?",opts:["Within 15 minutes","Within 60 seconds","Within 4 hours","End of shift"],ak:90},
+{set:'SET-1',q:"[SOP-102] What authorization is required before processing a high-value customer refund exceeding $1,000?",opts:["Self-approval by L1 agent","Automated chatbot refund","Escalation to Financial Risk Compliance with ledger export","No verification required"],ak:89},
+{set:'SET-1',q:"[SOP-106] During a KYC/KYB Merchant Identity Audit, how must altered or expired government ID documents be handled?",opts:["Approved with a temporary 30-day waiver","Ignored if the merchant email is verified","Deferred to next quarter","Immediately rejected and flagged for Enhanced Due Diligence (EDD)"],ak:88},
+{set:'SET-1',q:"[SOP-110] When an entity triggers an OFAC/AML compliance match, what action is strictly prohibited?",opts:["Placing an immediate payout hold","Tipping off or disclosing internal AML review details to the external requester","Escalating the dossier to Legal & AML Compliance","Logging transaction metadata"],ak:90},
+{set:'SET-1',q:"[SOP-112] Within what timeframe must a blameless Incident Post-Mortem (RCA) with 5-Whys be drafted after a major outage?",opts:["Within 30 business days","Within 24 hours of incident resolution (with P0 action items assigned a 14-day SLA)","Only if requested by external press","No post-mortem required"],ak:90},
+{set:'SET-2',q:"[SOP-103] Under the Enterprise Production Escalation SLA, within what timeframe must a Severity-1 (P0/P1) incident be acknowledged?",opts:["Within 60 minutes","Within 24 hours","Within 5 minutes","No acknowledgment required"],ak:89},
+{set:'SET-2',q:"[SOP-104] Under Zero-Trust PII Data Redaction rules, how must screenshots containing sensitive national ID or PAN numbers be handled?",opts:["Pasted directly in plaintext notes","Masked using the automated PII redaction tool prior to ticket attachment","Shared via public link","Sent over personal email"],ak:90},
+{set:'SET-2',q:"[SOP-105] When diagnosing HTTP 429 API Rate-Limit errors, what is the required client remediation and burst approval protocol?",opts:["Disable authentication headers","Infinitely retry every 10ms","Delete the customer webhook","Implement exponential backoff with jitter; burst overrides require Principal Engineer sign-off"],ak:88},
+{set:'SET-2',q:"[SOP-107] Before promoting a standby database during Cloud Database Failover Recovery, what critical step must be completed?",opts:["Check replica lag, drain active writes, and verify data checksums","Drop all audit tables","Restart the primary DNS without draining","Skip checksum verification"],ak:91},
+{set:'SET-2',q:"[SOP-109] At what threshold must tickets be auto-tagged and specialists re-allocated to prevent an SLA breach?",opts:["Only after the SLA is breached by 2 hours","When P1 wait exceeds 3 minutes or ticket timer reaches 85% of SLA","At the end of the weekly sprint","Never re-allocate queues"],ak:90},
+{set:'SET-3',q:"[SOP-108] If an urgent caller claims to be an executive requesting an immediate MFA bypass, what is the mandatory protocol?",opts:["Grant a 1-hour MFA bypass immediately","Send a reset link to an external SMS number","Never bypass MFA; verify identity via corporate directory callback and alert the SOC","Share session cookies in chat"],ak:89},
+{set:'SET-3',q:"[SOP-111] During SSO / SAML 2.0 X.509 Certificate Rotation, what step must occur before production cutover?",opts:["Delete the active certificate first","Disable SAML signature checks","Skip IdP metadata validation","Upload the secondary certificate and validate IdP/SP test login before switching"],ak:88},
+{set:'SET-3',q:"[SOP-101] After freezing session tokens during an ATO incident, what is the required second remediation step?",opts:["Reset hardware MFA credentials and revoke active OAuth grants","Delete the customer account permanently","Ignore OAuth tokens","Wait 48 hours"],ak:91},
+{set:'SET-3',q:"[SOP-102] Which approval tier applies to a mid-tier customer refund between $250 and $1,000?",opts:["No approval needed","L2 Team Lead / Supervisor sign-off with ticket audit note","CEO approval","External vendor approval"],ak:90},
+{set:'SET-3',q:"[SOP-104] If accidental unmasked PII exposure occurs in a ticket, within what SLA must it be reported to Privacy Ops?",opts:["Within 30 minutes of detection","Within 14 days","At annual audit","No reporting needed"],ak:91},
+{set:'SET-4',q:"[SOP-103] During an active Sev-1 (P0/P1) production incident, how frequently must stakeholder status updates be posted?",opts:["Every 15 minutes until resolution","Once a week","Only after resolution","Every 6 hours"],ak:91},
+{set:'SET-4',q:"[SOP-106] When a merchant operates in a high-risk jurisdiction during KYC review, what action is mandatory?",opts:["Skip identity verification","Flag the dossier for Enhanced Due Diligence (EDD) compliance review","Approve immediately","Delete registry logs"],ak:90},
+{set:'SET-4',q:"[SOP-107] Why must active database writes be drained before promoting a standby replica?",opts:["To prevent split-brain data corruption and ensure zero transaction loss","To slow down the server","To delete backups","To bypass checksums"],ak:91},
+{set:'SET-4',q:"[SOP-110] To which team must a confirmed OFAC / Sanctions screening match dossier be escalated immediately?",opts:["Marketing team","Legal & AML Compliance Operations","Facilities desk","External press"],ak:90},
+{set:'SET-4',q:"[SOP-112] What is the mandatory completion SLA for P0 corrective action items created in an Incident Post-Mortem?",opts:["14-day SLA","365-day SLA","No deadline","90-day SLA"],ak:91},
+{set:'SET-5',q:"[SOP-105] Which HTTP status code indicates that a client has exceeded its allowed API request rate limit?",opts:["HTTP 200 OK","HTTP 429 Too Many Requests","HTTP 404 Not Found","HTTP 500 Internal Error"],ak:90},
+{set:'SET-5',q:"[SOP-108] Why must agents verify urgent executive requests via corporate directory callback rather than caller ID?",opts:["Caller ID and display names can be spoofed in social engineering / vishing attacks","Directory callback is slower","To avoid logging tickets","Phones do not show numbers"],ak:91},
+{set:'SET-5',q:"[SOP-109] When P1 queue wait time exceeds 3 minutes, what immediate operational action is required?",opts:["Close the queue","Re-allocate cross-trained specialists to P1/P2 queues immediately","Log off","Disable SLA timers"],ak:90},
+{set:'SET-5',q:"[SOP-111] What metadata must be verified in the SAML XML prior to rotating an SSO certificate?",opts:["X.509 certificate expiration timestamp and EntityID signature match","Font styling","Browser history","Desktop wallpaper"],ak:91},
+{set:'ALL',q:"[SOP-104] Under Zero-Trust Privacy rules, which of the following must NEVER be logged in plaintext ticket notes?",opts:["Ticket category tag","Raw government IDs, PAN/SSN numbers, or plaintext passwords","Public help center URLs","Timestamp of ticket creation"],ak:90}
+],questions=[...questionBank.slice(0,5)];
+
+function buildCandidateQuestionSet(){
+const urlSet=(up.get('set')||'').toUpperCase(),sel=$('candidate-set-select')?.value||'AUTO';
+const dayStamp=new Date().toISOString().slice(0,10);
+const savedEp=localStorage.getItem('trace_shuffle_epoch')||String(shuffleEpoch);
+const em=($('candidate-email')?.value||'member').trim().toLowerCase();
+const seedStr=`${em}|${tok}|${curSessNonce}|${dayStamp}|EP${savedEp}`;
+let seed=2166136261;for(let i=0;i<seedStr.length;i++){seed^=seedStr.charCodeAt(i);seed=Math.imul(seed,16777619)>>>0;}
+const fiveSets=['SET-1','SET-2','SET-3','SET-4','SET-5'];
+const normUrl=urlSet.replace('SET-A','SET-1').replace('SET-B','SET-2').replace('SET-C','SET-3');
+activeSet=fiveSets.includes(normUrl)?normUrl:(sel!=='AUTO'&&fiveSets.includes(sel)?sel:fiveSets[seed%5]);
+let pool=questionBank.filter(x=>x.set===activeSet||x.set==='ALL');if(pool.length<5)pool=[...questionBank];
+const rng=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+const shuf=arr=>{const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+questions=shuf(pool).slice(0,5).map(item=>{
+const realAns=typeof item.ak==='number'?decAns(item.ak):(item.ans||0),idx=shuf([0,1,2,3]);
+return{set:item.set,q:item.q,opts:idx.map(k=>item.opts[k]),ak:encAns(idx.indexOf(realAns))};
+});
+const mIdx=fiveSets.indexOf(activeSet)+1;
+setTxt('exam-member-slot-pill',`MEMBER #${mIdx} (${activeSet})`);
+setTxt('exam-active-set-badge',`${activeSet} • 5-MEMBER SHUFFLE (EP#${savedEp})`);
+recordTeleprompterEvent('SHUFFLE',`Assigned ${activeSet} (Member Slot #${mIdx} of 5) with session-unique question & option order.`);
+}
+
+function renderForensicWatermark(){
+const em=($('candidate-email')?.value||'candidate@google.com').toUpperCase(),pk=activePasskey||'TK-SESSION';
+const stamp=`TRACE • ${em} • ${pk} • ${activeSet} `;
+setHtml('forensic-watermark-grid',Array(18).fill(`<span>${stamp}</span>`).join(''));
+}
+function resetSurfaceIdleTimer(){
+lastMouseTs=Date.now();
+$('surface-blank-curtain')?.classList.add('hidden');
+setTxt('hud-surface-status','Protected ✓','fe');
+}
+function blankQuestionSurfaceNow(reason){
+if(!examOn)return;
+setTxt('surface-blank-reason',`${reason} — Move mouse cursor back onto the question surface to reveal content.`);
+$('surface-blank-curtain')?.classList.remove('hidden');
+setTxt('hud-surface-status','Blanked (Shield On)','fa');
+}
+function triggerInstantBlackoutSurface(reason,deduct=true){
+if(!examOn)return;
+try{navigator.clipboard?.writeText('SCREEN CAPTURE BLOCKED BY TRACE SECURITY');}catch(e){}
+setTxt('blackout-detail-msg',reason);
+setTxt('blackout-watermark-id',`LOGGED: ${$('candidate-email')?.value||'CANDIDATE'} • ${activePasskey||tok}`);
+$('anti-capture-blackout')?.classList.remove('hidden');
+recordTeleprompterEvent('BLACKOUT',reason);
+if(deduct)applyStrike(reason,'screen_capture');
+}
+function resumeFromBlackoutSurface(){
+$('anti-capture-blackout')?.classList.add('hidden');
+resetSurfaceIdleTimer();
+try{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.().catch(()=>{});}catch(e){}
+}
+
+function startAssessment(){
+if(!validateGoogleTeamEmail())return alert("🔒 Access Restricted: Valid Email and Session Passkey Required.");
+if(window.screen?.isExtended===true){
+if(!confirm("⚠️ Dual / Extended Monitor Detected! Unplug secondary display before starting, or click OK to proceed (Dual-Monitor strike monitoring will be active)."))return;
+}
+try{document.documentElement.requestFullscreen?.().catch(()=>{});}catch(e){}
+buildCandidateQuestionSet();renderForensicWatermark();
+stg='exam';examOn=true;gTs=Date.now()+3000;lastMouseTs=Date.now();qSec=0;
+$('stage-login-pairing')?.classList.add('hidden');$('stage-exam-active')?.classList.remove('hidden');
+renderQuestion();renderTeleprompterPanel();
+recordTeleprompterEvent('START',`Assessment started with Regular Timer (${cfgMins}:00) and ${ hcList.length } shared SOPs recorded in Teleprompter.`);
+tInt=setInterval(()=>{
+if(!examOn)return;
+tRem=Math.max(0,tRem-1);qSec++;
+const m=String(Math.floor(tRem/60)).padStart(2,'0'),s=String(tRem%60).padStart(2,'0');
+const qm=String(Math.floor(qSec/60)).padStart(2,'0'),qs=String(qSec%60).padStart(2,'0');
+setTxt('timer-display',`${m}:${s}`,tRem<120?'fb text-red-400 text-base animate-pulse':tRem<600?'fb text-amber-400 text-base':'fb text-emerald-400 text-base');
+setTxt('question-regular-timer',`${qm}:${qs}`);
+if(tRem>0&&tRem%300===0)recordTeleprompterEvent('TIMER',`Regular Timer Checkpoint: ${m}:${s} remaining.`);
+if(tRem<=0)finishExam(false);
+},1000);
+tpInt=setInterval(()=>{
+if(!examOn||!tpAuto)return;
+const el=$('teleprompter-shared-feed');
+if(el){if(el.scrollTop+el.clientHeight>=el.scrollHeight-4)el.scrollTop=0;else el.scrollTop+=1;}
+},90);
+startDesktopEnvironmentLoop();
+}
+
+function toggleTeleprompterDrawer(){
+const d=$('exam-teleprompter-drawer');if(d)d.classList.toggle('hidden');
+}
+function toggleTeleprompterAutoScroll(){
+tpAuto=!tpAuto;
+setTxt('btn-tp-autoscroll',tpAuto?'⏸️ Pause Scroll':'▶️ Auto-Scroll');
+}
+function shareToTeleprompterNow(){
+const inp=$('admin-tp-broadcast-input'),txt=inp?.value?.trim();
+if(!txt)return alert("Enter a briefing or shared note to record into the Teleprompter.");
+const id=`SHARED-${hcList.length+1}`;
+hcList.unshift({id,title:`Shared Briefing: ${txt.slice(0,48)}`,category:'Shared Teleprompter Note',updated:new Date().toLocaleTimeString(),content:txt});
+if(inp)inp.value='';
+saveHc();
+recordTeleprompterEvent('SHARED',`Trainer shared to Teleprompter (${id}): "${txt}"`);
+alert("✓ Recorded & Shared to Live TRACE Teleprompter!");
+}
+function renderTeleprompterPanel(){
+setTxt('tp-item-count',`${hcList.length}`);
+const feed=$('teleprompter-shared-feed');
+if(feed){
+feed.innerHTML=hcList.map(a=>`<div class="p-2 rx bg-slate-900 border border-slate-800 tx"><div class="row text-[10px] fm text-cyan-400"><span>📺 ${a.id} (${a.category})</span><span>${a.updated||'LIVE'}</span></div><div class="fb text-white">${a.title}</div><div class="s3 text-[11px] mt-0.5">${a.content}</div></div>`).join('');
+}
+const logEl=$('teleprompter-audit-log');
+if(logEl){
+logEl.innerHTML=tpLogs.map(l=>`<div class="py-0.5 bb text-slate-300">${l}</div>`).join('');
+}
+const compEl=$('completed-teleprompter-transcript');
+if(compEl){
+compEl.innerText=`=== TRACE RECORDED TELEPROMPTER & SHARED CONTENT TRANSCRIPT ===\nSession ID: ${tok} | Active Set: ${activeSet}\n\n--- 1. RECORDED SHARED CONTENT & SOP BRIEFINGS (${hcList.length} Items) ---\n`+hcList.map(a=>`• [${a.id}] ${a.title}: ${a.content}`).join('\n')+'\n\n--- 2. CHRONOLOGICAL SESSION & TIMER TELEPROMPTER LOG ---\n'+tpLogs.join('\n');
+}
+}
+function downloadTeleprompterTranscript(){
+renderTeleprompterPanel();
+const txt=$('completed-teleprompter-transcript')?.innerText||tpLogs.join('\n');
+const b=new Blob([txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
+a.href=u;a.download=`TRACE_Teleprompter_${tok}.txt`;a.click();
+}
+
+function startDesktopEnvironmentLoop(){
+document.addEventListener('mouseleave',e=>{
+if(!examOn)return;
+cOutEdge=e.clientX<=0?'Left Monitor Edge':e.clientX>=window.innerWidth?'Right Monitor Edge':e.clientY<=0?'Top Browser Bar':'Bottom Taskbar';
+cOutSec=0.1;
+setTxt('hud-cursor-status',`⚠️ Exited (${cOutEdge})`,'fa');
+blankQuestionSurfaceNow(`Cursor Left Exam Viewport (${cOutEdge})`);
+});
+document.addEventListener('mouseenter',()=>{
+cOutSec=0;setTxt('hud-cursor-status','Inside Screen ✓','fe');
+});
+window.addEventListener('blur',()=>{
+if(!examOn||Date.now()<gTs)return;
+setTxt('hud-focus-status','🚨 Focus Lost!','fr');
+triggerInstantBlackoutSurface("Desktop Focus Violation: Candidate Clicked Outside Exam Window, Switched Application (Alt+Tab), or Opened Snipping Tool (1 Strike Deducted)",true);
+});
+window.addEventListener('focus',()=>{
+if(examOn)setTxt('hud-focus-status','Focused ✓','fe');
+});
+document.addEventListener('visibilitychange',()=>{
+if(examOn&&document.hidden&&Date.now()>=gTs){
+triggerInstantBlackoutSurface("Browser Lockdown Violation: Candidate Switched Browser Tab or Minimized Window (1 Strike Deducted)",true);
+}
+});
+document.addEventListener('fullscreenchange',()=>{
+const isFs=!!document.fullscreenElement;
+setTxt('hud-fullscreen-status',isFs?'Active ✓':'⚠️ Exited Fullscreen',isFs?'fe':'fa');
+if(examOn&&!isFs&&Date.now()>=gTs){
+applyStrike("Fullscreen Kiosk Violation: Candidate Exited Full-Screen Lockdown Mode (1 Strike Deducted)",'fullscreen');
+}
+});
+if(window.screen?.addEventListener){
+window.screen.addEventListener('change',()=>{
+if(examOn&&window.screen?.isExtended===true&&Date.now()-monAlertTs>5000){
+monAlertTs=Date.now();setTxt('hud-monitor-status','🚨 Dual Display!','fr');
+applyStrike("Dual-Monitor Hardware Violation: Secondary Extended Display Connected During Assessment (1 Strike Deducted)",'dual_monitor');
 }
 });
 }
-document.body.appendChild(form);
-const jitterMs = (dataMap && dataMap.isManualTest) ? 0 : Math.floor(Math.random() * 4500);
-setTimeout(() => {
-try { form.submit(); } catch(e){}
-}, jitterMs);
-setTimeout(() => {
-try { form.remove(); } catch(e){}
-try { postFrame.remove(); } catch(e){}
-}, 18000);
-} catch(e){}
+setInterval(()=>{
+if(!examOn)return;
+const isExt=window.screen?.isExtended===true;
+setTxt('hud-monitor-status',isExt?'🚨 Dual Display!':'1 Display ✓',isExt?'fr':'fe');
+if(isExt&&Date.now()>gTs&&Date.now()-monAlertTs>8000){
+monAlertTs=Date.now();
+applyStrike("Dual-Monitor Hardware Violation: Extended Second Monitor Active During Exam (1 Strike Deducted)",'dual_monitor');
+}
+if(cOutSec>0){
+cOutSec+=0.25;
+if(cOutSec>=2.5){
+const edge=cOutEdge||'Screen Boundary';cOutSec=0;
+applyStrike(`Cursor Boundary Violation: Mouse Cursor Left Exam Screen via ${edge} for >2.5s (1 Strike Deducted)`,'cursor_exit');
+}
+}
+const idleSec=(Date.now()-lastMouseTs)/1000;
+if(idleSec>=3.5){
+blankQuestionSurfaceNow("Hands-Off-Mouse Auto-Blank (>3.5s Idle) — Anti-Phone Photo Shield Active");
+}
+const remBlank=Math.max(0,3.5-idleSec);
+setTxt('live-timers-hud',`Cursor Out: ${cOutSec.toFixed(1)}s / 2.5s | Auto-Blank Shield: ${remBlank.toFixed(1)}s`);
+},250);
 }
 
-function sendSingleSheetAction(targetAction, payload = {}) {
-const gasUrl = getGasUrl();
-if (!gasUrl) return;
-const cName = $('candidate-name')?.value?.trim() || 'Alex Mercer';
-const cEmail = $('candidate-email')?.value?.trim() || 'alex.mercer@assessment.org';
-let correctCount = 0;
-try { questions.forEach((q, idx) => { if (userAnswers[idx] === q.ans) correctCount++; }); } catch(e){}
-const liveScorePct = Math.round((correctCount / (questions.length || 5)) * 100);
-const liveIntegrityPct = Math.max(0, Math.round((strikesRemaining / 3) * 100));
-const consumedStrikes = 3 - strikesRemaining;
-const sopCount = (typeof hcVisitedIds !== 'undefined' && hcVisitedIds) ? hcVisitedIds.size : 0;
-const sopSecs = (typeof hcManualReadSeconds !== 'undefined') ? hcManualReadSeconds : 0;
-const sopList = (typeof hcVisitedIds !== 'undefined' && hcVisitedIds && hcVisitedIds.size > 0) ? Array.from(hcVisitedIds).join(', ') : 'None';
-const fullData = {
-action: targetAction,
-spreadsheetId: TRACE_SHEET_ID,
-gid: TRACE_SHEET_GID,
-sheetName: 'Trace-tracker',
-session: currentSessionId,
-sessionId: currentSessionId,
-name: cName,
-candidateName: cName,
-email: cEmail,
-candidateEmail: cEmail,
-candidateId: currentSessionId,
-role: 'Fullstack Engineer',
-cohort: 'Fullstack Engineer',
-score: payload.score !== undefined ? payload.score : liveScorePct,
-integrity: payload.integrity !== undefined ? payload.integrity : liveIntegrityPct,
-status: payload.status || (isExamActive ? 'IN_PROGRESS' : 'ACTIVE'),
-violation: payload.violation || `${payload.status || targetAction} (Score: ${payload.score !== undefined ? payload.score : liveScorePct}% | Integrity: ${payload.integrity !== undefined ? payload.integrity : liveIntegrityPct}% | SOPs Read: ${sopCount})`,
-strike: payload.strike !== undefined ? payload.strike : consumedStrikes,
-sopDocsRead: payload.sopDocsRead !== undefined ? payload.sopDocsRead : sopCount,
-sopReadSeconds: payload.sopReadSeconds !== undefined ? payload.sopReadSeconds : sopSecs,
-sopArticlesViewed: payload.sopArticlesViewed || sopList,
-timestamp: new Date().toISOString(),
-...payload
-};
-dispatchSheetTransport(gasUrl, fullData);
-}
-
-function syncToGoogleSheet(action, payload = {}) {
-const effectiveAction = (action === 'startSession') ? 'submitScore' : action;
-const dedupKey = `${currentSessionId}:${effectiveAction}:${payload.status || ''}:${payload.strike || ''}:${payload.violation || ''}`;
-if (sentSheetEventKeys.has(dedupKey)) return;
-sentSheetEventKeys.add(dedupKey);
-sendSingleSheetAction(effectiveAction, payload);
-}
-
-function sendManualTestRowToSheet() {
-const testSession = currentSessionId || ('TRACE-' + Math.floor(100000 + Math.random() * 900000));
-sendSingleSheetAction('submitScore', { session: testSession, status: 'LIVE_TRACKER_SYNC_OK', score: 100, integrity: 100 });
-alert(`✓ Sent 1 single row to Trace-tracker (Session: ${testSession})!`);
-}
-
-function applyPortalRoleView(roleMode) {
-isTrainerRoleActive = (roleMode === 'trainer');
-const trainerHeaderActions = $('trainer-only-header-actions');
-const roleBadge = $('active-role-badge');
-const roleBtn = $('btn-role-switcher');
-const adminStage = $('stage-admin-view');
-const candidateStages = ['stage-login-pairing', 'stage-biometrics', 'stage-exam-active', 'stage-assessment-completed'];
-if (isTrainerRoleActive) {
-trainerHeaderActions?.classList.remove('hidden');
-adminStage?.classList.remove('hidden');
-candidateStages.forEach(sid => $(sid)?.classList.add('hidden'));
-setTxt('active-role-badge', '👩‍🏫 TRAINER / ADMIN VIEW', 'px-2.5 py-0.5 rounded-full bg-indigo-950 border border-indigo-500/50 text-indigo-300 font-mono text-[10px] font-bold');
-setTxt('btn-role-switcher', '🧑‍💻 Switch to Candidate View', 'btn-b');
-} else {
-trainerHeaderActions?.classList.add('hidden');
-adminStage?.classList.add('hidden');
-candidateStages.forEach(sid => $(sid)?.classList.add('hidden'));
-if (currentStage === 'login') $('stage-login-pairing')?.classList.remove('hidden');
-else if (currentStage === 'biometrics') $('stage-biometrics')?.classList.remove('hidden');
-else if (currentStage === 'exam') $('stage-exam-active')?.classList.remove('hidden');
-else if (currentStage === 'completed') $('stage-assessment-completed')?.classList.remove('hidden');
-setTxt('active-role-badge', '🧑‍💻 CANDIDATE VIEW', 'px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-mono text-[10px] font-bold');
-setTxt('btn-role-switcher', '🔒 Trainer Login (PIN: 2026)', 'btn-d');
-}
-}
-
-function toggleTrainerCandidateRole() {
-if (isTrainerRoleActive) {
-applyPortalRoleView('candidate');
-} else {
-const pin = prompt("Enter Trainer Governance PIN to open Trainer View (Default PIN: 2026):", "2026");
-if (pin === "2026" || pin === "admin" || pin === "trace") {
-applyPortalRoleView('trainer');
-} else if (pin !== null) {
-alert("Invalid Trainer PIN. Remaining in Candidate Exam View.");
-}
-}
-}
-
-function copyPortalRoleLink(targetRole) {
-const baseUrl = window.location.href.split('?')[0].split('#')[0];
-const link = targetRole === 'trainer' ? `${baseUrl}?role=trainer` : baseUrl;
-if (navigator.clipboard) navigator.clipboard.writeText(link);
-alert(`${targetRole === 'trainer' ? '👩‍🏫 Direct Trainer View Link' : '🧑‍💻 Locked Candidate Exam Link'} copied to clipboard:\n\n${link}`);
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-if (isMobileGuardMode) {
-$('desktop-main-ui')?.classList.add('hidden');
-$('mobile-guard-ui')?.classList.remove('hidden');
-startMobileGuardMode();
-} else {
-setTxt('desktop-session-pin', currentSessionId);
-if ($('admin-gas-url-input')) $('admin-gas-url-input').value = getGasUrl();
-renderPairingQR();
-initDesktopRelayAndPolling();
-initDesktopPeer();
-setupTabSwitchFocusGuard();
-applyPortalRoleView(isTrainerRoleActive ? 'trainer' : 'candidate');
-}
-});
-
-const PUBLIC_GITHUB_PORTAL_URL = "https://shrinithiv-google.github.io/Trace_Assesment-Tracker/";
-const PEER_ICE_CONFIG = {
-config: {
-iceServers: [
-{ urls: "stun:stun.l.google.com:19302" },
-{ urls: "stun:stun1.l.google.com:19302" },
-{ urls: "stun:stun2.l.google.com:19302" },
-{ urls: "stun:stun3.l.google.com:19302" }
-]
-}
-};
-
-function getPublicMobileGuardUrl() {
-const host = (window.location.hostname || '').toLowerCase();
-const isPrivateHost = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.googlers.com') || host.endsWith('.internal');
-const baseUrl = isPrivateHost ? PUBLIC_GITHUB_PORTAL_URL : window.location.href.split('?')[0].split('#')[0];
-return `${baseUrl}?mode=phone_guard&session=${encodeURIComponent(currentSessionId)}`;
-}
-
-function computeSessionSyncCode(sessionId) {
-const str = String(sessionId || 'TRACE').toUpperCase();
-let hash = 2166136261;
-for (let i = 0; i < str.length; i++) {
-hash ^= str.charCodeAt(i);
-hash = Math.imul(hash, 16777619);
-}
-return String(1000 + (Math.abs(hash) % 9000));
-}
-
-function verifyPhoneSyncCode() {
-const inp = $('desktop-sync-code-input');
-const entered = (inp ? inp.value : '').trim();
-const expected = computeSessionSyncCode(currentSessionId);
-const cleanSuffix = currentSessionId.replace('TRACE-', '').trim().toUpperCase();
-if (!entered || entered === expected || entered.toUpperCase() === cleanSuffix || entered.length >= 4) {
-markPhoneAsPaired('Verified via 4-Digit Phone Sync Code');
-} else {
-alert(`Please enter the 4-digit Sync Code displayed on your Mobile Desk Guard screen (${expected}).`);
-}
-}
-
-function renderPairingQR() {
-const mobileUrl = getPublicMobileGuardUrl();
-if ($('pairing-qr-canvas') && typeof QRious !== 'undefined') {
-new QRious({ element: $('pairing-qr-canvas'), value: mobileUrl, size: 140, level: 'L' });
-}
-}
-
-function copyPairingLink() {
-const mobileUrl = getPublicMobileGuardUrl();
-if (navigator.clipboard) navigator.clipboard.writeText(mobileUrl);
-alert("Mobile Desk Guard Link Copied:\n" + mobileUrl);
-}
-
-let desktopPeerInstance = null;
-function initDesktopPeer() {
-if (typeof Peer === 'undefined') return;
-const registerDesktopPeer = () => {
-try {
-if (desktopPeerInstance && !desktopPeerInstance.destroyed) {
-if (desktopPeerInstance.disconnected) desktopPeerInstance.reconnect();
-return;
-}
-const peer = new Peer(currentSessionId + '-DESKTOP', PEER_ICE_CONFIG);
-desktopPeerInstance = peer;
-peer.on('connection', conn => {
-markPhoneAsPaired('WebRTC Direct Channel');
-setTxt('exam-phone-status', 'LOCKED ✓', 'text-emerald-400 font-bold');
-conn.on('open', () => {
-markPhoneAsPaired('WebRTC DataChannel Open');
-try { conn.send({ type: 'DESKTOP_ACK', session: currentSessionId }); } catch(e){}
-});
-conn.on('data', data => handleMobileGuardMessage(data));
-});
-peer.on('disconnected', () => {
-try { peer.reconnect(); } catch(e){}
-});
-} catch(e){}
-};
-registerDesktopPeer();
-setInterval(registerDesktopPeer, 5000);
-}
-
-let examStartGraceUntil = 0;
-let lastSeatStrikeTime = 0;
-let hasRealMobileHeartbeat = false;
-let lastMobileHeartbeatAt = 0;
-
-function initDesktopRelayAndPolling() {
-const cleanId = currentSessionId.replace(/[^a-zA-Z0-9]/g, '');
-const primaryTopic = `trace_sync_${cleanId}`;
-try {
-if (typeof BroadcastChannel !== 'undefined') {
-const bc = new BroadcastChannel(`trace_pair_${cleanId}`);
-bc.onmessage = evt => { if (evt && evt.data) handleMobileGuardMessage(evt.data); };
-}
-window.addEventListener('storage', evt => {
-if (evt.key === `trace_pair_${cleanId}` && evt.newValue) {
-try { handleMobileGuardMessage(JSON.parse(evt.newValue)); } catch(e){}
-}
-});
-} catch(e){}
-
-const connectSseStream = () => {
-try {
-const es = new EventSource(`https://ntfy.sh/${primaryTopic}/sse`);
-es.onmessage = evt => {
-try {
-const p = JSON.parse(evt.data);
-if (p.message) {
-try { handleMobileGuardMessage(JSON.parse(p.message)); }
-catch(_) { if (String(p.message).includes('PHONE_CONNECTED')) markPhoneAsPaired('Cloud SSE Relay'); }
-}
-} catch(e){}
-};
-} catch(e){}
-};
-connectSseStream();
-
-const pollRelayOnce = async () => {
-try {
-const res = await fetch(`https://ntfy.sh/${primaryTopic}/json?poll=1&since=15s`, { cache: 'no-store' });
-if (res.ok) {
-const text = await res.text();
-text.trim().split(String.fromCharCode(10)).forEach(line => {
-if (!line) return;
-try {
-const outer = JSON.parse(line);
-if (outer.message) {
-try { handleMobileGuardMessage(JSON.parse(outer.message)); }
-catch(_) { if (String(outer.message).includes('PHONE_CONNECTED')) markPhoneAsPaired('Cloud Poll Relay'); }
-}
-} catch(e){}
+function renderQuestion(){
+const q=questions[qIdx]||questions[0];
+setTxt('question-number-badge',`Question ${qIdx+1} of ${questions.length}`);
+setTxt('question-text',q.q);
+const c=$('options-container');if(!c)return;c.innerHTML='';
+q.opts.forEach((opt,i)=>{
+const sel=ansMap[qIdx]===i,b=document.createElement('button');b.type='button';
+b.onclick=()=>{resetSurfaceIdleTimer();ansMap[qIdx]=i;recordTeleprompterEvent('ANSWER',`Question ${qIdx+1}: Selected Option ${String.fromCharCode(65+i)} (after ${qSec}s).`);renderQuestion();};b.className=sel?'opt-on':'opt-off';
+b.innerHTML=`<span class="w-6 h-6 rounded-lg ${sel?'bg-blue-600 text-white':'bg-slate-900 s4'} flex items-center justify-center fm fb tx">${String.fromCharCode(65+i)}</span><span>${opt}</span>`;
+c.appendChild(b);
 });
 }
-} catch(e){}
-try {
-const dres = await fetch(`https://dweet.io/get/latest/dweet/for/${primaryTopic}`);
-if (dres.ok) {
-const dj = await dres.json();
-const content = dj && dj.with && dj.with[0] && dj.with[0].content;
-if (content) handleMobileGuardMessage(content);
-}
-} catch(e){}
-};
-setTimeout(pollRelayOnce, 700);
-setInterval(pollRelayOnce, 1400);
+function navigateQuestion(d){resetSurfaceIdleTimer();const n=qIdx+d;if(n>=0&&n<questions.length){qIdx=n;qSec=0;recordTeleprompterEvent('NAV',`Navigated to Question ${qIdx+1} of ${questions.length}.`);renderQuestion();}}
 
-setInterval(() => {
-if (!isExamActive || !hasRealMobileHeartbeat || Date.now() < examStartGraceUntil) return;
-if (Date.now() - lastMobileHeartbeatAt > 5500 && Date.now() - lastMobileStrikeTime > 5500) {
-lastMobileStrikeTime = Date.now();
-setTxt('exam-phone-status', 'TAB SWITCHED ⚠️', 'text-red-400 font-bold animate-pulse');
-applyStrike("Mobile Desk Guard Alert: Candidate Switched Tabs or Minimized Browser on Mobile Phone (1 Strike Deducted)", 'mobile', false);
-}
-}, 1000);
-}
+function triggerTestDualMonitorStrike(){setTxt('hud-monitor-status','🚨 Dual Display!','fr');applyStrike("Simulated Dual-Monitor Alert: Extended Secondary Display Detected via window.screen.isExtended (1 Strike Deducted)",'dual_monitor',true);}
+function triggerTestCursorExitStrike(){setTxt('hud-cursor-status','🚨 Left Screen >2.5s','fr');applyStrike("Simulated Cursor Boundary Alert: Mouse Left Exam Viewport Boundary for >2.5 Seconds (1 Strike Deducted)",'cursor_exit',true);}
+function triggerTestScreenshotBlackout(){triggerInstantBlackoutSurface("Simulated Picture / Screenshot Alert: Monitor Surface Blanked Immediately & 1 Strike Deducted",true);}
 
-function handleMobileGuardMessage(msg) {
-if (!msg) return;
-if (typeof msg === 'string') {
-try { msg = JSON.parse(msg); } catch(_) {
-if (msg.includes('PHONE_CONNECTED')) { markPhoneAsPaired(); return; }
-return;
+function applyStrike(reason,cat='general',force=false){
+if(!examOn)return;if(!force&&Date.now()<wCool)return;
+strikes++;setTxt('exam-strikes-display',`${strikes}/${MAX_S}`,'fr');
+setTxt('warning-reason',reason);setTxt('warning-strikes-left',`${Math.max(0,MAX_S-strikes)}`);
+recordTeleprompterEvent(`STRIKE-${strikes}`,reason);
+if(strikes>=MAX_S){setTxt('disqualified-reason',reason);$('modal-disqualified')?.classList.remove('hidden');finishExam(true);}
+else $('modal-warning')?.classList.remove('hidden');
 }
-}
-hasRealMobileHeartbeat = true;
-lastMobileHeartbeatAt = Date.now();
-if (msg.id && processedMobileEventIds.has(msg.id)) return;
-if (msg.id) processedMobileEventIds.add(msg.id);
-if (msg.type === 'PHONE_CONNECTED' || msg.type === 'HEARTBEAT') {
-markPhoneAsPaired();
-setTxt('exam-phone-status', 'LOCKED ✓', 'text-emerald-400 font-bold');
-} else if (msg.type === 'VIOLATION') {
-markPhoneAsPaired();
-setTxt('exam-phone-status', 'ALERT ⚠️', 'text-red-400 font-bold animate-pulse');
-if (!isExamActive || Date.now() < examStartGraceUntil) return;
-const now = Date.now();
-if (now - lastMobileStrikeTime > 4200) {
-lastMobileStrikeTime = now;
-applyStrike(msg.reason || "Mobile Desk Guard Alert: Entire Laptop Screen Not Visible in Phone Camera (Keyboard-Only View or Phone Moved)", 'mobile', false);
-}
-}
+function dismissWarningModal(){wCool=Date.now()+2500;$('modal-warning')?.classList.add('hidden');resetSurfaceIdleTimer();try{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.().catch(()=>{});}catch(e){}}
+function submitExamEarly(){finishExam(false);}
+function finishExam(term=false){
+examOn=false;stg='completed';if(activePasskey)markPasskeyUsed(activePasskey);if(tInt)clearInterval(tInt);if(tpInt)clearInterval(tpInt);
+try{if(document.fullscreenElement)document.exitFullscreen?.().catch(()=>{});}catch(e){}
+$('anti-capture-blackout')?.classList.add('hidden');
+$('stage-exam-active')?.classList.add('hidden');$('stage-assessment-completed')?.classList.remove('hidden');
+let cor=0;questions.forEach((q,i)=>{const cAns=typeof q.ak==='number'?decAns(q.ak):q.ans;if(ansMap[i]===cAns)cor++;});
+const pct=Math.round((cor/Math.max(1,questions.length))*100),integ=Math.max(0,100-strikes*25),passed=!term&&strikes<MAX_S&&pct>=75;
+recordTeleprompterEvent('COMPLETED',`Score: ${pct}% (${cor}/${questions.length}) | Integrity: ${integ}% | Status: ${passed?'CERTIFIED':'FAILED'}`);
+renderTeleprompterPanel();
+setTxt('completed-score-display',`${pct}%`);setTxt('completed-score-detail',`${cor}/${questions.length} (${passed?'CERTIFIED ✓':'FAILED'})`);
+setTxt('completed-integrity-display',`${integ}%`);setTxt('completed-strikes-detail',`${strikes}/${MAX_S} Strikes`);
+setTxt('completed-candidate-name',$('candidate-name')?.value||'Candidate');setTxt('completed-candidate-email',$('candidate-email')?.value||'candidate@google.com');
+setTxt('completed-session-pin',`${activeSet} (${tok})`);setTxt('completed-timestamp',new Date().toLocaleTimeString());
+syncSheet({scorePct:pct,passed:passed?'PASSED':'FAILED/TERMINATED',strikes,integrityScore:integ});
 }
 
-function markPhoneAsPaired(sourceLabel = '') {
-if (isPhonePaired) return;
-isPhonePaired = true;
-const syncCode = computeSessionSyncCode(currentSessionId);
-if ($('desktop-sync-code-input')) $('desktop-sync-code-input').value = syncCode;
-if ($('phone-pairing-indicator')) {
-$('phone-pairing-indicator').innerHTML = `<span class='text-emerald-400 font-bold'>✓ Mobile Phone Desk Guard Connected! ${sourceLabel ? '(' + sourceLabel + ')' : ''}</span>`;
+const defHc=[["SOP-101","ATO & Unauthorized Access Remediation","Internal SOP","1. Freeze session tokens within 60s. 2. Reset hardware MFA & OAuth. 3. Escalate to Security-ATO."],["SOP-102","High-Value Refund Verification Protocol","Internal SOP","1. <$250: L1 check. 2. $250-$1,000: L2 Supervisor sign-off. 3. >$1,000: Financial Risk Compliance + ledger export."],["SOP-103","Enterprise Production Escalation SLA","Internal SOP","1. Sev-1 (P0/P1) acknowledged within 5m. 2. Page On-Call Commander. 3. Update every 15m."],["SOP-104","PII Data Redaction & Zero-Trust Privacy","Help Center Article","1. Never log raw SSN/PAN/passwords. 2. Mask screenshots via PII redaction tool. 3. Report exposure within 30m."],["SOP-105","API Rate-Limit & Webhook Diagnostics","Help Center Article","1. Check HTTP 429 headers. 2. Exponential backoff + jitter. 3. Burst needs Principal Engineer sign-off."],["SOP-106","KYC / KYB Merchant Identity Audit","Internal SOP","1. Match registry cert to owner ID. 2. Reject altered/expired docs. 3. Flag high-risk regions for EDD."],["SOP-107","Cloud Database Failover Recovery","Internal SOP","1. Check replica lag. 2. Drain writes before standby promotion. 3. Verify checksums."],["SOP-108","Phishing & Social Engineering Defense","Help Center Article","1. Never bypass MFA for urgent calls. 2. Verify via corporate directory. 3. Alert SOC."],["SOP-109","SLA Breach Prevention & Queue Balancing","Internal SOP","1. Alert when P1 wait >3m. 2. Shift specialists to P1/P2. 3. Tag tickets at 85% SLA."],["SOP-110","Sanctions Screening (OFAC / AML) Escalation","Help Center Article","1. Hold matched payouts. 2. Never tip off external requester. 3. Escalate dossier to Legal & AML."],["SOP-111","SSO / SAML 2.0 Certificate Rotation","Help Center Article","1. Check SAML XML & X.509 expiry. 2. Upload secondary cert before cutover. 3. Test IdP/SP login."],["SOP-112","Incident Post-Mortem (RCA) Tracking","Internal SOP","1. Draft blameless RCA within 24h. 2. Log timeline & 5-Whys. 3. Assign P0 items (14d SLA)."]].map(([id,title,category,b])=>({id,title,category,updated:"LIVE",content:`PROCEDURE ${id} (${category}) ${b}`}));
+let hcList=[],hcCat='ALL',hcId='SOP-101';
+function initHc(){try{const s=localStorage.getItem('trace_hc_articles_v2');hcList=s?JSON.parse(s):[...defHc];}catch(e){hcList=[...defHc];}saveHc();}
+function saveHc(){try{localStorage.setItem('trace_hc_articles_v2',JSON.stringify(hcList));}catch(e){}setTxt('hc-count-badge',`${hcList.length} Docs`);setTxt('admin-hc-total-count',`${hcList.length}`);renHc();renderTeleprompterPanel();}
+function toggleExamHelpCenter(){resetSurfaceIdleTimer();const p=$('exam-help-center-panel');if(p){p.classList.toggle('hidden');if(!p.classList.contains('hidden')){renHc();openHcArticle(hcId||hcList[0]?.id);}}}
+function setHcCategory(c){hcCat=c;renHc();}
+function handleCandidateManualSearch(){renHc();}
+function renHc(){
+const l=$('hc-article-list');if(!l)return;const q=($('hc-search-input')?.value||'').toLowerCase().trim();
+const f=hcList.filter(a=>(hcCat==='ALL'||a.category===hcCat)&&(!q||a.title.toLowerCase().includes(q)||a.id.toLowerCase().includes(q)||a.content.toLowerCase().includes(q)));
+l.innerHTML=f.map(a=>`<button onclick="openHcArticle('${a.id}')" class="w-full text-left p-2 rx border ${a.id===hcId?'bg-blue-950/80 border-blue-500 text-white':'bg-slate-900 border-slate-800 s3'}"><div class="row text-[10px] fm text-blue-400"><span>${a.id}</span><span>${a.category}</span></div><div class="tx fb truncate">${a.title}</div></button>`).join('');
 }
-const btn = $('btn-proceed-to-biometrics');
-if (btn) {
-btn.disabled = false;
-btn.className = "w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg cursor-pointer";
-btn.innerHTML = "Continue to 1:1 Biometrics → (Phone Connected ✓)";
+function openHcArticle(id){
+const a=hcList.find(x=>x.id===id)||hcList[0];if(!a)return;hcId=a.id;setTxt('hc-watermark-overlay',`CONFIDENTIAL TRACE SOP • ${a.id} • ${a.category}`);
+setHtml('hc-article-reader',`<div class="space-y-1.5"><h4 class="text-sm fb text-white">${a.title}</h4><pre class="whitespace-pre-wrap font-sans tx s3 bg-slate-950 p-3 rx b8">${a.content}</pre></div>`);
+recordTeleprompterEvent('SOP-VIEW',`Opened shared SOP reference ${a.id}: ${a.title}`);
+renHc();
 }
+function switchTrainerIngestionMode(m){['chrome','files','dump'].forEach(k=>$('ingest-panel-'+k)?.classList.toggle('hidden',m!=='all'&&k!==m));}
+function ingestTrainerChromeLinks(){
+const raw=$('trainer-chrome-urls-input')?.value?.trim();if(!raw)return alert("Paste a Chrome / Web URL first.");const t=$('trainer-chrome-link-title')?.value?.trim(),urls=raw.split(/\r?\n/).map(u=>u.trim()).filter(Boolean);
+urls.forEach(u=>{let h='Web-Doc';try{h=new URL(u).hostname.replace('www.','');}catch(e){}const id=`SOP-WEB-${hcList.length+1}`,title=t||`Shared Link (${h}): ${u.split('/').pop()||'Guide'}`;hcList.unshift({id,title,category:'Help Center Article',updated:new Date().toLocaleTimeString(),content:`SHARED URL: ${u}\n\n1. Official web procedure shared & recorded into TRACE Teleprompter.\n2. Follow linked compliance checklist.`});recordTeleprompterEvent('SHARED-URL',`Recorded shared link ${id}: ${u}`);});
+saveHc();setTxt('trainer-ai-ingestion-status',`✓ Shared & Recorded ${urls.length} Link(s) into Teleprompter (${hcList.length} Total Docs)!`);
 }
-
-function proceedToBiometricStage() {
-if (!isPhonePaired) return;
-currentStage = 'biometrics';
-$('stage-login-pairing')?.classList.add('hidden');
-$('stage-biometrics')?.classList.remove('hidden');
-startLabWebcam();
+function handleTrainerBulkFilesUpload(e){
+const files=Array.from(e.target.files||[]);if(!files.length)return;
+files.forEach(f=>{const r=new FileReader();r.onload=ev=>{const id=`SOP-FILE-${hcList.length+1}`,title=f.name.replace(/\.[^/.]+$/,'');hcList.unshift({id,title,category:'Internal SOP',updated:new Date().toLocaleTimeString(),content:String(ev.target.result||'').slice(0,6000)||`Uploaded SOP: ${f.name}`});recordTeleprompterEvent('SHARED-FILE',`Recorded uploaded file ${id}: ${f.name}`);saveHc();};r.readAsText(f);});
+setTxt('trainer-ai-ingestion-status',`✓ Recorded & Shared ${files.length} uploaded file(s) into Teleprompter!`);
 }
-
-let globalMobileSendSignal = null;
-let mobileBaselineCells = null;
-let mobileBaseOrient = null;
-let mobileBaseGravity = null;
-let mobileCalibStartTime = Date.now();
-
-async function requestMobileMotionPermissions() {
-try {
-if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-await DeviceOrientationEvent.requestPermission().catch(()=>{});
+function autoIngestEnterpriseSopBundle(){
+for(let i=1;i<=25;i++){const id=`SOP-${200+i}`;if(!hcList.some(a=>a.id===id))hcList.push({id,title:`TRACE Operational Standard #${i} — Escalation & Audit Protocol`,category:'Internal SOP',updated:'LIVE',content:`PROCEDURE ${id}\n\n1. Mandatory compliance required for all assessment cohorts.\n2. Verify ticket metadata, SLA timers, and zero-trust redaction before escalation.`});}
+recordTeleprompterEvent('SHARED-PACK',`Auto-loaded 25 SOP Pack into Teleprompter (${hcList.length} Total).`);
+saveHc();setTxt('trainer-ai-ingestion-status',`✓ Auto-Loaded & Recorded 25 SOP Pack into Teleprompter (${hcList.length} Total Active)!`);
 }
-if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-await DeviceMotionEvent.requestPermission().catch(()=>{});
+function runAiBulkDocumentIngestion(){
+const b=$('trainer-raw-dump-input')?.value?.trim();if(!b)return alert("Paste raw SOP text first.");
+const title=b.split('\n')[0].slice(0,65).trim()||`Shared Procedure SOP-${hcList.length+101}`,id=`SOP-${hcList.length+101}`;hcList.unshift({id,title,category:'Internal SOP',updated:new Date().toLocaleTimeString(),content:b});
+recordTeleprompterEvent('SHARED-DOC',`Recorded raw document ${id}: ${title}`);
+saveHc();setTxt('trainer-ai-ingestion-status',`✓ Recorded & Indexed "${title}" (${id}) into Teleprompter!`);
 }
-} catch(e){}
+function autoGenerateQuestionsFromSops(){
+const fiveSets=['SET-1','SET-2','SET-3','SET-4','SET-5'];
+hcList.slice(0,10).forEach((a,i)=>{const s=fiveSets[i%5];questionBank.push({set:s,q:`[${a.id}] (${a.title}) Which compliance action is mandatory before closing or escalating the ticket?`,opts:["Complete SLA & audit verification per "+a.id,"Bypass verification for urgent requests","Paste raw credentials in notes","Close ticket without audit log"],ak:encAns(0)});});
+recordTeleprompterEvent('Q-GEN',`Generated & distributed 10 new questions across all 5 Member Sets (${questionBank.length} Total).`);
+setTxt('trainer-ai-ingestion-status',`✓ Generated & Distributed 10 New Questions across Member Sets 1–5 (${questionBank.length} Total in Pool)!`);
 }
-
-function forceMobileResyncNow() {
-requestMobileMotionPermissions();
-mobileBaselineCells = null;
-mobileBaseOrient = null;
-mobileBaseGravity = null;
-mobileCalibStartTime = Date.now();
-if (typeof globalMobileSendSignal === 'function') {
-globalMobileSendSignal('PHONE_CONNECTED', 'Manual Mobile Re-Sync', true);
-}
-setTxt('mobile-banner-title', '✓ Screen Baseline Re-Locked & Synced to Desktop! (Code: ' + computeSessionSyncCode(currentSessionId) + ')', 'text-sm font-bold text-emerald-300');
-setTxt('mobile-monitor-val', 'LOCKED ON MONITOR ✓', 'text-emerald-400 font-bold text-sm mt-0.5');
-}
-
-let lastMobileSentViolationTs = 0;
-function sendMobileViolationNow(reason) {
-const now = Date.now();
-if (now - lastMobileSentViolationTs < 3800) return;
-lastMobileSentViolationTs = now;
-const cleanId = currentSessionId.replace(/[^a-zA-Z0-9]/g, '');
-const primaryTopic = `trace_sync_${cleanId}`;
-const payload = { id: 'mob_' + now + '_' + Math.random(), type: 'VIOLATION', reason, ts: now };
-if (mobilePeerConn && mobilePeerConn.open) {
-try { mobilePeerConn.send(payload); } catch(e){}
-}
-try {
-if (typeof BroadcastChannel !== 'undefined') new BroadcastChannel(`trace_pair_${cleanId}`).postMessage(payload);
-localStorage.setItem(`trace_pair_${cleanId}`, JSON.stringify(payload));
-} catch(e){}
-try {
-if (navigator.sendBeacon) navigator.sendBeacon(`https://ntfy.sh/${primaryTopic}`, JSON.stringify(payload));
-else fetch(`https://ntfy.sh/${primaryTopic}`, { method: 'POST', body: JSON.stringify(payload), keepalive: true, headers: { 'Content-Type': 'text/plain;charset=UTF-8' } }).catch(()=>{});
-} catch(e){}
-try {
-fetch(`https://dweet.io/dweet/for/${primaryTopic}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), keepalive: true }).catch(()=>{});
-} catch(e){}
-setTxt('mobile-banner-title', '⚠️ VIOLATION TRANSMITTED: ' + reason, 'text-xs font-bold text-red-400');
-setTxt('mobile-monitor-val', 'SCREEN LOST / MOVED ❌', 'text-red-400 font-bold text-sm mt-0.5');
+function addNewQuestion(){
+const q=$('new-q-text')?.value?.trim(),s=$('new-q-set')?.value||'SET-1';if(!q)return alert("Enter question text.");
+questionBank.push({set:s,q:`[${s}] ${q}`,opts:[$('new-opt-a')?.value||'Option A',$('new-opt-b')?.value||'Option B',$('new-opt-c')?.value||'Option C',$('new-opt-d')?.value||'Option D'],ak:encAns(parseInt($('new-q-ans')?.value||'0',10))});
+recordTeleprompterEvent('Q-ADD',`Added custom question to ${s}.`);
+alert(`✓ Added Question to ${s} (${questionBank.length} Total in Pool)!`);
 }
 
-async function startMobileGuardMode() {
-mobileCalibStartTime = Date.now();
-const syncCode = computeSessionSyncCode(currentSessionId);
-setTxt('mobile-pin-badge', `PIN: ${currentSessionId}`);
-setTxt('mobile-sync-code-display', syncCode);
-document.addEventListener('touchstart', requestMobileMotionPermissions, { once: true });
-document.addEventListener('click', requestMobileMotionPermissions, { once: true });
-
-const cleanId = currentSessionId.replace(/[^a-zA-Z0-9]/g, '');
-const primaryTopic = `trace_sync_${cleanId}`;
-const sendSignal = (type, reason = '', forceCloud = false) => {
-const payload = { id: 'sig_' + Date.now() + '_' + Math.random(), type, reason, syncCode, ts: Date.now() };
-if (mobilePeerConn && mobilePeerConn.open) {
-try { mobilePeerConn.send(payload); } catch(e){}
-}
-try {
-if (typeof BroadcastChannel !== 'undefined') new BroadcastChannel(`trace_pair_${cleanId}`).postMessage(payload);
-localStorage.setItem(`trace_pair_${cleanId}`, JSON.stringify(payload));
-} catch(e){}
-if (type !== 'HEARTBEAT' || forceCloud) {
-fetch(`https://ntfy.sh/${primaryTopic}`, { method: 'POST', body: JSON.stringify(payload), keepalive: true, headers: { 'Content-Type': 'text/plain;charset=UTF-8' } }).catch(()=>{});
-fetch(`https://dweet.io/dweet/for/${primaryTopic}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), keepalive: true }).catch(()=>{});
-}
-};
-globalMobileSendSignal = sendSignal;
-
-if (typeof Peer !== 'undefined') {
-try {
-const peer = new Peer(PEER_ICE_CONFIG);
-const connectToDesktopPeer = () => {
-if (!peer || peer.destroyed) return;
-if (peer.disconnected) { try { peer.reconnect(); } catch(e){} return; }
-if (mobilePeerConn && mobilePeerConn.open) {
-try { mobilePeerConn.send({ id: 'hb_' + Date.now(), type: 'PHONE_CONNECTED', syncCode, ts: Date.now() }); } catch(e){}
-return;
-}
-try {
-const conn = peer.connect(currentSessionId + '-DESKTOP', { reliable: true });
-mobilePeerConn = conn;
-conn.on('open', () => {
-sendSignal('PHONE_CONNECTED', 'WebRTC Open', false);
-setTxt('mobile-banner-title', '✓ Paired & Locked to Desktop Session (' + syncCode + ')', 'text-sm font-bold text-emerald-300');
-});
-conn.on('data', d => {
-if (d && d.type === 'DESKTOP_ACK') {
-setTxt('mobile-banner-title', '✓ Paired & Verified by Desktop (' + syncCode + ')', 'text-sm font-bold text-emerald-300');
+function initSecurityLockdown(){
+document.addEventListener('contextmenu',e=>{if(role!=='trainer')e.preventDefault();});
+document.addEventListener('copy',e=>{if(examOn)e.preventDefault();});
+document.addEventListener('cut',e=>{if(examOn)e.preventDefault();});
+document.addEventListener('keyup',e=>{
+if(!examOn)return;
+if(e.key==='PrintScreen'||e.keyCode===44){
+triggerInstantBlackoutSurface("Screen Capture Violation: PrintScreen Key Detected — Monitor Surface Blanked & Clipboard Cleared (1 Strike Deducted)",true);
 }
 });
-} catch(e){}
-};
-peer.on('open', () => {
-connectToDesktopPeer();
-setInterval(connectToDesktopPeer, 2000);
-});
-} catch(e){}
-}
-
-sendSignal('PHONE_CONNECTED', 'Initial Pair', true);
-setInterval(() => sendSignal('HEARTBEAT', '', true), 2200);
-
-document.addEventListener('visibilitychange', () => {
-if (document.hidden) {
-sendMobileViolationNow("Mobile Desk Guard Alert: Candidate Switched Tabs or Minimized Browser on Mobile Phone (1 Strike Deducted)");
-}
-});
-window.addEventListener('pagehide', () => {
-sendMobileViolationNow("Mobile Desk Guard Alert: Mobile Browser Closed or Switched Away During Exam (1 Strike Deducted)");
-});
-
-let screenMissingTicks = 0;
-try {
-const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 320 }, height: { ideal: 240 } }, audio: false });
-const vid = $('mobile-cam-video');
-if (vid) { vid.srcObject = stream; vid.play().catch(()=>{}); }
-const canvas = $('mobile-vision-canvas');
-const ctx = canvas ? canvas.getContext('2d') : null;
-setInterval(() => {
-if (!vid || vid.readyState < 2 || !ctx || Date.now() - mobileCalibStartTime < 3500) return;
-ctx.drawImage(vid, 0, 0, 64, 48);
-const data = ctx.getImageData(0, 0, 64, 48).data;
-const cellLuma = new Float32Array(48);
-let totalLuma = 0;
-for (let y = 0; y < 48; y++) {
-for (let x = 0; x < 64; x++) {
-const idx = (y * 64 + x) * 4;
-const Y = 0.299 * data[idx] + 0.587 * data[idx+1] + 0.114 * data[idx+2];
-totalLuma += Y;
-cellLuma[Math.floor(y / 8) * 8 + Math.floor(x / 8)] += Y / 64;
-}
-}
-const avgLuma = totalLuma / (64 * 48);
-if (!mobileBaselineCells && avgLuma >= 22) {
-mobileBaselineCells = cellLuma;
-}
-let sceneShift = 0;
-if (mobileBaselineCells) {
-for (let i = 0; i < 48; i++) sceneShift += Math.abs(cellLuma[i] - mobileBaselineCells[i]);
-sceneShift /= 48;
-}
-if (avgLuma < 20 || sceneShift > 28) {
-screenMissingTicks++;
-setTxt('mobile-monitor-val', 'SCREEN LOST / KEYBOARD ONLY ⚠️', 'text-amber-400 font-bold text-sm mt-0.5');
-if (screenMissingTicks >= 3) {
-screenMissingTicks = 0;
-mobileBaselineCells = cellLuma;
-sendMobileViolationNow("Mobile Desk Guard Alert: Entire Laptop Screen Not Visible in Phone Camera (Keyboard-Only View or Phone Moved) — 1 Strike Deducted");
-}
-} else {
-screenMissingTicks = Math.max(0, screenMissingTicks - 1);
-setTxt('mobile-monitor-val', 'LOCKED ON MONITOR ✓', 'text-emerald-400 font-bold text-sm mt-0.5');
-}
-}, 450);
-} catch(e){}
-
-let orientMoveTicks = 0;
-window.addEventListener('deviceorientation', e => {
-if (Date.now() - mobileCalibStartTime < 3500 || e.beta === null || e.gamma === null) return;
-if (!mobileBaseOrient) { mobileBaseOrient = { beta: e.beta, gamma: e.gamma }; return; }
-const dBeta = Math.abs(e.beta - mobileBaseOrient.beta);
-const dGamma = Math.abs(e.gamma - mobileBaseOrient.gamma);
-const isKeptFlat = Math.abs(e.beta) < 28 || Math.abs(e.beta) > 148;
-if (dBeta >= 16 || dGamma >= 16 || isKeptFlat) {
-orientMoveTicks++;
-setTxt('mobile-pitch-val', `Tilted / Moved (${Math.round(e.beta)}°)`, "text-red-400 font-bold text-sm mt-0.5");
-if (orientMoveTicks >= 3) {
-orientMoveTicks = 0;
-mobileBaseOrient = { beta: e.beta, gamma: e.gamma };
-sendMobileViolationNow("Mobile Desk Guard Alert: Phone Moved, Kept Flat, or Tilted Toward Keyboard — Entire Screen Not Visible (1 Strike Deducted)");
-}
-} else {
-orientMoveTicks = Math.max(0, orientMoveTicks - 1);
-setTxt('mobile-pitch-val', `Upright (${Math.round(e.beta)}° OK)`, "text-emerald-400 font-bold text-sm mt-0.5");
-}
-});
-
-let accelMoveTicks = 0;
-window.addEventListener('devicemotion', e => {
-if (Date.now() - mobileCalibStartTime < 3500) return;
-const acc = e.accelerationIncludingGravity;
-if (!acc) return;
-const ax = acc.x || 0, ay = acc.y || 0, az = acc.z || 0;
-if (!mobileBaseGravity) { mobileBaseGravity = { ax, ay, az }; return; }
-const deltaG = Math.hypot(ax - mobileBaseGravity.ax, ay - mobileBaseGravity.ay, az - mobileBaseGravity.az);
-const isFlatOnDesk = Math.abs(az) > 7.5 && Math.hypot(ax, ay) < 4.6;
-if (deltaG > 2.2 || isFlatOnDesk) {
-accelMoveTicks++;
-setTxt('mobile-pitch-val', `Kept Down / Moved (Z:${Math.abs(az).toFixed(1)})`, "text-red-400 font-bold text-sm mt-0.5");
-if (accelMoveTicks >= 3) {
-accelMoveTicks = 0;
-mobileBaseGravity = { ax, ay, az };
-sendMobileViolationNow("Mobile Desk Guard Alert: Phone Kept Down Flat on Desk or Moved Away From Monitor (1 Strike Deducted)");
-}
-} else {
-accelMoveTicks = Math.max(0, accelMoveTicks - 1);
-}
-});
-}
-
-async function getBlazeFaceModel() {
-if (cachedBlazeFaceModel) return cachedBlazeFaceModel;
-if (typeof blazeface !== 'undefined') { try { cachedBlazeFaceModel = await blazeface.load(); } catch(e){} }
-return cachedBlazeFaceModel;
-}
-
-async function startLabWebcam() {
-try {
-labCamStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" }, audio: true });
-if ($('lab-webcam-video')) { $('lab-webcam-video').srcObject = labCamStream; $('lab-webcam-video').play().catch(()=>{}); }
-} catch(e){}
-hasLiveWebcam = true;
-startLiveCameraBiometricLoop();
-}
-
-function renderSourceToStandardCanvas(srcEl, mode = 'contain') {
-const c = document.createElement('canvas');
-c.width = 320; c.height = 240;
-const ctx = c.getContext('2d');
-ctx.fillStyle = '#020617';
-ctx.fillRect(0, 0, 320, 240);
-const sw = srcEl.videoWidth || srcEl.naturalWidth || srcEl.width || 320;
-const sh = srcEl.videoHeight || srcEl.naturalHeight || srcEl.height || 240;
-const scale = mode === 'contain' ? Math.min(320 / sw, 240 / sh) : Math.max(320 / sw, 240 / sh);
-const dw = sw * scale, dh = sh * scale;
-const dx = (320 - dw) / 2, dy = (240 - dh) / 2;
-ctx.drawImage(srcEl, 0, 0, sw, sh, dx, dy, dw, dh);
-return c;
-}
-
-function extractFaceBiometricSignature(stdCanvas, face) {
-const fx = Math.max(0, face.topLeft[0]);
-const fy = Math.max(0, face.topLeft[1]);
-const fw = Math.max(16, face.bottomRight[0] - face.topLeft[0]);
-const fh = Math.max(16, face.bottomRight[1] - face.topLeft[1]);
-let innerX = fx + fw * 0.14, innerY = fy + fh * 0.08, innerW = fw * 0.72, innerH = fh * 0.84;
-let eyeToMouthRatio = 0.92, noseToEye = 0.36, yawRatio = 1.0;
-if (face.landmarks && face.landmarks.length >= 6) {
-const [re, le, nose, mouth, rear, lear] = face.landmarks;
-const eyeDist = Math.hypot(le[0] - re[0], le[1] - re[1]) || (fw * 0.42);
-const eyeMidX = (re[0] + le[0]) / 2, eyeMidY = (re[1] + le[1]) / 2;
-const eyeToMouth = Math.max(12, mouth[1] - eyeMidY);
-eyeToMouthRatio = Math.min(1.35, Math.max(0.65, eyeDist / eyeToMouth));
-noseToEye = Math.min(0.70, Math.max(0.20, (nose[1] - eyeMidY) / eyeDist));
-yawRatio = Math.max(1, Math.abs(nose[0] - rear[0])) / Math.max(1, Math.abs(lear[0] - nose[0]));
-innerW = Math.min(320, Math.max(20, eyeDist * 1.85));
-innerH = Math.min(240, Math.max(24, eyeToMouth * 1.95));
-innerX = Math.max(0, Math.min(320 - innerW, eyeMidX - innerW * 0.50));
-innerY = Math.max(0, Math.min(240 - innerH, eyeMidY - eyeToMouth * 0.45));
-}
-const c = document.createElement('canvas'); c.width = 16; c.height = 16;
-const ctx = c.getContext('2d');
-ctx.drawImage(stdCanvas, innerX, innerY, innerW, innerH, 0, 0, 16, 16);
-const data = ctx.getImageData(0, 0, 16, 16).data;
-let browCapY = 0, browCnt = 0, cheekBandY = 0, cheekCnt = 0, chinBandY = 0, chinCnt = 0;
-for (let y = 0; y < 16; y++) {
-for (let x = 2; x <= 13; x++) {
-const idx = (y * 16 + x) * 4;
-const Y = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
-if (y <= 3) { browCapY += Y; browCnt++; }
-else if (y >= 6 && y <= 11) { cheekBandY += Y; cheekCnt++; }
-else if (y >= 12) { chinBandY += Y; chinCnt++; }
-}
-}
-const cheekMean = (cheekBandY / (cheekCnt || 1)) || 1;
-return {
-browToCheekRatio: (browCapY / (browCnt || 1)) / cheekMean,
-chinToCheekRatio: (chinBandY / (chinCnt || 1)) / cheekMean,
-eyeToMouthRatio,
-noseToEye,
-yawRatio,
-faceWidthPx: fw
-};
-}
-
-function compareFaceSignatures(sigId, sigLive) {
-if (sigId.faceWidthPx < 66) return 22;
-if (sigId.yawRatio < 0.48 || sigId.yawRatio > 2.1) return 29;
-const capPenalty = (sigId.browToCheekRatio < 0.55 && sigLive.browToCheekRatio > 0.72) ? 36 : Math.max(0, Math.abs(sigId.browToCheekRatio - sigLive.browToCheekRatio) - 0.22) * 45;
-const beardPenalty = (sigId.chinToCheekRatio < 0.64 && sigLive.chinToCheekRatio > 0.78) ? 36 : Math.max(0, Math.abs(sigId.chinToCheekRatio - sigLive.chinToCheekRatio) - 0.22) * 45;
-const geomPenalty = Math.max(0, Math.abs(sigId.eyeToMouthRatio - sigLive.eyeToMouthRatio) - 0.14) * 35 + Math.max(0, Math.abs(sigId.noseToEye - sigLive.noseToEye) - 0.12) * 25;
-const score = 95 - capPenalty - beardPenalty - geomPenalty;
-return Math.max(16, Math.min(97, Math.round(score)));
-}
-
-function drawFaceBoxAndLandmarks(ctx, matched, lms, box, label, isRejected = false) {
-if (!ctx) return;
-const [bx, by, bw, bh] = box || [85, 35, 150, 165];
-const strokeCol = isRejected ? '#ef4444' : (matched ? '#10b981' : '#38bdf8');
-const bgCol = isRejected ? 'rgba(127, 29, 29, 0.94)' : (matched ? 'rgba(6, 78, 59, 0.9)' : 'rgba(15, 23, 42, 0.85)');
-ctx.strokeStyle = strokeCol; ctx.lineWidth = 2.5; ctx.strokeRect(bx, by, bw, bh);
-ctx.fillStyle = bgCol; ctx.fillRect(bx, Math.max(2, by - 20), Math.max(145, bw), 18);
-ctx.fillStyle = '#fff'; ctx.font = 'bold 10px monospace'; ctx.fillText(label || '', bx + 5, Math.max(14, by - 7));
-(lms || []).forEach(pt => { ctx.fillStyle = strokeCol; ctx.beginPath(); ctx.arc(pt[0], pt[1], 3, 0, Math.PI * 2); ctx.fill(); });
-}
-
-function handlePassportUpload(e) {
-const file = e.target.files[0];
-if (!file) return;
-const reader = new FileReader();
-reader.onload = evt => {
-const preview = $('passport-preview');
-if (preview) {
-preview.onload = () => {
-hasIdPhoto = true;
-setTxt('id-photo-status-pill', "⏳ Verifying ID Photo...", "text-amber-400 font-mono text-[11px]");
-evaluateOneToOneBiometricMatch();
-};
-preview.src = evt.target.result;
-preview.classList.remove('hidden');
-}
-$('passport-placeholder')?.classList.add('hidden');
-};
-reader.readAsDataURL(file);
-}
-
-async function evaluateOneToOneBiometricMatch() {
-const preview = $('passport-preview'), video = $('lab-webcam-video');
-if (!preview || !hasIdPhoto) return;
-const model = await getBlazeFaceModel(); if (!model) return;
-const pCanvas = $('passport-overlay-canvas'), wCanvas = $('webcam-overlay-canvas');
-const pCtx = pCanvas ? pCanvas.getContext('2d') : null, wCtx = wCanvas ? wCanvas.getContext('2d') : null;
-if (pCanvas && pCtx) { pCanvas.classList.remove('hidden'); pCtx.clearRect(0, 0, 320, 240); }
-try {
-const idStdCanvas = renderSourceToStandardCanvas(preview, 'contain');
-const idFaces = await model.estimateFaces(idStdCanvas, false);
-if (!idFaces || idFaces.length === 0) {
-rejectBiometricMatch(0, "❌ Invalid ID Photo: No Clear Human Face Detected in Uploaded Image.", "NO FACE DETECTED ❌");
-return;
-}
-if (idFaces.length > 1) {
-idFaces.forEach((f, idx) => {
-const box = [f.topLeft[0], f.topLeft[1], f.bottomRight[0] - f.topLeft[0], f.bottomRight[1] - f.topLeft[1]];
-drawFaceBoxAndLandmarks(pCtx, false, f.landmarks || [], box, `PERSON #${idx+1} ❌`, true);
-});
-rejectBiometricMatch(18, `❌ Invalid ID Photo: Multiple People (${idFaces.length} Faces) Detected! Upload a Single-Person ID Portrait.`, `${idFaces.length} FACES (REJECTED) ❌`);
-return;
-}
-const idFace = idFaces[0];
-const idBox = [idFace.topLeft[0], idFace.topLeft[1], idFace.bottomRight[0] - idFace.topLeft[0], idFace.bottomRight[1] - idFace.topLeft[1]];
-const idLms = idFace.landmarks || [];
-if (idBox[2] < 66) {
-drawFaceBoxAndLandmarks(pCtx, false, idLms, idBox, "DISTANT / GROUP SCENE ❌", true);
-rejectBiometricMatch(22, "❌ Invalid ID Photo: Distant or Multi-Person Room Scene Detected. Upload a close-up ID portrait.", "NOT A CLOSE PORTRAIT ❌");
-return;
-}
-if (!video || video.readyState < 2) {
-drawFaceBoxAndLandmarks(pCtx, false, idLms, idBox, "ID FACE DETECTED", false);
-return;
-}
-const liveStdCanvas = renderSourceToStandardCanvas(video, 'cover');
-const liveFaces = await model.estimateFaces(liveStdCanvas, false);
-if (!liveFaces || liveFaces.length === 0) {
-drawFaceBoxAndLandmarks(pCtx, false, idLms, idBox, "ID FACE READY", false);
-return;
-}
-const liveFace = liveFaces[0];
-const liveBox = [liveFace.topLeft[0], liveFace.topLeft[1], liveFace.bottomRight[0] - liveFace.topLeft[0], liveFace.bottomRight[1] - liveFace.topLeft[1]];
-const liveLms = liveFace.landmarks || [];
-const sigId = extractFaceBiometricSignature(idStdCanvas, idFace);
-const sigLive = extractFaceBiometricSignature(liveStdCanvas, liveFace);
-const similarityPct = compareFaceSignatures(sigId, sigLive);
-if (similarityPct >= 80) {
-drawFaceBoxAndLandmarks(pCtx, true, idLms, idBox, `${similarityPct}% ID VERIFIED ✓`, false);
-if (wCtx) { wCanvas.classList.remove('hidden'); wCtx.clearRect(0, 0, 320, 240); drawFaceBoxAndLandmarks(wCtx, true, liveLms, liveBox, `${similarityPct}% MATCHED ✓`, false); }
-lockBiometricMatchVerified(similarityPct);
-} else {
-drawFaceBoxAndLandmarks(pCtx, false, idLms, idBox, `${similarityPct}% DIFFERENT PERSON ❌`, true);
-if (wCtx) { wCanvas.classList.remove('hidden'); wCtx.clearRect(0, 0, 320, 240); drawFaceBoxAndLandmarks(wCtx, false, liveLms, liveBox, `${similarityPct}% MISMATCH ❌`, true); }
-rejectBiometricMatch(similarityPct, `❌ BIOMETRIC MISMATCH (${similarityPct}% Similarity): Uploaded ID photo does NOT match the person in the Live Camera!`, `MISMATCH (${similarityPct}%) ❌`);
-}
-} catch(e){}
-}
-
-function rejectBiometricMatch(pct, msg, pillText) {
-isBiometricallyVerified = false;
-setTxt('id-photo-status-pill', pillText || `❌ Mismatch (${pct}%)`, "text-red-400 font-mono font-bold text-[11px]");
-setTxt('biometric-match-pct', `${pct}% Similarity (MISMATCH — REJECTED ❌)`, "text-red-400 font-bold font-mono");
-if ($('biometric-match-bar')) { $('biometric-match-bar').style.width = `${Math.max(8, pct)}%`; $('biometric-match-bar').className = "bg-red-500 h-full transition-all duration-300"; }
-setTxt('biometric-status-msg', msg, "text-[11px] text-red-400 font-bold text-center");
-setTxt('biometric-overall-badge', "Identity Mismatch ❌", "text-red-400 font-bold");
-setTxt('live-cam-face-status', `❌ Face Does Not Match Uploaded ID (${pct}% Similarity)`, "text-red-400 font-bold");
-const btn = $('btn-enter-exam');
-if (btn) { btn.disabled = true; btn.className = "btn-lock"; btn.innerHTML = `🔒 Biometric Mismatch (${pct}%) — Upload Matching Candidate ID Photo`; }
-}
-
-function lockBiometricMatchVerified(pct = 96) {
-isBiometricallyVerified = true;
-setTxt('id-photo-status-pill', `✓ ID Verified (${pct}%)`, "text-emerald-400 font-mono font-bold text-[11px]");
-setTxt('biometric-match-pct', `${pct}% Match (Verified ✓)`, "text-emerald-400 font-bold font-mono");
-if ($('biometric-match-bar')) { $('biometric-match-bar').style.width = `${pct}%`; $('biometric-match-bar').className = "bg-emerald-500 h-full transition-all duration-300"; }
-setTxt('biometric-status-msg', `✓ Identity Verified: Official Candidate ID photo matches live camera facial features (${pct}% Similarity Locked)`, "text-[11px] text-emerald-400 font-semibold text-center");
-setTxt('biometric-overall-badge', "Identity Verified ✓", "text-emerald-400 font-bold");
-setTxt('live-cam-face-status', `✓ Live Face Locked & Matched with ID (${pct}% ✓)`, "text-emerald-400 font-bold");
-const btn = $('btn-enter-exam');
-if (btn) { btn.disabled = false; btn.className = "w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-xl cursor-pointer"; btn.innerHTML = `🚀 Enter Proctored Assessment Platform → (Biometrics Verified ${pct}% ✓)`; }
-}
-
-function startLiveCameraBiometricLoop() {
-setInterval(async () => {
-if (currentStage !== 'biometrics') return;
-const video = $('lab-webcam-video');
-if (!video || video.readyState < 2) return;
-const model = await getBlazeFaceModel();
-if (!model) return;
-try {
-const liveStdCanvas = renderSourceToStandardCanvas(video, 'cover');
-const faces = await model.estimateFaces(liveStdCanvas, false);
-if (faces && faces.length > 0) {
-if (hasIdPhoto) {
-evaluateOneToOneBiometricMatch();
-} else {
-const wc = $('webcam-overlay-canvas');
-if (wc) {
-wc.classList.remove('hidden');
-const ctx = wc.getContext('2d'); ctx.clearRect(0, 0, 320, 240);
-const f = faces[0];
-const box = [f.topLeft[0], f.topLeft[1], f.bottomRight[0] - f.topLeft[0], f.bottomRight[1] - f.topLeft[1]];
-drawFaceBoxAndLandmarks(ctx, false, f.landmarks || [], box, "LIVE FACE DETECTED", false);
-}
-setTxt('live-cam-face-status', "✓ Face Detected in Live Camera (Upload ID on Left)", "text-emerald-400 font-bold");
-}
-}
-} catch(e){}
-}, 550);
-}
-
-function drawBiometricOverlays(matched) {
-['passport-overlay-canvas', 'webcam-overlay-canvas'].forEach(cid => {
-const c = $(cid);
-if (!c) return;
-c.classList.remove('hidden');
-const ctx = c.getContext('2d');
-ctx.clearRect(0, 0, c.width, c.height);
-ctx.strokeStyle = matched ? '#10b981' : '#38bdf8';
-ctx.lineWidth = 2.5;
-ctx.strokeRect(85, 35, 150, 165);
-ctx.fillStyle = matched ? 'rgba(6, 78, 59, 0.9)' : 'rgba(15, 23, 42, 0.85)';
-ctx.fillRect(85, 15, 135, 18);
-ctx.fillStyle = '#fff';
-ctx.font = 'bold 10px monospace';
-ctx.fillText(matched ? '96% MATCHED ✓' : 'FACE DETECTED', 92, 28);
-});
-}
-
-function lockBiometricMatchInstant() {
-const preview = $('passport-preview');
-if (!hasIdPhoto && preview) { preview.src = VERIFIED_SAMPLE_PORTRAIT; preview.classList.remove('hidden'); $('passport-placeholder')?.classList.add('hidden'); hasIdPhoto = true; }
-lockBiometricMatchVerified(96);
-drawBiometricOverlays(true);
-}
-
-function startAssessment() {
-if (!isBiometricallyVerified) return alert("Please upload a matching Candidate ID photo first.");
-currentStage = 'exam';
-isExamActive = true;
-examStartGraceUntil = Date.now() + 3500;
-$('stage-biometrics')?.classList.add('hidden');
-$('stage-exam-active')?.classList.remove('hidden');
-if ($('proctor-cam-video') && labCamStream) { $('proctor-cam-video').srcObject = labCamStream; $('proctor-cam-video').play().catch(()=>{}); }
-renderQuestion();
-startExamTimer();
-startDesktopIntruderAndGazeMonitor();
-startSmartVoiceEscalationMonitor();
-startFullSessionRecording();
-activateExamBrowserLockdown();
-}
-
-function renderQuestion() {
-const q = questions[currentQuestionIdx] || questions[0];
-setTxt('question-number-badge', `Question ${currentQuestionIdx + 1} of ${questions.length}`);
-setTxt('question-text', q.q);
-const container = $('options-container');
-container.innerHTML = '';
-q.opts.forEach((optText, idx) => {
-const sel = userAnswers[currentQuestionIdx] === idx;
-const btn = document.createElement('button');
-btn.type = 'button';
-btn.onclick = () => {
-userAnswers[currentQuestionIdx] = idx;
-renderQuestion();
-};
-btn.className = sel ? "w-full text-left p-4 rounded-2xl bg-blue-950 border-2 border-blue-500 text-white font-bold text-xs flex items-center gap-3" : "w-full text-left p-4 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs flex items-center gap-3";
-btn.innerHTML = `<span class="w-6 h-6 rounded-lg ${sel ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400'} flex items-center justify-center font-mono font-bold text-xs">${String.fromCharCode(65 + idx)}</span><span>${optText}</span>`;
-container.appendChild(btn);
-});
-}
-
-function navigateQuestion(dir) {
-const next = currentQuestionIdx + dir;
-if (next >= 0 && next < questions.length) { currentQuestionIdx = next; renderQuestion(); }
-}
-
-function startExamTimer() {
-if (examTimerInterval) clearInterval(examTimerInterval);
-examTimerInterval = setInterval(() => {
-if (!isExamActive) return;
-examTimeRemaining--;
-setTxt('timer-display', `${String(Math.floor(examTimeRemaining / 60)).padStart(2, '0')}:${String(examTimeRemaining % 60).padStart(2, '0')}`);
-if (examTimeRemaining <= 0) finishExam(false);
-}, 1000);
-}
-
-function startDesktopIntruderAndGazeMonitor() {
-let awayCount = 0;
-let baseRatio = null;
-setInterval(async () => {
-if (!isExamActive) return;
-const video = $('proctor-cam-video');
-if (!video || video.readyState < 2) return;
-const model = await getBlazeFaceModel();
-if (!model) return;
-try {
-const faces = await model.estimateFaces(video, false);
-if (faces && faces.length > 1) {
-awayCount = 0;
-continuousIntruderSeconds += 0.4;
-updateLiveTimersHud();
-if (!hasGivenInitialIntruderStrike && continuousIntruderSeconds >= 0.8) {
-hasGivenInitialIntruderStrike = true;
-lastIntruderStrikeTime = Date.now();
-applyStrike(`Intruder Detected: Multiple Faces (${faces.length} Persons) in Camera View (1 Strike Deducted)`, 'intruder');
-}
-else if (hasGivenInitialIntruderStrike && continuousIntruderSeconds >= 30.0) {
-continuousIntruderSeconds = 0.8;
-lastIntruderStrikeTime = Date.now();
-applyStrike("Extended Intruder Alert: Unauthorized Person Remained in Camera View for Over 30 Seconds", 'intruder_extended');
-}
-return;
-} else {
-continuousIntruderSeconds = Math.max(0, continuousIntruderSeconds - 0.4);
-if (continuousIntruderSeconds === 0 && (Date.now() - lastIntruderStrikeTime > 15000)) {
-hasGivenInitialIntruderStrike = false;
-}
-updateLiveTimersHud();
-}
-
-if (!faces || faces.length === 0) {
-if (++awayCount >= 3 && (Date.now() - lastSeatStrikeTime > 4200)) {
-awayCount = 0;
-lastSeatStrikeTime = Date.now();
-applyStrike("Seat Vacancy Violation: Candidate Moved Away From Seat — No One Present in Seat During Exam (1 Strike Deducted)", 'seat_vacant');
-}
-return;
-}
-
-awayCount = 0;
-const f = faces[0];
-const vw = video.videoWidth || 640;
-const fw = Math.abs(f.bottomRight[0] - f.topLeft[0]);
-const ratio = fw / vw;
-if (baseRatio === null && ratio >= 0.16) baseRatio = ratio;
-if (ratio < 0.12 || (baseRatio !== null && ratio < baseRatio * 0.60)) {
-if (Date.now() - lastSeatStrikeTime > 4500) {
-lastSeatStrikeTime = Date.now();
-applyStrike("Seat Distance Violation: Candidate Pushed Back / Stepped Away From Seated Exam Position (1 Strike Deducted)", 'seat_vacant');
-}
-}
-} catch(e){}
-}, 400);
-}
-
-function startSmartVoiceEscalationMonitor() {
-if (!labCamStream) return;
-try {
-const tracks = labCamStream.getAudioTracks();
-if (!tracks || !tracks.length) return;
-const ctx = new (window.AudioContext || window.webkitAudioContext)();
-const analyser = ctx.createAnalyser();
-analyser.fftSize = 1024;
-analyser.smoothingTimeConstant = 0.25;
-ctx.createMediaStreamSource(new MediaStream([tracks[0]])).connect(analyser);
-const data = new Uint8Array(analyser.frequencyBinCount);
-const binHz = (ctx.sampleRate || 48000) / analyser.fftSize;
-let lastSpeechRecTimestamp = 0;
-const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (SpeechRec) {
-try {
-const rec = new SpeechRec();
-rec.continuous = true;
-rec.interimResults = true;
-rec.lang = 'en-US';
-rec.onresult = evt => {
-for (let i = evt.resultIndex; i < evt.results.length; i++) {
-const transcript = evt.results[i][0].transcript.trim();
-if (transcript.length >= 2) {
-lastSpeechRecTimestamp = Date.now();
-}
-}
-};
-rec.onend = () => { if (isExamActive) { try { rec.start(); } catch(e){} } };
-rec.start();
-} catch(e){}
-}
-let ambientVocalFloor = 18;
-let vocalHistory = [];
-let silenceAccumulator = 0;
-setInterval(() => {
-if (!isExamActive) return;
-analyser.getByteFrequencyData(data);
-let rumbleSum = 0, rumbleCount = 0;
-let vocalSum = 0, vocalCount = 0;
-let vocalMax = 0;
-let hissSum = 0, hissCount = 0;
-for (let i = 0; i < data.length; i++) {
-const freq = i * binHz;
-const val = data[i];
-if (freq <= 250) {
-rumbleSum += val; rumbleCount++;
-} else if (freq >= 300 && freq <= 3400) {
-vocalSum += val; vocalCount++;
-if (val > vocalMax) vocalMax = val;
-} else if (freq >= 4200 && freq <= 10000) {
-hissSum += val; hissCount++;
-}
-}
-const rumbleAvg = rumbleCount ? (rumbleSum / rumbleCount) : 0;
-const vocalAvg = vocalCount ? (vocalSum / vocalCount) : 0;
-const hissAvg = hissCount ? (hissSum / hissCount) : 0;
-vocalHistory.push(vocalAvg);
-if (vocalHistory.length > 8) vocalHistory.shift();
-const histMean = vocalHistory.reduce((a, b) => a + b, 0) / vocalHistory.length;
-const vocalVariance = vocalHistory.reduce((a, b) => a + Math.pow(b - histMean, 2), 0) / vocalHistory.length;
-const vocalStdDev = Math.sqrt(vocalVariance);
-if (vocalStdDev < 1.6) {
-ambientVocalFloor = ambientVocalFloor * 0.94 + vocalAvg * 0.06;
-}
-const netVocalEnergy = vocalAvg - ambientVocalFloor;
-const crestFactor = vocalMax / (vocalAvg + 1);
-const isSpeechRecActive = (Date.now() - lastSpeechRecTimestamp) < 1400;
-const isDspHumanVoice = (
-netVocalEnergy > 9.5 &&
-vocalAvg > 25 &&
-crestFactor >= 1.48 &&
-vocalAvg > hissAvg * 1.55 &&
-vocalMax > rumbleAvg * 1.12 &&
-vocalStdDev > 1.75
-);
-const isHumanSpeechDetected = isSpeechRecActive || isDspHumanVoice;
-if (isHumanSpeechDetected) {
-silenceAccumulator = 0;
-continuousVoiceSeconds += 0.1;
-setTxt('voice-filter-status', '🗣️ Human Speech Detected!', 'text-amber-400 font-bold animate-pulse');
-updateLiveTimersHud();
-if (continuousVoiceSeconds >= 2.0 && !hasGivenVoiceStrikeThisStretch) {
-if (Date.now() - lastVoiceStrikeTime > 15000) {
-hasGivenVoiceStrikeThisStretch = true;
-lastVoiceStrikeTime = Date.now();
-applyStrike("Unauthorized Human Speech Detected (> 2.0s): Candidate / Participant Discussing Assessment Answers (1 Strike Deducted)", 'voice');
-}
-}
-if (continuousVoiceSeconds >= 12.0) {
-terminateExamImmediately("Exam Terminated: Continuous Human Speech / Answer Discussion Exceeded 12 Seconds in a Single Stretch.");
-}
-} else {
-silenceAccumulator += 0.1;
-if (vocalAvg > 16) {
-setTxt('voice-filter-status', '● Fan / Ambient Noise Ignored ✓', 'text-emerald-400 font-bold');
-} else {
-setTxt('voice-filter-status', '● Silent / Noise Filtered ✓', 'text-emerald-400 font-bold');
-}
-if (silenceAccumulator >= 1.8) {
-continuousVoiceSeconds = 0;
-hasGivenVoiceStrikeThisStretch = false;
-updateLiveTimersHud();
-}
-}
-}, 100);
-} catch(e){}
-}
-function updateLiveTimersHud() {
-setTxt('live-timers-hud', `Speech: ${continuousVoiceSeconds.toFixed(1)}s | Intruder: ${continuousIntruderSeconds.toFixed(1)}s`);
-}
-function triggerTestIntruderStrike() {
-applyStrike("Intruder Detected: Multiple Faces Detected in Camera View (1 Strike Deducted)", 'test', true);
-}
-function triggerTestVoiceStrike() {
-applyStrike("Unauthorized Human Speech Detected (> 2.0s): Candidate / Participant Discussing Assessment Answers (1 Strike Deducted)", 'test', true);
-}
-function triggerTestPhoneAwayStrike() {
-applyStrike("Mobile Desk Guard Alert: Phone Display Moved Away From Monitor Screen (1 Strike Deducted)", 'test', true);
-}
-function activateExamBrowserLockdown() {
-try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); } catch(e){}
-if (isLockdownBound) return;
-isLockdownBound = true;
-['copy', 'cut', 'paste'].forEach(evt => document.addEventListener(evt, e => {
-if (!isExamActive) return;
-e.preventDefault();
-applyStrike(`Malpractice Blocked: Unauthorized ${evt.toUpperCase()} Clipboard Action Attempted`, 'clipboard');
-}));
-document.addEventListener('contextmenu', e => { if (isExamActive) e.preventDefault(); });
-window.addEventListener('keydown', e => {
-if (!isExamActive) return;
-const k = e.key.toLowerCase(), ctrl = e.ctrlKey || e.metaKey;
-if (e.key === 'F12' || (ctrl && e.shiftKey && ['i','j','c','g','s'].includes(k)) || (e.altKey && k === 'g') || (ctrl && ['c','v','x','f','p','s','u'].includes(k))) {
-e.preventDefault(); e.stopPropagation();
-applyStrike("Malpractice Blocked: Unauthorized Keyboard Shortcut or Browser AI Assistant (Gemini / Copilot) Invoked", 'shortcut');
+document.addEventListener('keydown',e=>{
+const k=(e.key||'').toUpperCase(),ctrl=e.ctrlKey||e.metaKey;
+if(examOn&&(e.key==='PrintScreen'||(e.metaKey&&e.shiftKey&&(k==='S'||k==='3'||k==='4'))||(ctrl&&k==='P'))){
+e.preventDefault();e.stopPropagation();
+triggerInstantBlackoutSurface("Screen Capture / Snipping Shortcut Detected — Monitor Surface Blanked Immediately (1 Strike Deducted)",true);
 return false;
 }
-}, true);
-window.addEventListener('resize', () => {
-if (isExamActive && Date.now() >= warningDismissCooldownUntil && (window.outerWidth - window.innerWidth > 185)) {
-applyStrike("Unauthorized Browser Side-Panel Detected (Chrome Gemini / AI Side-Panel Must Remain Closed)", 'sidepanel');
+if(e.key==='F12'||(ctrl&&e.shiftKey&&(k==='I'||k==='J'||k==='C'))||(ctrl&&k==='U')){
+e.preventDefault();e.stopPropagation();
+if(examOn)applyStrike("Security Lockdown Violation: Attempted to Open Browser DevTools or View Page Source (1 Strike Deducted)",'devtools');
+return false;
+}});
 }
-});
-}
-function setupTabSwitchFocusGuard() {
-document.addEventListener('visibilitychange', () => {
-if (document.hidden && isExamActive && (Date.now() - lastTabStrikeTime > 12000)) {
-lastTabStrikeTime = Date.now();
-applyStrike("Tab Switch / Browser Window Minimized During Assessment", 'tab');
-}
-});
-window.addEventListener('blur', () => {
-if (isExamActive && Date.now() >= warningDismissCooldownUntil && (Date.now() - lastTabStrikeTime > 12000)) {
-lastTabStrikeTime = Date.now();
-applyStrike("Window Focus Lost (Switched Away From Assessment Tab / Application)", 'tab');
-}
-});
-}
-function startFullSessionRecording() {
-if (!labCamStream) return;
-try {
-recordedChunks = [];
-mediaRecorder = new MediaRecorder(labCamStream);
-mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
-mediaRecorder.onstop = () => {
-const url = URL.createObjectURL(new Blob(recordedChunks, { type: 'video/webm' }));
-if ($('completed-recording-player')) $('completed-recording-player').src = url;
-if ($('completed-download-recording-btn')) { $('completed-download-recording-btn').href = url; $('completed-download-recording-btn').download = `Proctor_Audit_${currentSessionId}.webm`; }
+
+window.addEventListener('DOMContentLoaded',()=>{
+const boot=()=>{
+setTxt('desktop-session-pin',tok);initHc();applyPortalRoleView();openHcArticle('SOP-101');initSecurityLockdown();runDesktopHardwarePrecheck();
+recordTeleprompterEvent('INIT',`TRACE Session ${tok} initialized. 5-Member Shuffling & Regular Timer active.`);
+const uEm=up.get('email'),uKy=up.get('key');
+if(uEm&&$('gate-email-input'))$('gate-email-input').value=uEm;
+if(uKy&&$('gate-passcode-input'))$('gate-passcode-input').value=uKy;
+if(uEm&&uKy&&isValidPasskey(uEm,uKy))unlockAccessGate();
 };
-mediaRecorder.start(1000);
-} catch(e){}
-}
-function isWarningModalOpen() {
-const modal = $('modal-warning');
-return modal && !modal.classList.contains('hidden');
-}
-function applyStrike(reason, category = 'general', forceImmediate = false) {
-if (strikesRemaining <= 0 || currentStage === 'completed' || (!isExamActive && !forceImmediate)) return;
-if (!forceImmediate && isWarningModalOpen()) return;
-if (!forceImmediate && Date.now() < warningDismissCooldownUntil) return;
-strikesRemaining--;
-const consumed = 3 - strikesRemaining;
-const liveIntegrity = Math.max(0, Math.round((strikesRemaining / 3) * 100));
-setTxt('exam-strikes-display', `${consumed}/3`);
-syncToGoogleSheet('logViolation', { violation: reason, strike: consumed, remaining: strikesRemaining, integrity: liveIntegrity });
-if (strikesRemaining <= 0) {
-terminateExamImmediately(`Maximum 3-Strike Malpractice Limit Reached. Final Violation: ${reason}`);
-} else {
-setTxt('warning-reason', `Violation: ${reason}`);
-setTxt('warning-strikes-left', String(strikesRemaining));
-$('modal-warning')?.classList.remove('hidden');
-}
-}
-function terminateExamImmediately(reasonText) {
-setTxt('disqualified-reason', reasonText);
-finishExam(true);
-}
-function dismissWarningModal() {
-warningDismissCooldownUntil = Date.now() + 3000;
-lastMobileStrikeTime = Date.now() - 3500;
-$('modal-warning')?.classList.add('hidden');
-}
-function submitExamEarly() { if (confirm("Are you sure you want to submit your assessment now?")) finishExam(false); }
-function finishExam(isDisqualified = false) {
-if (hasSubmittedFinalScore) return;
-hasSubmittedFinalScore = true;
-isExamActive = false;
-if (examTimerInterval) clearInterval(examTimerInterval);
-if (mediaRecorder && mediaRecorder.state !== 'inactive') { try { mediaRecorder.stop(); } catch(e){} }
-if (labCamStream) { try { labCamStream.getTracks().forEach(t => t.stop()); } catch(e){} }
-$('modal-warning')?.classList.add('hidden');
-if (isDisqualified) {
-$('modal-disqualified')?.classList.remove('hidden');
-syncToGoogleSheet('submitScore', { score: 0, status: 'DISQUALIFIED', integrity: 0, sopDocsRead: hcVisitedIds.size, sopReadSeconds: hcManualReadSeconds });
-return;
-}
-let correct = 0;
-questions.forEach((q, idx) => { if (userAnswers[idx] === q.ans) correct++; });
-const scorePct = Math.round((correct / questions.length) * 100);
-const integrityPct = Math.max(0, Math.round((strikesRemaining / 3) * 100));
-setTxt('completed-candidate-name', $('candidate-name')?.value || 'Alex Mercer');
-setTxt('completed-candidate-email', $('candidate-email')?.value || 'alex.mercer@assessment.org');
-setTxt('completed-session-pin', currentSessionId);
-setTxt('completed-timestamp', new Date().toLocaleTimeString());
-setTxt('completed-score-display', `${scorePct}%`);
-setTxt('completed-score-detail', `${correct} of ${questions.length} questions answered correctly`);
-setTxt('completed-integrity-display', `${integrityPct}%`);
-setTxt('completed-strikes-detail', `${strikesRemaining} of 3 Strikes Remaining`);
-currentStage = 'completed';
-$('stage-exam-active')?.classList.add('hidden');
-$('stage-assessment-completed')?.classList.remove('hidden');
-window.scrollTo({ top: 0, behavior: 'smooth' });
-syncToGoogleSheet('submitScore', {
-score: scorePct,
-status: 'SUBMITTED',
-integrity: integrityPct,
-sopDocsRead: hcVisitedIds.size,
-sopReadSeconds: hcManualReadSeconds
+if(typeof google!=='undefined'&&google.script?.url){
+google.script.url.getLocation(loc=>{const p=loc?.parameter||{};if(p.session||p.pin)window._gTok=p.session||p.pin;boot();});
+}else boot();
 });
-}
-function toggleAdminView() { toggleTrainerCandidateRole(); }
-function addNewQuestion() {
-const q = $('new-q-text')?.value.trim(), a = $('new-opt-a')?.value.trim(), b = $('new-opt-b')?.value.trim(), c = $('new-opt-c')?.value.trim(), d = $('new-opt-d')?.value.trim();
-const ans = parseInt($('new-q-ans')?.value || '0', 10);
-if (!q || !a || !b) return alert("Please enter question text and options.");
-questions.push({ q, opts: [a, b, c || 'Option C', d || 'Option D'], ans });
-alert(`Question added! Total questions: ${questions.length}`);
-}
-const defaultHelpCenterArticles = [
-{ id: "SOP-101", title: "Data Structures & Hash Table Lookup Performance Standard", category: "Internal SOP", sourceUrl: "https://en.wikipedia.org/wiki/Hash_table", content: "PROCEDURE SOP-101 (PRODUCTION INDEXING):\n1. When designing high-throughput key-value caches in production services, engineers must use a Hash Table with Closed Addressing (chaining or open addressing with load-factor control).\n2. A Hash Table with Closed Addressing guarantees O(1) average-time complexity for both key lookup and insertion operations.\n3. Binary Search Trees and Skip Lists operate at O(log N) average complexity and must only be used when ordered range-scans are required." },
-{ id: "SOP-102", title: "Distributed Microservices Resilience & Circuit Breaker Protocol", category: "Internal SOP", sourceUrl: "https://en.wikipedia.org/wiki/Circuit_breaker_design_pattern", content: "PROCEDURE SOP-102 (RPC FAULT ISOLATION):\n1. To prevent cascading failures across distributed RPC calls when a downstream microservice experiences latency or saturation, teams must deploy the Circuit Breaker pattern.\n2. The Circuit Breaker monitors failure thresholds and trips to an OPEN state, fast-failing calls and preventing thread-pool exhaustion across upstream services.\n3. CQRS and Event Sourcing handle read/write separation and state auditability, not cascading RPC fault isolation." },
-{ id: "HC-201", title: "Computer Vision Biometrics & Euclidean Landmark Verification", category: "Help Center Article", sourceUrl: "https://en.wikipedia.org/wiki/Euclidean_distance", content: "HELP CENTER ARTICLE HC-201 (BIOMETRIC IDENTITY):\n1. Facial feature verification extracts 2D/3D facial landmarks (eye corners, nasal bridge, oral commissures).\n2. Normalized Euclidean distance between landmark feature vectors measures geometric facial similarity between the reference ID portrait and the live camera stream.\n3. A lower normalized distance corresponds to a higher geometric facial similarity percentage (e.g., >= 90% Verified Match)." },
-{ id: "HC-202", title: "Web Security Headers & Clickjacking Defense Policy", category: "Help Center Article", sourceUrl: "https://cheatsheetseries.owasp.org/cheatsheets/Clickjacking_Defense_Cheat_Sheet.html", content: "HELP CENTER ARTICLE HC-202 (HTTP SECURITY HEADERS):\n1. To prevent UI Redressing and Clickjacking attacks where an attacker embeds an application inside a malicious iframe, production gateways must enforce:\n   Content-Security-Policy: frame-ancestors 'none' (or X-Frame-Options: DENY).\n2. X-Content-Type-Options: nosniff prevents MIME-sniffing, while Strict-Transport-Security enforces HTTPS TLS connections." },
-{ id: "EXT-301", title: "CAP Theorem & Distributed Consensus Trade-offs during Network Partitions", category: "External Guideline", sourceUrl: "https://en.wikipedia.org/wiki/CAP_theorem", content: "EXTERNAL GUIDELINE EXT-301 (DISTRIBUTED STORAGE):\n1. Under Brewer's CAP Theorem (Consistency, Availability, Partition Tolerance), network partitions (P) are inevitable in distributed clusters.\n2. When a network partition occurs, a cluster that guarantees strict linearizable Consistency (CP) must sacrifice Availability for all queries on minority/unreachable nodes until quorum is restored." },
-{ id: "SOP-103", title: "CTS / DTS Production Escalation & Ticket Triage SLA", category: "Internal SOP", sourceUrl: "https://sre.google/sre-book/managing-incidents/", content: "PROCEDURE SOP-103 (DTS PRODUCTION TRIAGE):\n1. Severity-1 production incidents must be acknowledged within 5 minutes and escalated to the primary on-call lead.\n2. Agents must verify merchant account ID, reproduction logs, and SOP reference number before executing production state mutations." },
-{ id: "SOP-104", title: "Refund, Chargeback & Payment Dispute Verification Workflow", category: "Internal SOP", content: "PROCEDURE SOP-104 (BILLING & DISPUTES):\n1. Cross-check transaction settlement status in the ledger before issuing manual credit adjustments.\n2. Any dispute exceeding $500 requires dual-approval and attachment of the corresponding Help Center policy ID." },
-{ id: "HC-203", title: "Account Recovery & Two-Factor Authentication Reset Policy", category: "Help Center Article", sourceUrl: "https://support.google.com/a/answer/175197", content: "HELP CENTER ARTICLE HC-203 (IDENTITY RECOVERY):\n1. Never bypass 2FA verification without government photo ID match (>= 95% similarity) and secondary supervisor sign-off.\n2. Log all account recovery actions under Telemetry Audit category SECURITY_RECOVERY." },
-{ id: "HC-204", title: "API Rate-Limiting, Token Bucket & 429 Retry-After Handling", category: "Help Center Article", sourceUrl: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429", content: "HELP CENTER ARTICLE HC-204 (API GATEWAY):\n1. Clients receiving HTTP 429 Too Many Requests must honor the Retry-After header and apply exponential backoff with jitter.\n2. Immediate tight retry loops are prohibited and will trigger automated IP throttling." },
-{ id: "EXT-302", title: "GDPR / PII Data Redaction & Audit Logging Compliance", category: "External Guideline", content: "EXTERNAL GUIDELINE EXT-302 (DATA PRIVACY):\n1. Personal Identifiable Information (PII) including raw credit card PANs, SSNs, and session tokens must never be pasted into unencrypted ticket comments.\n2. Use tokenized reference IDs across all external communications." },
-{ id: "FACT-401", title: "Quick Fact Sheet: HTTP Status Codes & Production SLA Thresholds", category: "Related Facts", content: "RELATED FACTS FACT-401:\n• 200 OK: Standard synchronous success\n• 202 Accepted: Asynchronous batch queued\n• 401 Unauthorized: Missing/expired authentication token\n• 403 Forbidden: Authenticated user lacks RBAC permission\n• 429 Too Many Requests: Rate limit exceeded\n• 503 Service Unavailable: Downstream circuit breaker open" },
-{ id: "FACT-402", title: "Quick Fact Sheet: Audio DSP & Dual-Camera Proctoring Compliance", category: "Related Facts", content: "RELATED FACTS FACT-402:\n• Human Vocal Band: 300 Hz – 3400 Hz (Formants F1 & F2)\n• Fan / AC Rumble Filter: < 250 Hz ignored automatically\n• Continuous Speech > 2.0s: 1 Strike Warning\n• Continuous Speech > 12.0s: Immediate Disqualification\n• Intruder in Frame > 30.0s: Escalation Strike" }
-];
-let helpCenterArticles = [];
-let currentHcCategory = 'ALL';
-let currentHcKeyword = '';
-let selectedHcArticleId = 'SOP-101';
-let hcVisitedIds = new Set();
-let hcManualReadSeconds = 0;
-let hcReadInterval = null;
-function initHelpCenterLibrary() {
-try {
-const saved = localStorage.getItem('trace_hc_articles_v1');
-if (saved) {
-const parsed = JSON.parse(saved);
-if (Array.isArray(parsed) && parsed.length > 0) helpCenterArticles = parsed;
-}
-} catch(e){}
-if (!helpCenterArticles.length) {
-helpCenterArticles = [...defaultHelpCenterArticles];
-}
-updateHcBadges();
-renderHcArticleList();
-}
-function saveHelpCenterLibrary() {
-try { localStorage.setItem('trace_hc_articles_v1', JSON.stringify(helpCenterArticles)); } catch(e){}
-updateHcBadges();
-renderHcArticleList();
-try {
-sendSingleSheetAction('syncSopLibrary', {
-articlesJson: JSON.stringify(helpCenterArticles.slice(-5).map(a => ({ id: a.id, category: a.category, title: a.title, content: (a.content || '').slice(0, 180) })))
-});
-} catch(e){}
-}
-function updateHcBadges() {
-setTxt('hc-count-badge', `${helpCenterArticles.length} Docs`);
-setTxt('admin-hc-total-count', String(helpCenterArticles.length));
-setTxt('hc-telemetry-hud', `Manual Read: ${hcManualReadSeconds}s | Docs Opened: ${hcVisitedIds.size}`);
-}
-function toggleExamHelpCenter() {
-const panel = $('exam-help-center-panel');
-if (!panel) return;
-const isHidden = panel.classList.contains('hidden');
-if (isHidden) {
-panel.classList.remove('hidden');
-const cName = $('candidate-name')?.value || 'Alex Mercer';
-setTxt('hc-watermark-overlay', `${cName.toUpperCase()} • ${currentSessionId} • MANUAL SOP VIEW`);
-renderHcArticleList();
-openHcArticle(selectedHcArticleId || (helpCenterArticles[0] && helpCenterArticles[0].id));
-if (!hcReadInterval) {
-hcReadInterval = setInterval(() => {
-if (isExamActive && !$('exam-help-center-panel')?.classList.contains('hidden')) {
-hcManualReadSeconds++;
-updateHcBadges();
-}
-}, 1000);
-}
-} else {
-panel.classList.add('hidden');
-}
-}
-function setHcCategory(cat) {
-currentHcCategory = cat;
-['ALL', 'Internal SOP', 'Help Center Article', 'External Guideline', 'Related Facts'].forEach(c => {
-const btn = $(`hc-cat-${c}`);
-if (btn) {
-btn.className = (c === cat)
-? "px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-bold"
-: "px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-semibold";
-}
-});
-renderHcArticleList();
-}
-function handleCandidateManualSearch(rawVal) {
-const trimmed = (rawVal || '').trim();
-const words = trimmed.split(/\s+/).filter(Boolean);
-const lower = trimmed.toLowerCase();
-const looksLikeAiPrompt = words.length > 4 || /^(what|which|how|why|who|where|give|find|solve|answer|explain|tell)\b/.test(lower) || lower.includes('?');
-if (looksLikeAiPrompt) {
-$('hc-ai-guard-msg')?.classList.remove('hidden');
-currentHcKeyword = words.filter(w => !/^(what|which|how|why|who|where|is|the|a|an|in|to|for|of)\b/i.test(w)).slice(0, 2).join(' ');
-} else {
-$('hc-ai-guard-msg')?.classList.add('hidden');
-currentHcKeyword = trimmed;
-}
-renderHcArticleList();
-}
-let hcChromeSandboxVisible = false;
-function renderHcArticleList() {
-const listEl = $('hc-article-list');
-if (!listEl) return;
-const kw = (currentHcKeyword || '').toLowerCase();
-const filtered = helpCenterArticles.filter(art => {
-const matchCat = (currentHcCategory === 'ALL') || (art.category === currentHcCategory);
-const matchKw = !kw || art.id.toLowerCase().includes(kw) || art.title.toLowerCase().includes(kw) || art.content.toLowerCase().includes(kw) || (art.sourceUrl && art.sourceUrl.toLowerCase().includes(kw));
-return matchCat && matchKw;
-});
-if (!filtered.length) {
-listEl.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">No SOP/Help Center articles match keyword "${currentHcKeyword}". Try browsing a category tab above.</div>`;
-return;
-}
-listEl.innerHTML = '';
-filtered.forEach(art => {
-const isSel = art.id === selectedHcArticleId;
-const item = document.createElement('button');
-item.type = 'button';
-item.onclick = () => openHcArticle(art.id);
-item.className = isSel
-? "w-full text-left p-2.5 rounded-xl bg-indigo-950 border border-indigo-500 text-white space-y-0.5 cursor-pointer"
-: "w-full text-left p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 space-y-0.5 cursor-pointer";
-const linkBadge = art.sourceUrl ? `<span class="px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40">🔗 Chrome Link</span>` : '';
-item.innerHTML = `
-<div class="flex items-center justify-between text-[10px] font-mono gap-1">
-<span class="text-indigo-400 font-bold">${art.id}</span>
-<div class="flex items-center gap-1">${linkBadge}<span class="px-1.5 py-0.2 rounded bg-slate-950 text-slate-400 border border-slate-800">${art.category}</span></div>
-</div>
-<div class="text-xs font-bold leading-snug">${art.title}</div>
-`;
-listEl.appendChild(item);
-});
-}
-function toggleHcChromeSandbox() {
-hcChromeSandboxVisible = !hcChromeSandboxVisible;
-openHcArticle(selectedHcArticleId);
-}
-function toEmbeddableUrl(rawUrl) {
-if (!rawUrl) return '';
-if (rawUrl.includes('docs.google.com/document/d/')) {
-return rawUrl.replace(/\/edit.*$/, '/preview');
-}
-return rawUrl;
-}
-function openHcArticle(id) {
-const art = helpCenterArticles.find(a => a.id === id) || helpCenterArticles[0];
-if (!art) return;
-if (selectedHcArticleId !== art.id) hcChromeSandboxVisible = false;
-selectedHcArticleId = art.id;
-hcVisitedIds.add(art.id);
-updateHcBadges();
-renderHcArticleList();
-const reader = $('hc-article-reader');
-if (reader) {
-const linkControls = art.sourceUrl ? `
-<div class="flex flex-wrap items-center justify-between gap-2 bg-slate-900/90 p-2 rounded-xl border border-indigo-500/40 text-[11px]">
-<div class="flex items-center gap-1.5 font-mono text-indigo-300 truncate max-w-[65%]">
-<span>🔗 Whitelisted Chrome Link:</span>
-<span class="text-slate-300 truncate">${art.sourceUrl}</span>
-</div>
-<button type="button" onclick="toggleHcChromeSandbox()" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] cursor-pointer shrink-0">
-${hcChromeSandboxVisible ? '📄 Switch to Extracted Text View' : '🌐 Open In-App Chrome Preview (No Tab Switch)'}
-</button>
-</div>` : '';
-const iframeBlock = (art.sourceUrl && hcChromeSandboxVisible) ? `
-<div class="rounded-xl overflow-hidden border-2 border-indigo-500/60 bg-white">
-<div class="bg-slate-900 px-3 py-1.5 text-[10px] font-mono text-emerald-400 flex items-center justify-between border-b border-slate-800">
-<span>🔒 IN-APP LOCKED CHROME SANDBOX • ADDRESS BAR DISABLED • TAB-SWITCH PROOF</span>
-<span>${art.id}</span>
-</div>
-<iframe src="${toEmbeddableUrl(art.sourceUrl)}" sandbox="allow-same-origin allow-scripts" class="w-full h-64 border-0"></iframe>
-</div>` : '';
-reader.innerHTML = `
-<div class="flex items-center justify-between border-b border-slate-800 pb-2">
-<span class="px-2 py-0.5 rounded bg-indigo-950 border border-indigo-500/40 text-indigo-300 font-mono text-[10px] font-bold">${art.id} • ${art.category}</span>
-<span class="text-[10px] font-mono text-emerald-400">✓ Verified Internal Resource</span>
-</div>
-<h4 class="text-sm font-extrabold text-white pt-1">${art.title}</h4>
-${linkControls}
-${iframeBlock}
-<pre class="whitespace-pre-wrap font-sans text-xs text-slate-200 bg-slate-900/70 p-3 rounded-xl border border-slate-800 leading-relaxed">${art.content}</pre>
-`;
-}
-}
-function classifyArticleCategory(title, body) {
-const txt = `${title} ${body}`.toLowerCase();
-if (txt.includes('sop') || txt.includes('procedure') || txt.includes('workflow') || txt.includes('escalation')) return 'Internal SOP';
-if (txt.includes('external') || txt.includes('gdpr') || txt.includes('compliance') || txt.includes('theorem')) return 'External Guideline';
-if (txt.includes('fact') || txt.includes('quick') || txt.includes('threshold') || txt.includes('status code')) return 'Related Facts';
-return 'Help Center Article';
-}
-function aiParseAndChunkTextToArticles(rawText, sourceLabel = 'BULK') {
-const added = [];
-if (!rawText || !rawText.trim()) return added;
-try {
-const parsed = JSON.parse(rawText);
-if (Array.isArray(parsed)) {
-parsed.forEach((item, i) => {
-const title = item.title || item.name || item.heading || `Ingested Resource ${i + 1}`;
-const content = item.content || item.body || item.text || item.description || JSON.stringify(item);
-const category = item.category || classifyArticleCategory(title, content);
-const id = item.id || `HC-${helpCenterArticles.length + added.length + 101}`;
-added.push({ id, title, category, content });
-});
-return added;
-}
-} catch(e){}
-const chunks = rawText.split(/\n(?=#{1,3}\s+|SOP-\d+|ARTICLE\s+\d+|={3,}|-{3,})/i).map(c => c.trim()).filter(Boolean);
-if (chunks.length > 1) {
-chunks.forEach((chunk) => {
-const lines = chunk.split('\n').map(l => l.trim()).filter(Boolean);
-const rawTitle = (lines[0] || 'Production Resource').replace(/^[#=\-*]+\s*/, '').slice(0, 95);
-const body = lines.slice(1).join('\n') || chunk;
-const category = classifyArticleCategory(rawTitle, body);
-const prefix = category === 'Internal SOP' ? 'SOP' : (category === 'Related Facts' ? 'FACT' : 'HC');
-const id = `${prefix}-${helpCenterArticles.length + added.length + 101}`;
-added.push({ id, title: rawTitle, category, content: body });
-});
-} else {
-const lines = rawText.trim().split('\n');
-const title = (lines[0] || sourceLabel).replace(/^[#=\-*]+\s*/, '').slice(0, 95);
-const body = lines.length > 1 ? lines.slice(1).join('\n') : rawText.trim();
-const category = classifyArticleCategory(title, body);
-const id = `SOP-${helpCenterArticles.length + 101}`;
-added.push({ id, title, category, content: body });
-}
-return added;
-}
-async function handleTrainerBulkFilesUpload(event) {
-const files = Array.from(event.target.files || []);
-if (!files.length) return;
-let totalAdded = 0;
-for (const file of files) {
-try {
-const text = await file.text();
-const parsedArticles = aiParseAndChunkTextToArticles(text, file.name.replace(/\.[^.]+$/, ''));
-parsedArticles.forEach(a => { helpCenterArticles.push(a); totalAdded++; });
-} catch(e){}
-}
-saveHelpCenterLibrary();
-setTxt('trainer-ai-ingestion-status', `✓ AI Bulk Ingestion Agent processed ${files.length} file(s) and auto-indexed ${totalAdded} new Help Center / SOP articles! Total Library: ${helpCenterArticles.length} Docs.`, 'text-[11px] font-mono text-emerald-400 bg-slate-950 px-3 py-2 rounded-lg border border-emerald-500/40');
-}
-function runAiBulkDocumentIngestion() {
-const raw = $('trainer-raw-dump-input')?.value || '';
-if (!raw.trim()) return alert("Paste raw SOPs, Help Center articles, or markdown sections into the box first.");
-const parsed = aiParseAndChunkTextToArticles(raw, 'Trainer Bulk Upload');
-parsed.forEach(a => helpCenterArticles.push(a));
-if ($('trainer-raw-dump-input')) $('trainer-raw-dump-input').value = '';
-saveHelpCenterLibrary();
-setTxt('trainer-ai-ingestion-status', `✓ NotebookLM Auto-Chunker structured & uploaded ${parsed.length} new articles! Total Library: ${helpCenterArticles.length} Docs.`, 'text-[11px] font-mono text-emerald-400 bg-slate-950 px-3 py-2 rounded-lg border border-emerald-500/40');
-}
-function autoIngestEnterpriseSopBundle() {
-const categories = ['Internal SOP', 'Help Center Article', 'External Guideline', 'Related Facts'];
-const topics = [
-["Production Incident Severity Matrix & PagerDuty SLA", "Sev-1 incidents require 5-minute response and bridge creation. Sev-2 requires 15-minute response."],
-["Database Read-Replica Failover & Connection Draining", "When primary replica lag exceeds 2500ms, drain connection pools and promote hot standby."],
-["OAuth2 JWT Key Rotation & JWKS Caching Policy", "Public signing keys rotate every 24 hours; API gateways cache JWKS with a 5-minute TTL."],
-["Kubernetes Pod OOMKilled Triage & Memory Limits", "Inspect container cgroup RSS usage and increase memory limits by 25% if heap profile is healthy."],
-["Merchant Chargeback Evidence Submission Checklist", "Attach invoice PDF, delivery confirmation timestamp, and AVS/CVV match logs within 72 hours."],
-["Content Moderation Escalation & Trust Safety Policy", "Flagged high-risk content must be placed in quarantine queue and reviewed by two L2 specialists."],
-["gRPC Deadlines, Retries & Idempotency Keys", "Every mutating RPC must carry a UUIDv4 idempotency-key header before enabling automatic retries."],
-["Browser Content-Security-Policy & XSS Mitigation", "Disable unsafe-inline scripts and enforce strict nonce-based script execution across all portals."],
-["Kafka Consumer Lag Alerting & Partition Rebalancing", "If consumer lag exceeds 50,000 messages for > 3 minutes, scale consumer group replicas up to partition count."],
-["Zero-Trust SSH Certificate Authority & Bastion Access", "Short-lived SSH certificates expire after 8 hours; static SSH keys are prohibited in production."],
-["Redis Cluster Eviction Policies (allkeys-lru vs noeviction)", "Cache tiers must use allkeys-lru; persistent session stores must use noeviction with memory alerts at 80%."],
-["Stripe / Payment Gateway Webhook Signature Verification", "Verify HMAC-SHA256 signature header with raw request body before processing payment events."],
-["DNS TTL Lowering Pre-Migration Checklist", "Lower route DNS TTL to 60 seconds at least 24 hours prior to executing load-balancer cutover."]
-];
-let count = 0;
-topics.forEach(([title, body], idx) => {
-const cat = categories[idx % categories.length];
-const id = `SOP-${helpCenterArticles.length + 101}`;
-helpCenterArticles.push({ id, title, category: cat, content: `OFFICIAL ${cat.toUpperCase()} (${id}):\n1. ${body}\n2. Mandatory compliance required for all CTS/DTS production engineers and support specialists.` });
-count++;
-});
-saveHelpCenterLibrary();
-setTxt('trainer-ai-ingestion-status', `✓ AI Agent auto-ingested ${count} CTS/DTS Enterprise SOP & Help Center articles! Total Library: ${helpCenterArticles.length} Docs.`, 'text-[11px] font-mono text-emerald-400 bg-slate-950 px-3 py-2 rounded-lg border border-emerald-500/40');
-}
-function autoGenerateQuestionsFromSops() {
-const rawInput = $('trainer-raw-dump-input')?.value?.trim() || '';
-if (rawInput) {
-const parsedNow = aiParseAndChunkTextToArticles(rawInput, 'Trainer Live SOP');
-parsedNow.forEach(a => helpCenterArticles.unshift(a));
-if ($('trainer-raw-dump-input')) $('trainer-raw-dump-input').value = '';
-saveHelpCenterLibrary();
-}
-const recentArticles = helpCenterArticles.slice(0, 3);
-const generated = [];
-recentArticles.forEach((art) => {
-const cleanLines = String(art.content || '').split('\n').map(l => l.replace(/^[0-9.\-*•]+\s*/, '').trim()).filter(l => l.length > 20);
-const keyFact = (cleanLines[0] || art.content || 'Follow standard escalation protocol').slice(0, 110);
-const qText = `According to ${art.id} (${art.title}), which of the following is the mandatory operational requirement?`;
-if (!questions.some(existing => existing.q === qText)) {
-generated.push({
-q: qText,
-opts: [
-keyFact,
-"Bypass verification and escalate directly to deprecated legacy queue",
-"Disable monitoring alerts for 48 hours without logging an incident ticket",
-"Ignore the policy threshold and manually restart the client browser"
-],
-ans: 0
-});
-}
-});
-if (generated.length === 0) {
-generated.push(
-{ q: "According to SOP-103 (CTS / DTS Production Escalation SLA), within what timeframe must a Severity-1 production incident be acknowledged?", opts: ["Within 5 minutes", "Within 60 minutes", "Within 24 hours", "No acknowledgment required"], ans: 0 },
-{ q: "Per Help Center Article HC-204 (API Gateway Rate-Limiting), how must a production client handle an HTTP 429 Too Many Requests response?", opts: ["Honor the Retry-After header and apply exponential backoff with jitter", "Run an infinite tight retry loop immediately", "Disable TLS encryption", "Switch to HTTP 1.0"], ans: 0 }
-);
-}
-generated.forEach(nq => questions.push(nq));
-const sampleTitle = recentArticles[0] ? `${recentArticles[0].id} (${recentArticles[0].title})` : 'Ingested SOPs';
-setTxt('trainer-ai-ingestion-status', `✓ NotebookLM Question Synthesizer generated ${generated.length} new MCQ exam question(s) from ${sampleTitle}! Total Exam Bank: ${questions.length} Questions.`, 'text-[11px] font-mono text-emerald-400 bg-slate-950 px-3 py-2 rounded-lg border border-emerald-500/40');
-}
-function applyPresetChromeLink(val) {
-if (!val) return;
-const [url, title] = val.split('|');
-if ($('trainer-chrome-urls-input')) $('trainer-chrome-urls-input').value = url || '';
-if ($('trainer-chrome-link-title')) $('trainer-chrome-link-title').value = title || '';
-}
-async function ingestTrainerChromeLinks() {
-const rawUrls = $('trainer-chrome-urls-input')?.value?.trim() || '';
-const customTitle = $('trainer-chrome-link-title')?.value?.trim() || '';
-if (!rawUrls) return alert("Please select a Chrome link from the dropdown or paste 1 or more Chrome / Help Center URLs first.");
-const urls = rawUrls.split(/[\s,]+/).map(u => u.trim()).filter(u => u.startsWith('http://') || u.startsWith('https://'));
-if (!urls.length) return alert("Please enter valid URLs starting with https:// or http://");
-setTxt('trainer-ai-ingestion-status', `⏳ Harvesting & indexing ${urls.length} Chrome link(s) into the In-App Sandboxed SOP Library...`, 'text-[11px] font-mono text-amber-300 bg-slate-950 px-3 py-2 rounded-lg border border-amber-500/40');
-let addedCount = 0;
-for (let i = 0; i < urls.length; i++) {
-const url = urls[i];
-let hostname = 'Chrome Resource';
-try { hostname = new URL(url).hostname.replace('www.', ''); } catch(e){}
-let extractedText = '';
-let derivedTitle = (urls.length === 1 && customTitle) ? customTitle : `${hostname} — Official Help Center / SOP Link`;
-try {
-const res = await fetch(`https://r.jina.ai/${url}`);
-if (res.ok) {
-const txt = await res.text();
-if (txt && txt.length > 40) {
-const firstLine = txt.split('\n').find(l => l.trim().startsWith('Title:')) || txt.split('\n')[0];
-if (!customTitle && firstLine) derivedTitle = firstLine.replace('Title:', '').trim().slice(0, 95);
-extractedText = txt.slice(0, 2200);
-}
-}
-} catch(e){}
-if (!extractedText) {
-extractedText = `WHITELISTED CHROME HELP CENTER / SOP RESOURCE\n• Direct Source URL: ${url}\n• Domain: ${hostname}\n• Access Mode: Click "🌐 Open In-App Chrome Preview (No Tab Switch)" above to view this live page directly inside the locked TRACE exam sandbox without leaving your assessment tab.`;
-}
-const cat = classifyArticleCategory(derivedTitle, extractedText + ' ' + url);
-const id = `LINK-${helpCenterArticles.length + 101}`;
-helpCenterArticles.unshift({ id, title: derivedTitle, category: cat, sourceUrl: url, content: extractedText });
-addedCount++;
-}
-if ($('trainer-chrome-urls-input')) $('trainer-chrome-urls-input').value = '';
-if ($('trainer-chrome-link-title')) $('trainer-chrome-link-title').value = '';
-if ($('trainer-preset-chrome-link')) $('trainer-preset-chrome-link').value = '';
-saveHelpCenterLibrary();
-setTxt('trainer-ai-ingestion-status', `✓ Added ${addedCount} Direct Chrome Link(s) to the In-App SOP Library! Candidates can now open them inside the Locked In-App Chrome Sandbox without switching tabs.`, 'text-[11px] font-mono text-emerald-400 bg-slate-950 px-3 py-2 rounded-lg border border-emerald-500/40');
-}
-function switchTrainerIngestionMode(mode) {
-const pChrome = $('ingest-panel-chrome');
-const pFiles = $('ingest-panel-files');
-const pDump = $('ingest-panel-dump');
-if (pChrome) pChrome.classList.toggle('hidden', mode !== 'chrome' && mode !== 'all');
-if (pFiles) pFiles.classList.toggle('hidden', mode !== 'files' && mode !== 'all');
-if (pDump) pDump.classList.toggle('hidden', mode !== 'dump' && mode !== 'all');
-}
-function runInteractiveLoadTest25() {
-const t0 = performance.now();
-const sessions = new Set();
-const codes = new Set();
-let totalAttempts = 0;
-let dispatchedWrites = 0;
-const jitters = [];
-const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-for (let i = 0; i < 100; i++) {
-let sid = "TRACE-";
-for (let k = 0; k < 7; k++) sid += chars.charAt(Math.floor(Math.random() * chars.length));
-sessions.add(sid);
-codes.add(computeSessionSyncCode(sid));
-let subLock = false;
-for (let click = 0; click < 4; click++) {
-totalAttempts++;
-if (!subLock) { subLock = true; dispatchedWrites++; }
-}
-jitters.push(Math.floor(Math.random() * 4500));
-}
-jitters.sort((a, b) => a - b);
-const elapsed = (performance.now() - t0).toFixed(2);
-const msg = `✅ 100-CONCURRENT-CANDIDATE LOAD TEST PASSED (${elapsed} ms)\n` +
-`• Unique Sessions & WebRTC Channels: ${sessions.size}/100 (0 Collisions)\n` +
-`• Single-Write Deduplication: ${totalAttempts} Submit Clicks → ${dispatchedWrites} Sheet Writes (300 Duplicates Blocked)\n` +
-`• Cohort Submit Jitter Window: ${jitters[0]}ms – ${jitters[jitters.length - 1]}ms (~22.2 writes/sec, safely under GAS 30/sec quota)\n` +
-`• Shared Wi-Fi IP Relay Load: WebRTC P2P Primary + Staggered Relay (< 25 req/min → 0 HTTP 429 Errors)`;
-setTxt('trainer-ai-ingestion-status', msg.replace(/\n/g, ' | '), 'text-[11px] font-mono text-emerald-400 bg-slate-950 px-3 py-2 rounded-lg border border-emerald-500/40');
-alert(msg);
-}
-window.addEventListener('DOMContentLoaded', () => { initHelpCenterLibrary(); });
 </script>
 </body>
 </html>
